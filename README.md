@@ -1,4 +1,4 @@
-# BiDE — Booking & Instructor Dispatch Engine
+# BiDE - Booking & Instructor Dispatch Engine
 
 **BiDE** is a web-based driving lesson marketplace designed to connect learner drivers with verified driving instructors. The platform allows students to find instructors, request bookings, upload proof of payment, track lesson progress, and leave reviews. Instructors can manage lesson offerings, availability, booking requests, and payment verification, while administrators oversee users, instructor applications, bookings, payments, and reports.
 
