@@ -3,20 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BiDE.Models
 {
-    public enum PaymentStatus
-    {
-        Pending,
-        Uploaded,
-        Verified,
-        Rejected
-    }
-
-    public enum PaymentMethod
-    {
-        EFT,
-        Cash
-    }
-
     public class Payment
     {
         [Key]
@@ -29,26 +15,29 @@ namespace BiDE.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal Amount { get; set; }
 
-        [Required]
-        public PaymentMethod Method { get; set; }
+        public DateTime? PaymentDate { get; set; }
 
         [Required]
-        public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
+        [StringLength(50)]
+        public string PaymentMethod { get; set; } = string.Empty;
 
         [StringLength(500)]
-        public string? ProofOfPaymentPath { get; set; }
+        public string? ProofOfPayment { get; set; }
 
-        public DateTime? UploadedAt { get; set; }
+        [Required]
+        [StringLength(50)]
+        public string PaymentStatus { get; set; } = "Pending";
 
-        public DateTime? VerifiedAt { get; set; }
+        [Required]
+        public int InstructorId { get; set; }
 
-        [StringLength(300)]
-        public string? RejectionReason { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? VerificationDate { get; set; }
 
         // Navigation properties
         [ForeignKey("BookingId")]
         public Booking Booking { get; set; } = null!;
+
+        [ForeignKey("InstructorId")]
+        public Instructor Instructor { get; set; } = null!;
     }
 }

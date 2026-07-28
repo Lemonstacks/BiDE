@@ -3,28 +3,26 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BiDE.Models
 {
-    public class LessonOffering
+    public class Availability
     {
         [Key]
-        public int OfferId { get; set; }
+        public int AvailabilityId { get; set; }
 
         [Required]
         public int InstructorId { get; set; }
 
         [Required]
+        public DateTime Date { get; set; }
+
+        [Required]
+        public TimeSpan StartTime { get; set; }
+
+        [Required]
+        public TimeSpan EndTime { get; set; }
+
+        [Required]
         [StringLength(50)]
-        public string LessonType { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(100)]
-        public string Title { get; set; } = string.Empty;
-
-        [Required]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal Price { get; set; }
-
-        [StringLength(500)]
-        public string? Description { get; set; }
+        public string AvailabilityStatus { get; set; } = "Available";
 
         // Navigation properties
         [ForeignKey("InstructorId")]

@@ -2,10 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BiDE.Models
 {
-    public class Student
+    public class Admin
     {
         [Key]
-        public int StudentId { get; set; }
+        public int AdminId { get; set; }
 
         [Required]
         [StringLength(50)]
@@ -25,14 +25,8 @@ namespace BiDE.Models
         [StringLength(100)]
         public string Email { get; set; } = string.Empty;
 
-        [StringLength(100)]
-        public string? Suburb { get; set; }
-
         [Required]
         [StringLength(255)]
         public string Password { get; set; } = string.Empty;
-
-        // Navigation properties
-        public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
     }
 }

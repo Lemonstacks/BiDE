@@ -3,55 +3,42 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BiDE.Models
 {
-    public enum BookingStatus
-    {
-        Pending,
-        Confirmed,
-        InProgress,
-        Completed,
-        Cancelled,
-        Rescheduled
-    }
-
     public class Booking
     {
         [Key]
         public int BookingId { get; set; }
 
         [Required]
+        public int InstructorId { get; set; }
+
+        [Required]
         public int StudentId { get; set; }
 
         [Required]
-        public int LessonOfferingId { get; set; }
+        public int ScheduleId { get; set; }
 
         [Required]
-        public DateTime ScheduledDate { get; set; }
-
-        public TimeSpan StartTime { get; set; }
-
-        public TimeSpan EndTime { get; set; }
+        public int OfferId { get; set; }
 
         [Required]
-        public BookingStatus Status { get; set; } = BookingStatus.Pending;
-
-        [StringLength(500)]
-        public string? InstructorNotes { get; set; }
-
-        [StringLength(500)]
-        public string? StudentNotes { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        public DateTime? UpdatedAt { get; set; }
+        [StringLength(50)]
+        public string Status { get; set; } = "Pending";
 
         // Navigation properties
+        [ForeignKey("InstructorId")]
+        public Instructor Instructor { get; set; } = null!;
+
         [ForeignKey("StudentId")]
         public Student Student { get; set; } = null!;
 
-        [ForeignKey("LessonOfferingId")]
+        [ForeignKey("ScheduleId")]
+        public Availability Schedule { get; set; } = null!;
+
+        [ForeignKey("OfferId")]
         public LessonOffering LessonOffering { get; set; } = null!;
 
         public Payment? Payment { get; set; }
         public Review? Review { get; set; }
+        public ICollection<LessonProgress> LessonProgresses { get; set; } = new List<LessonProgress>();
     }
 }
