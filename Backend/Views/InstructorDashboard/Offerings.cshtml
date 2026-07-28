@@ -1,0 +1,157 @@
+@model List<LessonOffering>
+@{
+    ViewData["Title"] = "Lesson Offerings";
+    var instructor = ViewBag.Instructor as Instructor;
+    var isApproved = instructor?.Status == InstructorStatus.Approved;
+    var success = TempData["Success"] as string;
+}
+
+<div class="page-container">
+    <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <p class="section-label">Instructor</p>
+            <h1 class="section-title">Lesson Offerings</h1>
+        </div>
+        @if (isApproved)
+        {
+            <button type="button" class="btn btn-primary" onclick="openModal('offeringModal')">
+                + Add Offering
+            </button>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(success))
+    {
+        <div class="alert alert-info">@success</div>
+    }
+
+    @if (!isApproved)
+    {
+        <div class="alert alert-warning">
+            Your application is <strong>@instructor?.Status</strong>. Lesson offerings can only be managed once your account is approved by an admin.
+        </div>
+    }
+    else if (Model.Count == 0)
+    {
+        <div class="empty-state" style="padding: 4rem;">
+            <p class="text-muted">No offerings yet. Add your first lesson offering.</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var o in Model)
+        {
+            <div class="offering-row">
+                <div>
+                    <p class="offering-title">@o.Title</p>
+                    <div class="offering-meta">
+                        <span class="offering-type">@o.LessonType</span>
+                        <span>R@o.Price.ToString("N0")</span>
+                        @if (!string.IsNullOrEmpty(o.Description))
+                        {
+                            <span>@o.Description</span>
+                        }
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="button" class="btn btn-icon btn-ghost"
+                            onclick="openEditModal(@o.OfferId, '@o.Title', '@o.LessonType', '@(o.Description ?? "")', '@o.Price')">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <form method="post" asp-action="DeleteOffering" style="display:inline;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="offerId" value="@o.OfferId" />
+                        <button type="submit" class="btn btn-icon btn-destructive" onclick="return confirm('Delete this offering?')">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+
+<!-- Create Offering Modal -->
+<div class="modal-overlay" id="offeringModal">
+    <div class="modal" style="position: relative;">
+        <button class="modal-close" onclick="closeModal('offeringModal')">&times;</button>
+        <h3 class="modal-title">New Offering</h3>
+        <form method="post" asp-action="CreateOffering">
+            @Html.AntiForgeryToken()
+            <div class="form-group">
+                <label class="form-label">Title *</label>
+                <input type="text" name="title" class="form-input" required placeholder="e.g. Highway Driving Lesson" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Type *</label>
+                <select name="lessonType" class="form-select" required>
+                    <option value="Manual">Manual</option>
+                    <option value="Automatic">Automatic</option>
+                    <option value="Highway">Highway</option>
+                    <option value="Parking">Parking</option>
+                    <option value="Defensive">Defensive</option>
+                    <option value="Refresher">Refresher</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Price (R) *</label>
+                <input type="number" name="price" class="form-input" required min="0" step="0.01" placeholder="e.g. 350" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-textarea" rows="3" placeholder="Describe the lesson..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">Create Offering</button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Offering Modal -->
+<div class="modal-overlay" id="editOfferingModal">
+    <div class="modal" style="position: relative;">
+        <button class="modal-close" onclick="closeModal('editOfferingModal')">&times;</button>
+        <h3 class="modal-title">Edit Offering</h3>
+        <form method="post" asp-action="UpdateOffering">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="offerId" id="edit-offer-id" value="" />
+            <div class="form-group">
+                <label class="form-label">Title *</label>
+                <input type="text" name="title" id="edit-title" class="form-input" required />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Type *</label>
+                <select name="lessonType" id="edit-type" class="form-select" required>
+                    <option value="Manual">Manual</option>
+                    <option value="Automatic">Automatic</option>
+                    <option value="Highway">Highway</option>
+                    <option value="Parking">Parking</option>
+                    <option value="Defensive">Defensive</option>
+                    <option value="Refresher">Refresher</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Price (R) *</label>
+                <input type="number" name="price" id="edit-price" class="form-input" required min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea name="description" id="edit-description" class="form-textarea" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">Update Offering</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function openEditModal(id, title, type, desc, price) {
+    document.getElementById('edit-offer-id').value = id;
+    document.getElementById('edit-title').value = title;
+    document.getElementById('edit-type').value = type;
+    document.getElementById('edit-description').value = desc;
+    document.getElementById('edit-price').value = price;
+    openModal('editOfferingModal');
+}
+</script>
+}

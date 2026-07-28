@@ -1,0 +1,137 @@
+@{
+    ViewData["Title"] = "Instructor Dashboard";
+    var instructor = ViewBag.Instructor as Instructor;
+    var pending = ViewBag.Pending as List<Booking> ?? new List<Booking>();
+    var accepted = ViewBag.Accepted as List<Booking> ?? new List<Booking>();
+    var completed = ViewBag.Completed as List<Booking> ?? new List<Booking>();
+    int totalBookings = ViewBag.TotalBookings;
+    var success = TempData["Success"] as string;
+}
+
+<div class="page-container">
+    <div class="section-header">
+        <p class="section-label">Instructor</p>
+        <h1 class="section-title">Welcome, @instructor?.FirstName @instructor?.LastName</h1>
+    </div>
+
+    @if (!string.IsNullOrEmpty(success))
+    {
+        <div class="alert alert-info">@success</div>
+    }
+
+    @if (instructor?.Status != InstructorStatus.Approved)
+    {
+        <div class="alert alert-warning">
+            Your application is <strong>@instructor?.Status</strong>. Some features are restricted until your account is approved by an admin.
+        </div>
+    }
+
+    <!-- Stats -->
+    <div class="grid-4" style="border: 1px solid var(--border); margin-bottom: 3rem;">
+        <div class="stat-card">
+            <svg class="stat-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <p class="stat-value">@pending.Count</p>
+            <p class="stat-label">Pending Requests</p>
+        </div>
+        <div class="stat-card">
+            <svg class="stat-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <p class="stat-value">@accepted.Count</p>
+            <p class="stat-label">Upcoming Lessons</p>
+        </div>
+        <div class="stat-card">
+            <svg class="stat-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <p class="stat-value">@completed.Count</p>
+            <p class="stat-label">Completed</p>
+        </div>
+        <div class="stat-card">
+            <svg class="stat-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+            <p class="stat-value">@totalBookings</p>
+            <p class="stat-label">Total Bookings</p>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="grid-3" style="margin-bottom: 3rem;">
+        <a href="/InstructorDashboard/Offerings" class="quick-link">
+            <span class="quick-link-label">Lesson Offerings</span>
+        </a>
+        <a href="/InstructorDashboard/Availability" class="quick-link">
+            <span class="quick-link-label">Manage Availability</span>
+        </a>
+        <a href="/InstructorDashboard/LessonProgress" class="quick-link">
+            <span class="quick-link-label">Lesson Progress</span>
+        </a>
+    </div>
+
+
+    <!-- Pending Requests -->
+    @if (pending.Count > 0)
+    {
+        <p class="detail-section-title">Pending Requests</p>
+        <div style="margin-bottom: 2rem;">
+            @foreach (var b in pending.Take(10))
+            {
+                <div class="card">
+                    <div class="card-row">
+                        <div>
+                            <p class="card-title">@(b.LessonOffering?.Title ?? "Lesson")</p>
+                            <p class="card-subtitle">@b.Student.FirstName @b.Student.LastName (@b.Student.Email)</p>
+                            <div class="card-meta">
+                                <span class="card-meta-item">
+                                    @(b.Schedule?.Date.ToString("MMM d, yyyy") ?? "")
+                                </span>
+                                <span class="card-meta-item">
+                                    @(b.Schedule?.StartTime.ToString(@"hh\:mm") ?? "") - @(b.Schedule?.EndTime.ToString(@"hh\:mm") ?? "")
+                                </span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <form method="post" asp-action="AcceptBooking" style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="bookingId" value="@b.BookingId" />
+                                <button type="submit" class="btn btn-primary btn-sm">Accept</button>
+                            </form>
+                            <form method="post" asp-action="RejectBooking" style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="bookingId" value="@b.BookingId" />
+                                <button type="submit" class="btn btn-destructive btn-sm">Reject</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Accepted / Upcoming -->
+    @if (accepted.Count > 0)
+    {
+        <p class="detail-section-title">Upcoming Lessons</p>
+        <div>
+            @foreach (var b in accepted.Take(10))
+            {
+                <div class="card">
+                    <div class="card-row">
+                        <div>
+                            <p class="card-title">@(b.LessonOffering?.Title ?? "Lesson")</p>
+                            <p class="card-subtitle">@b.Student.FirstName @b.Student.LastName</p>
+                            <div class="card-meta">
+                                <span class="card-meta-item">
+                                    @(b.Schedule?.Date.ToString("MMM d, yyyy") ?? "") | @(b.Schedule?.StartTime.ToString(@"hh\:mm") ?? "") - @(b.Schedule?.EndTime.ToString(@"hh\:mm") ?? "")
+                                </span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span class="badge badge-accepted">Accepted</span>
+                            <form method="post" asp-action="CompleteBooking" style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="bookingId" value="@b.BookingId" />
+                                <button type="submit" class="btn btn-sm">Mark Complete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

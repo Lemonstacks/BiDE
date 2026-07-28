@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - BiDE</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">BiDE</a>
+            <div class="navbar-links">
+                <a href="/Instructors" class="nav-link">Find Instructors</a>
+                @if (Context.Session.GetInt32("UserId") != null)
+                {
+                    var role = Context.Session.GetString("UserRole");
+                    @if (role == "Student")
+                    {
+                        <a href="/Student/Bookings" class="nav-link">My Bookings</a>
+                        <a href="/Student/CompletedLessons" class="nav-link">Completed</a>
+                    }
+                    @if (role == "Instructor")
+                    {
+                        <a href="/InstructorDashboard" class="nav-link">Dashboard</a>
+                        <a href="/InstructorDashboard/Offerings" class="nav-link">Offerings</a>
+                        <a href="/InstructorDashboard/Availability" class="nav-link">Availability</a>
+                    }
+                    @if (role == "Admin")
+                    {
+                        <a href="/Admin" class="nav-link">Admin Panel</a>
+                    }
+                    <a href="/Profile" class="nav-link">Profile</a>
+                    <a href="/Account/Logout" class="nav-link nav-link-muted">Logout</a>
+                }
+                else
+                {
+                    <a href="/Account/Login" class="nav-link">Login</a>
+                    <a href="/Account/Register" class="nav-link btn-primary-sm">Register</a>
+                }
+            </div>
+            <button class="navbar-toggle" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+        <!-- Mobile menu -->
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="/Instructors" class="nav-link">Find Instructors</a>
+            @if (Context.Session.GetInt32("UserId") != null)
+            {
+                var role = Context.Session.GetString("UserRole");
+                @if (role == "Student")
+                {
+                    <a href="/Student/Bookings" class="nav-link">My Bookings</a>
+                    <a href="/Student/CompletedLessons" class="nav-link">Completed</a>
+                }
+                @if (role == "Instructor")
+                {
+                    <a href="/InstructorDashboard" class="nav-link">Dashboard</a>
+                    <a href="/InstructorDashboard/Offerings" class="nav-link">Offerings</a>
+                    <a href="/InstructorDashboard/Availability" class="nav-link">Availability</a>
+                }
+                @if (role == "Admin")
+                {
+                    <a href="/Admin" class="nav-link">Admin Panel</a>
+                }
+                <a href="/Profile" class="nav-link">Profile</a>
+                <a href="/Account/Logout" class="nav-link">Logout</a>
+            }
+            else
+            {
+                <a href="/Account/Login" class="nav-link">Login</a>
+                <a href="/Account/Register" class="nav-link">Register</a>
+            }
+        </div>
+    </nav>
+
+    <!-- Toast notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Main content -->
+    <main>
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div>
+                    <h3 class="footer-brand">BiDE</h3>
+                    <p class="footer-text">Your trusted platform for connecting with qualified driving instructors.</p>
+                </div>
+                <div>
+                    <h4 class="footer-heading">Students</h4>
+                    <a href="/Instructors" class="footer-link">Find Instructors</a>
+                    <a href="/Student/Bookings" class="footer-link">My Bookings</a>
+                </div>
+                <div>
+                    <h4 class="footer-heading">Instructors</h4>
+                    <a href="/Account/Register" class="footer-link">Become an Instructor</a>
+                    <a href="/InstructorDashboard" class="footer-link">Instructor Dashboard</a>
+                </div>
+                <div>
+                    <h4 class="footer-heading">Support</h4>
+                    <a href="#" class="footer-link">Help Center</a>
+                    <a href="#" class="footer-link">Contact Us</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; @DateTime.Now.Year BiDE. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/js/site.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
