@@ -26,6 +26,8 @@ namespace BiDE.Models
         [StringLength(500)]
         public string? Description { get; set; }
 
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         // Navigation properties
         [ForeignKey("InstructorId")]
         public Instructor Instructor { get; set; } = null!;

@@ -24,6 +24,8 @@ namespace BiDE.Models
         [StringLength(50)]
         public string AvailabilityStatus { get; set; } = "Available";
 
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         // Navigation properties
         [ForeignKey("InstructorId")]
         public Instructor Instructor { get; set; } = null!;

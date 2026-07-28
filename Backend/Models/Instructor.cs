@@ -1,7 +1,16 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BiDE.Models
 {
+    public enum InstructorStatus
+    {
+        Pending,
+        Approved,
+        Rejected,
+        Suspended
+    }
+
     public class Instructor
     {
         [Key]
@@ -39,7 +48,25 @@ namespace BiDE.Models
         [StringLength(100)]
         public string? Suburb { get; set; }
 
+        // Approval workflow fields
+        [Required]
+        public InstructorStatus Status { get; set; } = InstructorStatus.Pending;
+
+        public int? ApprovedByAdminId { get; set; }
+
+        public DateTime ApplicationDate { get; set; } = DateTime.UtcNow;
+
+        public DateTime? ApprovalDate { get; set; }
+
+        [StringLength(500)]
+        public string? RejectionReason { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         // Navigation properties
+        [ForeignKey("ApprovedByAdminId")]
+        public Admin? ApprovedByAdmin { get; set; }
+
         public ICollection<Availability> Availabilities { get; set; } = new List<Availability>();
         public ICollection<LessonOffering> LessonOfferings { get; set; } = new List<LessonOffering>();
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();

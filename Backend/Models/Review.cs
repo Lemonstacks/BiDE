@@ -12,6 +12,9 @@ namespace BiDE.Models
         public int BookingId { get; set; }
 
         [Required]
+        public int StudentId { get; set; }
+
+        [Required]
         [Range(1, 5)]
         public int Rating { get; set; }
 
@@ -23,5 +26,8 @@ namespace BiDE.Models
         // Navigation properties
         [ForeignKey("BookingId")]
         public Booking Booking { get; set; } = null!;
+
+        [ForeignKey("StudentId")]
+        public Student Student { get; set; } = null!;
     }
 }

@@ -2,8 +2,8 @@
 
 **BiDE** is a web-based driving lesson marketplace designed to connect learner drivers with verified driving instructors. The platform allows students to find instructors, request bookings, upload proof of payment, track lesson progress, and leave reviews. Instructors can manage lesson offerings, availability, booking requests, and payment verification, while administrators oversee users, instructor applications, bookings, payments, and reports.
 
-> **Project Status:** Documentation and planning phase.  
-> Coding has not started yet.
+> **Project Status:** In development.  
+> Backend structure and database schema are complete. Frontend integration pending.
 
 ---
 
@@ -62,7 +62,7 @@ Administrators manage the overall system by reviewing instructor applications, m
 
 ---
 
-## Planned Core Features
+## Core Features
 
 ### Student Features
 
@@ -126,6 +126,87 @@ Administrators manage the overall system by reviewing instructor applications, m
 
 ---
 
+## Technology Stack
+
+- **Backend:** ASP.NET MVC (.NET 8)
+- **ORM:** Entity Framework Core 8.0
+- **Database:** SQL Server (MSSQLSERVER01 instance)
+- **Frontend:** React (via Base44 — integration pending)
+- **IDE:** Visual Studio / Kiro
+- **Version Control:** Git and GitHub
+
+---
+
+## Database Schema
+
+The database consists of 9 tables with the following relationships:
+
+| Table | Description |
+|-------|-------------|
+| **Instructors** | Driving instructors with profile, credentials, and verification status |
+| **Students** | Learner drivers with profile information |
+| **Admins** | System administrators |
+| **Availabilities** | Instructor time slots (date, start/end time, status) |
+| **LessonOfferings** | Lesson packages instructors offer (type, title, price) |
+| **Bookings** | Links student, instructor, availability slot, and lesson offering |
+| **LessonProgresses** | Tracks individual lesson sessions within a booking |
+| **Payments** | Proof-of-payment records with verification workflow |
+| **Reviews** | Student ratings and comments after completed lessons |
+
+### Key Relationships
+
+```
+Instructor ──1:many──> Availabilities
+Instructor ──1:many──> LessonOfferings
+Instructor ──1:many──> Bookings
+Student ──1:many──> Bookings
+Booking ──many:1──> Availability (schedule slot)
+Booking ──many:1──> LessonOffering
+Booking ──1:many──> LessonProgresses
+Booking ──1:1──> Payment
+Booking ──1:1──> Review
+Payment ──many:1──> Instructor (verifier)
+```
+
+---
+
+## Repository Structure
+
+```text
+BiDE/
+├── README.md
+├── Backend/
+│   ├── BiDE.csproj
+│   ├── Program.cs
+│   ├── appsettings.json
+│   ├── Controllers/
+│   ├── Models/
+│   │   ├── Admin.cs
+│   │   ├── Availability.cs
+│   │   ├── Booking.cs
+│   │   ├── Instructor.cs
+│   │   ├── LessonOffering.cs
+│   │   ├── LessonProgress.cs
+│   │   ├── Payment.cs
+│   │   ├── Review.cs
+│   │   └── Student.cs
+│   ├── Data/
+│   │   └── ApplicationDbContext.cs
+│   ├── Migrations/
+│   ├── Services/
+│   ├── Views/
+│   └── wwwroot/
+├── Frontend/
+│   └── (React app — pending integration)
+└── Documentation/
+    ├── Database Design Diagrams/
+    ├── FSSB and Schedule/
+    ├── UI design items/
+    └── usecases inline/
+```
+
+---
+
 ## Documentation
 
 Project documentation is stored in the `Documentation/` folder.
@@ -136,46 +217,36 @@ Current documentation includes:
 - Use Case documentation
 - System Flow documentation
 - CRUD Matrix
-- Database and system design diagrams
-- UI design screenshots
+- Database and system design diagrams (Visio)
+- UI design preview (Base44)
 - Project feedback documents
 
 ---
 
-## Planned Technology Stack
+## Getting Started
 
-The final technology stack will be confirmed before implementation begins.
+### Prerequisites
 
-Expected technologies may include:
+- .NET 8 SDK
+- SQL Server (local instance)
+- Entity Framework Core CLI (`dotnet tool install --global dotnet-ef`)
 
-- HTML
-- CSS
-- JavaScript
-- ASP.NET MVC
-- SQL-based database
-- Visual Studio
-- Git and GitHub
+### Setup
 
----
+```bash
+cd Backend
+dotnet restore
+dotnet build
+dotnet ef database update
+dotnet run
+```
 
-## Proposed Repository Structure
+### Connection String
 
-```text
-BiDE/
-│
-├── README.md
-├── Documentation/
-│   ├── Functional-Specification.pdf
-│   ├── System-Flow.pdf
-│   ├── Use-Cases.pdf
-│   ├── CRUD-Matrix.xlsx
-│   ├── Database-Design.vsdx
-│   └── Feedback/
-│
-├── docs/
-│   ├── architecture.md
-│   ├── requirements.md
-│   └── roadmap.md
-│
-└── src/
-    └── Project source code will be added here once development begins.
+The application connects to SQL Server using Windows Authentication. Update `appsettings.json` if your server instance differs:
+
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Server=YOUR_SERVER\\INSTANCE;Database=BIDE;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=True;"
+}
+```

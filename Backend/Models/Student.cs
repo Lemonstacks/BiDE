@@ -32,7 +32,10 @@ namespace BiDE.Models
         [StringLength(255)]
         public string Password { get; set; } = string.Empty;
 
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         // Navigation properties
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+        public ICollection<Review> Reviews { get; set; } = new List<Review>();
     }
 }
