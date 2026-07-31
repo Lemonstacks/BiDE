@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BiDE.Data;
+using BiDE.Helpers;
 using BiDE.Models;
 
 namespace BiDE.Controllers
@@ -36,8 +37,8 @@ namespace BiDE.Controllers
 
             // Check Student
             var student = await _context.Students
-                .FirstOrDefaultAsync(s => s.Email == email && s.Password == password);
-            if (student != null)
+                .FirstOrDefaultAsync(s => s.Email == email);
+            if (student != null && PasswordHasher.Verify(password, student.Password))
             {
                 HttpContext.Session.SetInt32("UserId", student.StudentId);
                 HttpContext.Session.SetString("UserRole", "Student");
@@ -48,8 +49,8 @@ namespace BiDE.Controllers
 
             // Check Instructor
             var instructor = await _context.Instructors
-                .FirstOrDefaultAsync(i => i.Email == email && i.Password == password);
-            if (instructor != null)
+                .FirstOrDefaultAsync(i => i.Email == email);
+            if (instructor != null && PasswordHasher.Verify(password, instructor.Password))
             {
                 HttpContext.Session.SetInt32("UserId", instructor.InstructorId);
                 HttpContext.Session.SetString("UserRole", "Instructor");
@@ -60,8 +61,8 @@ namespace BiDE.Controllers
 
             // Check Admin
             var admin = await _context.Admins
-                .FirstOrDefaultAsync(a => a.Email == email && a.Password == password);
-            if (admin != null)
+                .FirstOrDefaultAsync(a => a.Email == email);
+            if (admin != null && PasswordHasher.Verify(password, admin.Password))
             {
                 HttpContext.Session.SetInt32("UserId", admin.AdminId);
                 HttpContext.Session.SetString("UserRole", "Admin");
@@ -132,7 +133,7 @@ namespace BiDE.Controllers
                     LastName = lastName,
                     Email = email,
                     Contact = contact,
-                    Password = password,
+                    Password = PasswordHasher.Hash(password),
                     Suburb = suburb,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -154,7 +155,7 @@ namespace BiDE.Controllers
                     LastName = lastName,
                     Email = email,
                     Contact = contact,
-                    Password = password,
+                    Password = PasswordHasher.Hash(password),
                     Suburb = suburb,
                     Status = InstructorStatus.Pending,
                     IsVerified = false,
