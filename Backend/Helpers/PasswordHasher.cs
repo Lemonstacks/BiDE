@@ -11,11 +11,26 @@ namespace BiDE.Helpers
         }
 
         /// <summary>
-        /// Verifies a plain-text password against a BCrypt hash.
+        /// Verifies a plain-text password against a stored password.
+        /// Handles both BCrypt hashes and legacy plain-text passwords.
         /// </summary>
-        public static bool Verify(string password, string hashedPassword)
+        public static bool Verify(string password, string storedPassword)
         {
-            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+            if (IsBCryptHash(storedPassword))
+            {
+                return BCrypt.Net.BCrypt.Verify(password, storedPassword);
+            }
+
+            // Legacy plain-text comparison
+            return password == storedPassword;
+        }
+
+        /// <summary>
+        /// Checks whether a stored password is a BCrypt hash (starts with $2).
+        /// </summary>
+        public static bool IsBCryptHash(string storedPassword)
+        {
+            return !string.IsNullOrEmpty(storedPassword) && storedPassword.StartsWith("$2");
         }
     }
 }

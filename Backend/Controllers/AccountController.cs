@@ -40,6 +40,13 @@ namespace BiDE.Controllers
                 .FirstOrDefaultAsync(s => s.Email == email);
             if (student != null && PasswordHasher.Verify(password, student.Password))
             {
+                // Upgrade legacy plain-text password to BCrypt hash
+                if (!PasswordHasher.IsBCryptHash(student.Password))
+                {
+                    student.Password = PasswordHasher.Hash(password);
+                    await _context.SaveChangesAsync();
+                }
+
                 HttpContext.Session.SetInt32("UserId", student.StudentId);
                 HttpContext.Session.SetString("UserRole", "Student");
                 HttpContext.Session.SetString("UserName", $"{student.FirstName} {student.LastName}");
@@ -52,6 +59,13 @@ namespace BiDE.Controllers
                 .FirstOrDefaultAsync(i => i.Email == email);
             if (instructor != null && PasswordHasher.Verify(password, instructor.Password))
             {
+                // Upgrade legacy plain-text password to BCrypt hash
+                if (!PasswordHasher.IsBCryptHash(instructor.Password))
+                {
+                    instructor.Password = PasswordHasher.Hash(password);
+                    await _context.SaveChangesAsync();
+                }
+
                 HttpContext.Session.SetInt32("UserId", instructor.InstructorId);
                 HttpContext.Session.SetString("UserRole", "Instructor");
                 HttpContext.Session.SetString("UserName", $"{instructor.FirstName} {instructor.LastName}");
@@ -64,6 +78,13 @@ namespace BiDE.Controllers
                 .FirstOrDefaultAsync(a => a.Email == email);
             if (admin != null && PasswordHasher.Verify(password, admin.Password))
             {
+                // Upgrade legacy plain-text password to BCrypt hash
+                if (!PasswordHasher.IsBCryptHash(admin.Password))
+                {
+                    admin.Password = PasswordHasher.Hash(password);
+                    await _context.SaveChangesAsync();
+                }
+
                 HttpContext.Session.SetInt32("UserId", admin.AdminId);
                 HttpContext.Session.SetString("UserRole", "Admin");
                 HttpContext.Session.SetString("UserName", $"{admin.FirstName} {admin.LastName}");
