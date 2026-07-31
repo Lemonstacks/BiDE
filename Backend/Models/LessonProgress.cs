@@ -14,6 +14,7 @@ namespace BiDE.Models
         [Required]
         public DateTime ProgressDate { get; set; }
 
+        [Range(1, int.MaxValue, ErrorMessage = "Duration must be a positive number.")]
         public int Duration { get; set; }
 
         public TimeSpan StartTime { get; set; }

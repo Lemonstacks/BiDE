@@ -108,6 +108,12 @@ namespace BiDE.Controllers
                 return View();
             }
 
+            if (password.Length < 8)
+            {
+                ViewBag.Error = "Password must be at least 8 characters.";
+                return View();
+            }
+
             if (role != "Student" && role != "Instructor")
             {
                 ViewBag.Error = "Please select a valid role.";

@@ -30,6 +30,7 @@ namespace BiDE.Models
 
         [Required]
         [StringLength(255)]
+        [MinLength(8, ErrorMessage = "Password must be at least 8 characters.")]
         public string Password { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

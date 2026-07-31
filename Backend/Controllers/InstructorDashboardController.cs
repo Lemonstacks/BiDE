@@ -107,6 +107,12 @@ namespace BiDE.Controllers
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.InstructorId == instructorId.Value);
             if (booking == null) return NotFound();
 
+            if (booking.Status != "Accepted")
+            {
+                TempData["Error"] = "Only accepted bookings can be marked as completed.";
+                return RedirectToAction("Index");
+            }
+
             booking.Status = "Completed";
             booking.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -138,6 +144,18 @@ namespace BiDE.Controllers
             var instructorId = GetInstructorId();
             if (instructorId == null) return RedirectToAction("Login", "Account");
 
+            if (date.Date < DateTime.UtcNow.Date)
+            {
+                TempData["Error"] = "Cannot add availability for a past date.";
+                return RedirectToAction("Availability");
+            }
+
+            if (endTime <= startTime)
+            {
+                TempData["Error"] = "End time must be after start time.";
+                return RedirectToAction("Availability");
+            }
+
             var slot = new Availability
             {
                 InstructorId = instructorId.Value,
@@ -166,12 +184,21 @@ namespace BiDE.Controllers
             var slot = await _context.Availabilities
                 .FirstOrDefaultAsync(a => a.AvailabilityId == id && a.InstructorId == instructorId.Value);
 
-            if (slot != null)
+            if (slot == null)
             {
-                _context.Availabilities.Remove(slot);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Slot removed.";
+                TempData["Error"] = "Slot not found.";
+                return RedirectToAction("Availability");
             }
+
+            if (slot.AvailabilityStatus == "Booked")
+            {
+                TempData["Error"] = "Cannot delete a slot that is already booked.";
+                return RedirectToAction("Availability");
+            }
+
+            _context.Availabilities.Remove(slot);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Slot removed.";
 
             return RedirectToAction("Availability");
         }
@@ -198,6 +225,18 @@ namespace BiDE.Controllers
         {
             var instructorId = GetInstructorId();
             if (instructorId == null) return RedirectToAction("Login", "Account");
+
+            if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(lessonType))
+            {
+                TempData["Error"] = "Title and lesson type are required.";
+                return RedirectToAction("Offerings");
+            }
+
+            if (price <= 0)
+            {
+                TempData["Error"] = "Price must be greater than zero.";
+                return RedirectToAction("Offerings");
+            }
 
             var offering = new LessonOffering
             {

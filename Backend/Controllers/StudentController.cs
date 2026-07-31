@@ -76,6 +76,12 @@ namespace BiDE.Controllers
 
             if (booking == null) return NotFound();
 
+            if (booking.Status != "Pending" && booking.Status != "Accepted")
+            {
+                TempData["Error"] = "This booking can no longer be cancelled.";
+                return RedirectToAction("Bookings");
+            }
+
             booking.Status = "Cancelled";
             booking.CancellationReason = reason;
             booking.CancelledBy = "Student";
@@ -112,6 +118,12 @@ namespace BiDE.Controllers
             if (existing)
             {
                 TempData["Error"] = "You have already reviewed this lesson.";
+                return RedirectToAction("CompletedLessons");
+            }
+
+            if (rating < 1 || rating > 5)
+            {
+                TempData["Error"] = "Rating must be between 1 and 5.";
                 return RedirectToAction("CompletedLessons");
             }
 

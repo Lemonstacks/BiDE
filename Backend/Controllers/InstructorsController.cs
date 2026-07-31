@@ -57,7 +57,7 @@ namespace BiDE.Controllers
         public async Task<IActionResult> Detail(int id)
         {
             var instructor = await _context.Instructors
-                .FirstOrDefaultAsync(i => i.InstructorId == id);
+                .FirstOrDefaultAsync(i => i.InstructorId == id && i.Status == InstructorStatus.Approved && i.IsVerified);
 
             if (instructor == null)
                 return NotFound();
@@ -99,13 +99,21 @@ namespace BiDE.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            // Verify entities exist
+            // Verify entities exist and belong to the instructor
             var offering = await _context.LessonOfferings.FindAsync(offerId);
             var schedule = await _context.Availabilities.FindAsync(scheduleId);
 
-            if (offering == null || schedule == null)
+            if (offering == null || schedule == null ||
+                offering.InstructorId != instructorId ||
+                schedule.InstructorId != instructorId)
             {
                 TempData["Error"] = "Invalid offering or schedule selection.";
+                return RedirectToAction("Detail", new { id = instructorId });
+            }
+
+            if (schedule.AvailabilityStatus != "Available")
+            {
+                TempData["Error"] = "This time slot is no longer available.";
                 return RedirectToAction("Detail", new { id = instructorId });
             }
 
