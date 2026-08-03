@@ -21,14 +21,14 @@
 
     <!-- Stats Overview -->
     <div class="grid-4" style="border: 1px solid var(--border); margin-bottom: 3rem;">
-        <div class="stat-card">
+        <a href="#pending-section" class="stat-card" style="text-decoration: none; color: inherit; cursor: pointer;">
             <p class="stat-value">@pending.Count</p>
             <p class="stat-label">Pending Applications</p>
-        </div>
-        <div class="stat-card">
+        </a>
+        <a href="#approved-section" class="stat-card" style="text-decoration: none; color: inherit; cursor: pointer;">
             <p class="stat-value">@approved.Count</p>
             <p class="stat-label">Approved Instructors</p>
-        </div>
+        </a>
         <div class="stat-card">
             <p class="stat-value">@totalStudents</p>
             <p class="stat-label">Registered Students</p>
@@ -40,7 +40,7 @@
     </div>
 
     <!-- Pending Applications -->
-    <div style="margin-bottom: 3rem;">
+    <div id="pending-section" style="margin-bottom: 3rem;">
         <p class="detail-section-title">Pending Applications (@pending.Count)</p>
         <hr class="detail-divider" />
 
@@ -89,7 +89,7 @@
 
 
     <!-- Approved Instructors -->
-    <div style="margin-bottom: 3rem;">
+    <div id="approved-section" style="margin-bottom: 3rem;">
         <p class="detail-section-title">Approved Instructors (@approved.Count)</p>
         <hr class="detail-divider" />
 

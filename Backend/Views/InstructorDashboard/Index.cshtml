@@ -28,26 +28,26 @@
 
     <!-- Stats -->
     <div class="grid-4" style="border: 1px solid var(--border); margin-bottom: 3rem;">
-        <div class="stat-card">
+        <a href="#pending-section" class="stat-card" style="text-decoration: none; color: inherit; cursor: pointer;">
             <svg class="stat-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <p class="stat-value">@pending.Count</p>
             <p class="stat-label">Pending Requests</p>
-        </div>
-        <div class="stat-card">
+        </a>
+        <a href="#upcoming-section" class="stat-card" style="text-decoration: none; color: inherit; cursor: pointer;">
             <svg class="stat-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             <p class="stat-value">@accepted.Count</p>
             <p class="stat-label">Upcoming Lessons</p>
-        </div>
-        <div class="stat-card">
+        </a>
+        <a href="/InstructorDashboard/LessonProgress" class="stat-card" style="text-decoration: none; color: inherit; cursor: pointer;">
             <svg class="stat-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             <p class="stat-value">@completed.Count</p>
             <p class="stat-label">Completed</p>
-        </div>
-        <div class="stat-card">
+        </a>
+        <a href="/InstructorDashboard/Payments" class="stat-card" style="text-decoration: none; color: inherit; cursor: pointer;">
             <svg class="stat-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
             <p class="stat-value">@totalBookings</p>
             <p class="stat-label">Total Bookings</p>
-        </div>
+        </a>
     </div>
 
     <!-- Quick Links -->
@@ -67,7 +67,7 @@
     <!-- Pending Requests -->
     @if (pending.Count > 0)
     {
-        <p class="detail-section-title">Pending Requests</p>
+        <p id="pending-section" class="detail-section-title">Pending Requests</p>
         <div style="margin-bottom: 2rem;">
             @foreach (var b in pending.Take(10))
             {
@@ -106,7 +106,7 @@
     <!-- Accepted / Upcoming -->
     @if (accepted.Count > 0)
     {
-        <p class="detail-section-title">Upcoming Lessons</p>
+        <p id="upcoming-section" class="detail-section-title">Upcoming Lessons</p>
         <div>
             @foreach (var b in accepted.Take(10))
             {
