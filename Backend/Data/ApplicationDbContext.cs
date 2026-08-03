@@ -127,7 +127,7 @@ namespace BiDE.Data
                       .HasForeignKey(r => r.StudentId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
-            // Seed Admin
+            // Seed Admin (password: Admin123)
             modelBuilder.Entity<Admin>().HasData(
                 new Admin
                 {
