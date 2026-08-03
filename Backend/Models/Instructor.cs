@@ -61,6 +61,9 @@ namespace BiDE.Models
         [StringLength(500)]
         public string? RejectionReason { get; set; }
 
+        [StringLength(255)]
+        public string? ProfilePicture { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties

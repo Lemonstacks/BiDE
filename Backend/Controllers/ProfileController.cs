@@ -8,10 +8,12 @@ namespace BiDE.Controllers
     public class ProfileController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public ProfileController(ApplicationDbContext context)
+        public ProfileController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         // GET: /Profile
@@ -46,7 +48,7 @@ namespace BiDE.Controllers
         // POST: /Profile/UpdateStudent
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateStudent(string firstName, string lastName, string contact, string? suburb)
+        public async Task<IActionResult> UpdateStudent(string firstName, string lastName, string contact, string? suburb, IFormFile? profilePicture)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null) return RedirectToAction("Login", "Account");
@@ -58,6 +60,30 @@ namespace BiDE.Controllers
             student.LastName = lastName;
             student.Contact = contact;
             student.Suburb = suburb;
+
+            if (profilePicture != null && profilePicture.Length > 0)
+            {
+                var uploadsDir = Path.Combine(_env.WebRootPath, "uploads", "profiles");
+                Directory.CreateDirectory(uploadsDir);
+
+                var fileName = $"student_{userId.Value}_{Path.GetRandomFileName()}{Path.GetExtension(profilePicture.FileName)}";
+                var filePath = Path.Combine(uploadsDir, fileName);
+
+                // Delete old picture if exists
+                if (!string.IsNullOrEmpty(student.ProfilePicture))
+                {
+                    var oldPath = Path.Combine(_env.WebRootPath, student.ProfilePicture.TrimStart('/'));
+                    if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+                }
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await profilePicture.CopyToAsync(stream);
+                }
+
+                student.ProfilePicture = $"/uploads/profiles/{fileName}";
+            }
+
             await _context.SaveChangesAsync();
 
             HttpContext.Session.SetString("UserName", $"{student.FirstName} {student.LastName}");
@@ -70,7 +96,7 @@ namespace BiDE.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateInstructor(
             string firstName, string lastName, string contact,
-            string? suburb, string? certification, int experience)
+            string? suburb, string? certification, int experience, IFormFile? profilePicture)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null) return RedirectToAction("Login", "Account");
@@ -84,6 +110,30 @@ namespace BiDE.Controllers
             instructor.Suburb = suburb;
             instructor.Certification = certification;
             instructor.Experience = experience;
+
+            if (profilePicture != null && profilePicture.Length > 0)
+            {
+                var uploadsDir = Path.Combine(_env.WebRootPath, "uploads", "profiles");
+                Directory.CreateDirectory(uploadsDir);
+
+                var fileName = $"instructor_{userId.Value}_{Path.GetRandomFileName()}{Path.GetExtension(profilePicture.FileName)}";
+                var filePath = Path.Combine(uploadsDir, fileName);
+
+                // Delete old picture if exists
+                if (!string.IsNullOrEmpty(instructor.ProfilePicture))
+                {
+                    var oldPath = Path.Combine(_env.WebRootPath, instructor.ProfilePicture.TrimStart('/'));
+                    if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+                }
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await profilePicture.CopyToAsync(stream);
+                }
+
+                instructor.ProfilePicture = $"/uploads/profiles/{fileName}";
+            }
+
             await _context.SaveChangesAsync();
 
             HttpContext.Session.SetString("UserName", $"{instructor.FirstName} {instructor.LastName}");

@@ -15,8 +15,25 @@
         <div class="alert alert-info">@success</div>
     }
 
-    <form method="post" asp-action="UpdateStudent" asp-controller="Profile">
+    <form method="post" asp-action="UpdateStudent" asp-controller="Profile" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
+
+        <div class="form-group" style="text-align: center; margin-bottom: 1.5rem;">
+            <div style="margin-bottom: 0.75rem;">
+                @if (!string.IsNullOrEmpty(Model.ProfilePicture))
+                {
+                    <img src="@Model.ProfilePicture" alt="Profile Picture" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover;" />
+                }
+                else
+                {
+                    <div style="width: 120px; height: 120px; border-radius: 50%; background: #e2e8f0; display: inline-flex; align-items: center; justify-content: center; font-size: 2rem; color: #94a3b8;">
+                        @Model.FirstName[0]@Model.LastName[0]
+                    </div>
+                }
+            </div>
+            <label class="form-label">Profile Picture</label>
+            <input type="file" name="profilePicture" accept="image/*" class="form-input" />
+        </div>
 
         <div class="form-group">
             <label class="form-label">Email</label>
