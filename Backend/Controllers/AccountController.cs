@@ -140,7 +140,7 @@ namespace BiDE.Controllers
                 _context.Students.Add(student);
                 await _context.SaveChangesAsync();
 
-                // Auto-login
+                // Auto-login 
                 HttpContext.Session.SetInt32("UserId", student.StudentId);
                 HttpContext.Session.SetString("UserRole", "Student");
                 HttpContext.Session.SetString("UserName", $"{student.FirstName} {student.LastName}");

@@ -127,6 +127,17 @@ namespace BiDE.Data
                       .HasForeignKey(r => r.StudentId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
+            // Seed Admin
+            modelBuilder.Entity<Admin>().HasData(
+                new Admin
+                {
+                    AdminId = 1,
+                    FirstName = "System",
+                    LastName = "Administrator",
+                    Contact = "0712345678",
+                    Email = "admin@bide.com",
+                    Password = "Admin123"
+                });
         }
     }
 }
