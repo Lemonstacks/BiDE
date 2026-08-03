@@ -1,0 +1,198 @@
+@{
+    ViewData["Title"] = "Admin Panel";
+    var pending = ViewBag.Pending as List<Instructor> ?? new List<Instructor>();
+    var approved = ViewBag.Approved as List<Instructor> ?? new List<Instructor>();
+    var rejected = ViewBag.Rejected as List<Instructor> ?? new List<Instructor>();
+    int totalStudents = ViewBag.TotalStudents;
+    int totalBookings = ViewBag.TotalBookings;
+    var success = TempData["Success"] as string;
+}
+
+<div class="page-container">
+    <div class="section-header">
+        <p class="section-label">Administration</p>
+        <h1 class="section-title">Admin Panel</h1>
+    </div>
+
+    @if (!string.IsNullOrEmpty(success))
+    {
+        <div class="alert alert-info">@success</div>
+    }
+
+    <!-- Stats Overview -->
+    <div class="grid-4" style="border: 1px solid var(--border); margin-bottom: 3rem;">
+        <div class="stat-card">
+            <p class="stat-value">@pending.Count</p>
+            <p class="stat-label">Pending Applications</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-value">@approved.Count</p>
+            <p class="stat-label">Approved Instructors</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-value">@totalStudents</p>
+            <p class="stat-label">Registered Students</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-value">@totalBookings</p>
+            <p class="stat-label">Total Bookings</p>
+        </div>
+    </div>
+
+    <!-- Pending Applications -->
+    <div style="margin-bottom: 3rem;">
+        <p class="detail-section-title">Pending Applications (@pending.Count)</p>
+        <hr class="detail-divider" />
+
+        @if (pending.Count == 0)
+        {
+            <p class="text-sm text-muted">No pending applications.</p>
+        }
+        else
+        {
+            @foreach (var i in pending)
+            {
+                <div class="card">
+                    <div class="card-row">
+                        <div>
+                            <p class="card-title">@i.FirstName @i.LastName</p>
+                            <p class="card-subtitle">@i.Email | @i.Contact</p>
+                            <div class="card-meta">
+                                @if (!string.IsNullOrEmpty(i.Suburb))
+                                {
+                                    <span class="card-meta-item">@i.Suburb</span>
+                                }
+                                <span class="card-meta-item">@i.Experience yrs exp</span>
+                                @if (!string.IsNullOrEmpty(i.Certification))
+                                {
+                                    <span class="card-meta-item">@i.Certification</span>
+                                }
+                                <span class="card-meta-item">Applied: @i.ApplicationDate.ToString("MMM d, yyyy")</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <form method="post" asp-action="Approve" style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="instructorId" value="@i.InstructorId" />
+                                <button type="submit" class="btn btn-primary btn-sm">Approve</button>
+                            </form>
+                            <button type="button" class="btn btn-destructive btn-sm"
+                                    onclick="openRejectModal(@i.InstructorId, '@i.FirstName @i.LastName')">
+                                Reject
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+
+    <!-- Approved Instructors -->
+    <div style="margin-bottom: 3rem;">
+        <p class="detail-section-title">Approved Instructors (@approved.Count)</p>
+        <hr class="detail-divider" />
+
+        @if (approved.Count == 0)
+        {
+            <p class="text-sm text-muted">No approved instructors yet.</p>
+        }
+        else
+        {
+            @foreach (var i in approved)
+            {
+                <div class="card">
+                    <div class="card-row">
+                        <div>
+                            <p class="card-title">@i.FirstName @i.LastName</p>
+                            <p class="card-subtitle">@i.Email | @i.Suburb</p>
+                            <div class="card-meta">
+                                <span class="card-meta-item">@i.Experience yrs exp</span>
+                                @if (i.ApprovalDate.HasValue)
+                                {
+                                    <span class="card-meta-item">Approved: @i.ApprovalDate.Value.ToString("MMM d, yyyy")</span>
+                                }
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span class="badge badge-approved">Approved</span>
+                            <form method="post" asp-action="Suspend" style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="instructorId" value="@i.InstructorId" />
+                                <button type="submit" class="btn btn-destructive btn-sm"
+                                        onclick="return confirm('Suspend @i.FirstName @i.LastName?')">
+                                    Suspend
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Rejected / Suspended -->
+    @if (rejected.Count > 0)
+    {
+        <div>
+            <p class="detail-section-title">Rejected / Suspended (@rejected.Count)</p>
+            <hr class="detail-divider" />
+            @foreach (var i in rejected)
+            {
+                <div class="card">
+                    <div class="card-row">
+                        <div>
+                            <p class="card-title">@i.FirstName @i.LastName</p>
+                            <p class="card-subtitle">@i.Email</p>
+                            @if (!string.IsNullOrEmpty(i.RejectionReason))
+                            {
+                                <p class="text-xs text-destructive mt-1">Reason: @i.RejectionReason</p>
+                            }
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span class="badge badge-rejected">@i.Status</span>
+                            <form method="post" asp-action="Reinstate" style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="instructorId" value="@i.InstructorId" />
+                                <button type="submit" class="btn btn-sm">Reinstate</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Reject Modal -->
+<div class="modal-overlay" id="rejectModal">
+    <div class="modal" style="position: relative;">
+        <button class="modal-close" onclick="closeModal('rejectModal')">&times;</button>
+        <h3 class="modal-title">Reject Application</h3>
+        <p class="text-sm text-muted mb-4" id="reject-name"></p>
+
+        <form method="post" asp-action="Reject">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="instructorId" id="reject-instructor-id" value="" />
+            <div class="form-group">
+                <label class="form-label">Reason (optional)</label>
+                <textarea name="reason" class="form-textarea" rows="3"
+                          placeholder="Provide a reason for rejection..."></textarea>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button type="button" class="btn" onclick="closeModal('rejectModal')" style="flex:1;">Cancel</button>
+                <button type="submit" class="btn btn-destructive" style="flex:1;">Confirm Rejection</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function openRejectModal(instructorId, name) {
+    document.getElementById('reject-instructor-id').value = instructorId;
+    document.getElementById('reject-name').textContent = 'Rejecting: ' + name;
+    openModal('rejectModal');
+}
+</script>
+}

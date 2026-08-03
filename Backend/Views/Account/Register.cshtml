@@ -1,0 +1,82 @@
+@{
+    ViewData["Title"] = "Register";
+    var error = ViewBag.Error as string;
+}
+
+<div class="page-container-narrow">
+    <div class="section-header text-center">
+        <p class="section-label">Get Started</p>
+        <h1 class="section-title">Create Account</h1>
+    </div>
+
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <div class="alert alert-error">@error</div>
+    }
+
+    <form method="post" asp-action="Register" asp-controller="Account">
+        @Html.AntiForgeryToken()
+
+        <div class="form-group">
+            <label class="form-label">I want to register as</label>
+            <select name="role" class="form-select" required>
+                <option value="">-- Select Role --</option>
+                <option value="Student">Student (I want to learn to drive)</option>
+                <option value="Instructor">Instructor (I want to teach)</option>
+            </select>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">First Name *</label>
+                <input type="text" name="firstName" class="form-input"
+                       placeholder="First name" required />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Last Name *</label>
+                <input type="text" name="lastName" class="form-input"
+                       placeholder="Last name" required />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Email Address *</label>
+            <input type="email" name="email" class="form-input"
+                   placeholder="you@example.com" required />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Phone Number *</label>
+            <input type="tel" name="contact" class="form-input"
+                   placeholder="e.g. 0812345678" required />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Suburb / Area</label>
+            <input type="text" name="suburb" class="form-input"
+                   placeholder="e.g. Johannesburg North" />
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Password *</label>
+                <input type="password" name="password" class="form-input"
+                       placeholder="Min 6 characters" required minlength="6" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Confirm Password *</label>
+                <input type="password" name="confirmPassword" class="form-input"
+                       placeholder="Repeat password" required minlength="6" />
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top: 0.5rem;">
+            Create Account
+        </button>
+    </form>
+
+    <p class="text-center text-sm text-muted" style="margin-top: 2rem;">
+        Already have an account?
+        <a href="/Account/Login" style="color: var(--primary); font-weight: 500;">Sign in</a>
+    </p>
+</div>
