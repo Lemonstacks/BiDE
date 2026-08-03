@@ -22,6 +22,7 @@
                     @if (role == "Student")
                     {
                         <a href="/Student/Bookings" class="nav-link">My Bookings</a>
+                        <a href="/Student/LessonProgress" class="nav-link">Progress</a>
                         <a href="/Student/CompletedLessons" class="nav-link">Completed</a>
                     }
                     @if (role == "Instructor")
@@ -29,6 +30,7 @@
                         <a href="/InstructorDashboard" class="nav-link">Dashboard</a>
                         <a href="/InstructorDashboard/Offerings" class="nav-link">Offerings</a>
                         <a href="/InstructorDashboard/Availability" class="nav-link">Availability</a>
+                        <a href="/InstructorDashboard/Payments" class="nav-link">Payments</a>
                     }
                     @if (role == "Admin")
                     {
@@ -56,6 +58,7 @@
                 @if (role == "Student")
                 {
                     <a href="/Student/Bookings" class="nav-link">My Bookings</a>
+                    <a href="/Student/LessonProgress" class="nav-link">Progress</a>
                     <a href="/Student/CompletedLessons" class="nav-link">Completed</a>
                 }
                 @if (role == "Instructor")

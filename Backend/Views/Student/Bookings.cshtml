@@ -37,6 +37,9 @@
             <div style="margin-bottom: 3rem;">
                 @foreach (var b in active)
                 {
+                    var payment = b.Payment;
+                    var paymentStatus = payment?.PaymentStatus ?? "Unpaid";
+
                     <div class="card">
                         <div class="card-row">
                             <div>
@@ -51,10 +54,35 @@
                                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                         @(b.Schedule?.StartTime.ToString(@"hh\:mm") ?? "") - @(b.Schedule?.EndTime.ToString(@"hh\:mm") ?? "")
                                     </span>
+                                    <span class="card-meta-item">
+                                        R@(b.LessonOffering?.Price.ToString("N0") ?? "0")
+                                    </span>
                                 </div>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                                 <span class="badge badge-@b.Status.ToLower()">@b.Status</span>
+
+                                @if (paymentStatus == "Verified")
+                                {
+                                    <span class="badge badge-completed">Paid</span>
+                                }
+                                else if (paymentStatus == "Pending")
+                                {
+                                    <span class="badge badge-pending">Payment Pending</span>
+                                }
+                                else if (paymentStatus == "Rejected")
+                                {
+                                    <span class="badge badge-rejected">Payment Rejected</span>
+                                }
+
+                                @if (b.Status == "Accepted" && paymentStatus != "Verified" && paymentStatus != "Pending")
+                                {
+                                    <button type="button" class="btn btn-primary btn-sm"
+                                            onclick="openPaymentModal(@b.BookingId, '@(b.LessonOffering?.Title ?? "Lesson")', '@(b.LessonOffering?.Price.ToString("N0") ?? "0")')">
+                                        Pay
+                                    </button>
+                                }
+
                                 @if (b.Status == "Pending")
                                 {
                                     <button type="button" class="btn btn-destructive btn-sm"
@@ -73,6 +101,9 @@
             <div>
                 @foreach (var b in past)
                 {
+                    var payment = b.Payment;
+                    var paymentStatus = payment?.PaymentStatus ?? "Unpaid";
+
                     <div class="card">
                         <div class="card-row">
                             <div>
@@ -84,7 +115,13 @@
                                     </span>
                                 </div>
                             </div>
-                            <span class="badge badge-@b.Status.ToLower()">@b.Status</span>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span class="badge badge-@b.Status.ToLower()">@b.Status</span>
+                                @if (paymentStatus == "Verified")
+                                {
+                                    <span class="badge badge-completed">Paid</span>
+                                }
+                            </div>
                         </div>
                     </div>
                 }
@@ -117,11 +154,54 @@
     </div>
 </div>
 
+<!-- Payment Modal -->
+<div class="modal-overlay" id="paymentModal">
+    <div class="modal" style="position: relative;">
+        <button class="modal-close" onclick="closeModal('paymentModal')">&times;</button>
+        <h3 class="modal-title">Submit Payment</h3>
+
+        <div style="padding: 0.75rem; background: var(--bg-muted); margin-bottom: 1rem; font-size: 0.875rem;">
+            <p class="font-bold" id="payment-lesson-title"></p>
+            <p class="text-muted text-xs mt-1">Amount: R<span id="payment-amount"></span></p>
+        </div>
+
+        <form method="post" asp-action="SubmitPayment" asp-controller="Student" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="bookingId" id="payment-booking-id" value="" />
+
+            <div class="form-group">
+                <label class="form-label">Payment Method *</label>
+                <select name="paymentMethod" class="form-select" required>
+                    <option value="">-- Select --</option>
+                    <option value="EFT">EFT / Bank Transfer</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Proof of Payment *</label>
+                <input type="file" name="proofOfPayment" accept="image/*,.pdf" class="form-input" required />
+                <p class="text-xs text-muted mt-1">Upload a screenshot or PDF of your payment confirmation.</p>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">Submit Payment</button>
+        </form>
+    </div>
+</div>
+
 @section Scripts {
 <script>
 function openCancelModal(bookingId) {
     document.getElementById('cancel-booking-id').value = bookingId;
     openModal('cancelModal');
+}
+
+function openPaymentModal(bookingId, title, amount) {
+    document.getElementById('payment-booking-id').value = bookingId;
+    document.getElementById('payment-lesson-title').textContent = title;
+    document.getElementById('payment-amount').textContent = amount;
+    openModal('paymentModal');
 }
 </script>
 }

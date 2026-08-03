@@ -110,6 +110,8 @@
         <div>
             @foreach (var b in accepted.Take(10))
             {
+                var paymentStatus = b.Payment?.PaymentStatus ?? "Unpaid";
+
                 <div class="card">
                     <div class="card-row">
                         <div>
@@ -121,7 +123,19 @@
                                 </span>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            @if (paymentStatus == "Verified")
+                            {
+                                <span class="badge badge-completed">Paid</span>
+                            }
+                            else if (paymentStatus == "Pending")
+                            {
+                                <span class="badge badge-pending">Payment Pending</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-rejected">Unpaid</span>
+                            }
                             <span class="badge badge-accepted">Accepted</span>
                             <form method="post" asp-action="CompleteBooking" style="display:inline;">
                                 @Html.AntiForgeryToken()

@@ -34,6 +34,7 @@ namespace BiDE.Controllers
                 .Include(b => b.Student)
                 .Include(b => b.LessonOffering)
                 .Include(b => b.Schedule)
+                .Include(b => b.Payment)
                 .Where(b => b.InstructorId == instructorId.Value)
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
@@ -304,6 +305,70 @@ namespace BiDE.Controllers
 
             TempData["Success"] = "Progress recorded.";
             return RedirectToAction("LessonProgress");
+        }
+
+        // GET: /InstructorDashboard/Payments
+        public async Task<IActionResult> Payments()
+        {
+            var instructorId = GetInstructorId();
+            if (instructorId == null) return RedirectToAction("Login", "Account");
+
+            var payments = await _context.Payments
+                .Include(p => p.Booking)
+                    .ThenInclude(b => b.Student)
+                .Include(p => p.Booking)
+                    .ThenInclude(b => b.LessonOffering)
+                .Include(p => p.Booking)
+                    .ThenInclude(b => b.Schedule)
+                .Where(p => p.InstructorId == instructorId.Value)
+                .OrderByDescending(p => p.PaymentDate)
+                .ToListAsync();
+
+            ViewBag.Pending = payments.Where(p => p.PaymentStatus == "Pending").ToList();
+            ViewBag.Verified = payments.Where(p => p.PaymentStatus == "Verified").ToList();
+            ViewBag.Rejected = payments.Where(p => p.PaymentStatus == "Rejected").ToList();
+
+            return View(payments);
+        }
+
+        // POST: /InstructorDashboard/VerifyPayment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyPayment(int paymentId)
+        {
+            var instructorId = GetInstructorId();
+            if (instructorId == null) return RedirectToAction("Login", "Account");
+
+            var payment = await _context.Payments
+                .FirstOrDefaultAsync(p => p.PaymentId == paymentId && p.InstructorId == instructorId.Value);
+            if (payment == null) return NotFound();
+
+            payment.PaymentStatus = "Verified";
+            payment.VerificationDate = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Payment verified.";
+            return RedirectToAction("Payments");
+        }
+
+        // POST: /InstructorDashboard/RejectPayment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectPayment(int paymentId)
+        {
+            var instructorId = GetInstructorId();
+            if (instructorId == null) return RedirectToAction("Login", "Account");
+
+            var payment = await _context.Payments
+                .FirstOrDefaultAsync(p => p.PaymentId == paymentId && p.InstructorId == instructorId.Value);
+            if (payment == null) return NotFound();
+
+            payment.PaymentStatus = "Rejected";
+            payment.VerificationDate = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Payment rejected.";
+            return RedirectToAction("Payments");
         }
     }
 }

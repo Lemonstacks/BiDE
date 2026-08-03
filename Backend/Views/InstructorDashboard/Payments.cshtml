@@ -1,0 +1,129 @@
+@model List<Payment>
+@{
+    ViewData["Title"] = "Payments";
+    var pending = ViewBag.Pending as List<Payment> ?? new List<Payment>();
+    var verified = ViewBag.Verified as List<Payment> ?? new List<Payment>();
+    var rejected = ViewBag.Rejected as List<Payment> ?? new List<Payment>();
+    var success = TempData["Success"] as string;
+}
+
+<div class="page-container">
+    <div class="section-header">
+        <p class="section-label">Instructor</p>
+        <h1 class="section-title">Payments</h1>
+    </div>
+
+    @if (!string.IsNullOrEmpty(success))
+    {
+        <div class="alert alert-info">@success</div>
+    }
+
+    @if (Model.Count == 0)
+    {
+        <div class="empty-state" style="padding: 4rem;">
+            <p class="text-muted">No payments submitted yet. Payments will appear here once students submit proof of payment.</p>
+        </div>
+    }
+    else
+    {
+        <!-- Pending Payments -->
+        @if (pending.Count > 0)
+        {
+            <p class="detail-section-title">Awaiting Verification (@pending.Count)</p>
+            <div style="margin-bottom: 3rem;">
+                @foreach (var p in pending)
+                {
+                    <div class="card">
+                        <div class="card-row">
+                            <div>
+                                <p class="card-title">@(p.Booking.LessonOffering?.Title ?? "Lesson")</p>
+                                <p class="card-subtitle">@p.Booking.Student.FirstName @p.Booking.Student.LastName (@p.Booking.Student.Email)</p>
+                                <div class="card-meta">
+                                    <span class="card-meta-item">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                        @(p.Booking.Schedule?.Date.ToString("MMM d, yyyy") ?? "")
+                                    </span>
+                                    <span class="card-meta-item">
+                                        R@(p.Amount.ToString("N0"))
+                                    </span>
+                                    <span class="card-meta-item">
+                                        @p.PaymentMethod
+                                    </span>
+                                    <span class="card-meta-item">
+                                        Submitted: @(p.PaymentDate?.ToString("MMM d, yyyy") ?? "")
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                                @if (!string.IsNullOrEmpty(p.ProofOfPayment))
+                                {
+                                    <a href="@p.ProofOfPayment" target="_blank" class="btn btn-sm">View Proof</a>
+                                }
+                                <form method="post" asp-action="VerifyPayment" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="paymentId" value="@p.PaymentId" />
+                                    <button type="submit" class="btn btn-primary btn-sm">Verify</button>
+                                </form>
+                                <form method="post" asp-action="RejectPayment" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="paymentId" value="@p.PaymentId" />
+                                    <button type="submit" class="btn btn-destructive btn-sm"
+                                            onclick="return confirm('Reject this payment?')">Reject</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Verified Payments -->
+        @if (verified.Count > 0)
+        {
+            <p class="detail-section-title">Verified (@verified.Count)</p>
+            <div style="margin-bottom: 3rem;">
+                @foreach (var p in verified)
+                {
+                    <div class="card">
+                        <div class="card-row">
+                            <div>
+                                <p class="card-title">@(p.Booking.LessonOffering?.Title ?? "Lesson")</p>
+                                <p class="card-subtitle">@p.Booking.Student.FirstName @p.Booking.Student.LastName</p>
+                                <div class="card-meta">
+                                    <span class="card-meta-item">R@(p.Amount.ToString("N0"))</span>
+                                    <span class="card-meta-item">@p.PaymentMethod</span>
+                                    <span class="card-meta-item">Verified: @(p.VerificationDate?.ToString("MMM d, yyyy") ?? "")</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-completed">Verified</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Rejected Payments -->
+        @if (rejected.Count > 0)
+        {
+            <p class="detail-section-title">Rejected (@rejected.Count)</p>
+            <div>
+                @foreach (var p in rejected)
+                {
+                    <div class="card">
+                        <div class="card-row">
+                            <div>
+                                <p class="card-title">@(p.Booking.LessonOffering?.Title ?? "Lesson")</p>
+                                <p class="card-subtitle">@p.Booking.Student.FirstName @p.Booking.Student.LastName</p>
+                                <div class="card-meta">
+                                    <span class="card-meta-item">R@(p.Amount.ToString("N0"))</span>
+                                    <span class="card-meta-item">@p.PaymentMethod</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-rejected">Rejected</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>

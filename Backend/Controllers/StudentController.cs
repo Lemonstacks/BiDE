@@ -8,10 +8,12 @@ namespace BiDE.Controllers
     public class StudentController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public StudentController(ApplicationDbContext context)
+        public StudentController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         private int? GetStudentId()
@@ -31,6 +33,7 @@ namespace BiDE.Controllers
                 .Include(b => b.Instructor)
                 .Include(b => b.LessonOffering)
                 .Include(b => b.Schedule)
+                .Include(b => b.Payment)
                 .Where(b => b.StudentId == studentId.Value)
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
@@ -56,6 +59,25 @@ namespace BiDE.Controllers
                 .Include(b => b.Review)
                 .Include(b => b.LessonProgresses)
                 .Where(b => b.StudentId == studentId.Value && b.Status == "Completed")
+                .OrderByDescending(b => b.CreatedAt)
+                .ToListAsync();
+
+            return View(bookings);
+        }
+
+        // GET: /Student/LessonProgress
+        public async Task<IActionResult> LessonProgress()
+        {
+            var studentId = GetStudentId();
+            if (studentId == null) return RedirectToAction("Login", "Account");
+
+            var bookings = await _context.Bookings
+                .Include(b => b.Instructor)
+                .Include(b => b.LessonOffering)
+                .Include(b => b.Schedule)
+                .Include(b => b.LessonProgresses)
+                .Where(b => b.StudentId == studentId.Value &&
+                       (b.Status == "Accepted" || b.Status == "Completed"))
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
@@ -129,6 +151,76 @@ namespace BiDE.Controllers
 
             TempData["Success"] = "Review submitted. Thank you!";
             return RedirectToAction("CompletedLessons");
+        }
+
+        // POST: /Student/SubmitPayment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitPayment(int bookingId, string paymentMethod, IFormFile proofOfPayment)
+        {
+            var studentId = GetStudentId();
+            if (studentId == null) return RedirectToAction("Login", "Account");
+
+            var booking = await _context.Bookings
+                .Include(b => b.LessonOffering)
+                .Include(b => b.Payment)
+                .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.StudentId == studentId.Value);
+
+            if (booking == null) return NotFound();
+
+            // Don't allow payment if already paid
+            if (booking.Payment != null && booking.Payment.PaymentStatus == "Verified")
+            {
+                TempData["Error"] = "Payment already verified for this booking.";
+                return RedirectToAction("Bookings");
+            }
+
+            // Save proof of payment file
+            string? proofPath = null;
+            if (proofOfPayment != null && proofOfPayment.Length > 0)
+            {
+                var uploadsDir = Path.Combine(_env.WebRootPath, "uploads", "payments");
+                Directory.CreateDirectory(uploadsDir);
+
+                var fileName = $"payment_{bookingId}_{Path.GetRandomFileName()}{Path.GetExtension(proofOfPayment.FileName)}";
+                var filePath = Path.Combine(uploadsDir, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await proofOfPayment.CopyToAsync(stream);
+                }
+
+                proofPath = $"/uploads/payments/{fileName}";
+            }
+
+            if (booking.Payment != null)
+            {
+                // Update existing payment record
+                booking.Payment.PaymentMethod = paymentMethod;
+                booking.Payment.ProofOfPayment = proofPath;
+                booking.Payment.PaymentStatus = "Pending";
+                booking.Payment.PaymentDate = DateTime.UtcNow;
+            }
+            else
+            {
+                // Create new payment record
+                var payment = new Payment
+                {
+                    BookingId = bookingId,
+                    InstructorId = booking.InstructorId,
+                    Amount = booking.LessonOffering?.Price ?? 0,
+                    PaymentMethod = paymentMethod,
+                    ProofOfPayment = proofPath,
+                    PaymentStatus = "Pending",
+                    PaymentDate = DateTime.UtcNow
+                };
+                _context.Payments.Add(payment);
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Payment submitted. Your instructor will verify it shortly.";
+            return RedirectToAction("Bookings");
         }
     }
 }
