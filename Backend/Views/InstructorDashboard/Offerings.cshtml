@@ -46,7 +46,7 @@
                     <p class="offering-title">@o.Title</p>
                     <div class="offering-meta">
                         <span class="offering-type">@o.LessonType</span>
-                        <span>R@o.Price.ToString("N0")</span>
+                        <span>R@(o.Price.ToString("N0"))</span>
                         @if (!string.IsNullOrEmpty(o.Description))
                         {
                             <span>@o.Description</span>

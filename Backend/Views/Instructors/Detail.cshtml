@@ -84,9 +84,9 @@
                                 </div>
                             </div>
                             <div class="offering-right">
-                                <p class="offering-price">R@o.Price.ToString("N0")</p>
+                                <p class="offering-price">R@(o.Price.ToString("N0"))</p>
                                 <button type="button" class="btn btn-primary btn-sm" style="margin-top: 0.5rem;"
-                                        onclick="openBookingModal(@o.OfferId, '@o.Title', '@o.Price.ToString("N0")')">
+                                        onclick="openBookingModal(@o.OfferId, '@o.Title', '@(o.Price.ToString("N0"))')">
                                     Book Now
                                 </button>
                             </div>
