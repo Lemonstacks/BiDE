@@ -48,17 +48,6 @@ namespace BiDE.Controllers
             ViewBag.TotalStudents = await _context.Students.CountAsync();
             ViewBag.TotalBookings = await _context.Bookings.CountAsync();
 
-            var bookings = await _context.Bookings
-                .Include(b => b.Student)
-                .Include(b => b.Instructor)
-                .Include(b => b.LessonOffering)
-                .Include(b => b.Schedule)
-                .OrderByDescending(b => b.CreatedAt)
-                .Take(50)
-                .ToListAsync();
-
-            ViewBag.Bookings = bookings;
-
             return View();
         }
 
@@ -143,6 +132,59 @@ namespace BiDE.Controllers
 
             TempData["Success"] = $"{instructor.FirstName} {instructor.LastName} has been reinstated.";
             return RedirectToAction("Index");
+        }
+
+        // GET: /Admin/Bookings
+        public async Task<IActionResult> Bookings(string? status, string? search, DateTime? dateFrom, DateTime? dateTo)
+        {
+            var adminId = GetAdminId();
+            if (adminId == null) return RedirectToAction("Login", "Account");
+
+            var query = _context.Bookings
+                .Include(b => b.Student)
+                .Include(b => b.Instructor)
+                .Include(b => b.LessonOffering)
+                .Include(b => b.Schedule)
+                .Include(b => b.Payment)
+                .AsQueryable();
+
+            // Filter by status
+            if (!string.IsNullOrWhiteSpace(status) && status != "all")
+            {
+                query = query.Where(b => b.Status == status);
+            }
+
+            // Filter by search (student or instructor name)
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.ToLower();
+                query = query.Where(b =>
+                    b.Student.FirstName.ToLower().Contains(term) ||
+                    b.Student.LastName.ToLower().Contains(term) ||
+                    b.Instructor.FirstName.ToLower().Contains(term) ||
+                    b.Instructor.LastName.ToLower().Contains(term));
+            }
+
+            // Filter by date range
+            if (dateFrom.HasValue)
+            {
+                query = query.Where(b => b.Schedule != null && b.Schedule.Date >= dateFrom.Value);
+            }
+            if (dateTo.HasValue)
+            {
+                query = query.Where(b => b.Schedule != null && b.Schedule.Date <= dateTo.Value);
+            }
+
+            var bookings = await query
+                .OrderByDescending(b => b.CreatedAt)
+                .ToListAsync();
+
+            ViewBag.Status = status;
+            ViewBag.Search = search;
+            ViewBag.DateFrom = dateFrom;
+            ViewBag.DateTo = dateTo;
+
+            return View(bookings);
         }
     }
 }

@@ -1,0 +1,96 @@
+@model List<Booking>
+@{
+    ViewData["Title"] = "Monitor Bookings";
+    var statusFilter = ViewBag.Status as string ?? "all";
+    var search = ViewBag.Search as string ?? "";
+    var dateFrom = ViewBag.DateFrom as DateTime?;
+    var dateTo = ViewBag.DateTo as DateTime?;
+}
+
+<div class="page-container">
+    <div class="section-header">
+        <p class="section-label">Administration</p>
+        <h1 class="section-title">Monitor Bookings (@Model.Count)</h1>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" asp-action="Bookings" asp-controller="Admin" class="card" style="padding: 1.5rem; margin-bottom: 2.5rem;">
+        <p class="detail-section-title" style="margin-bottom: 1rem;">Filters</p>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+            <div class="form-group" style="min-width: 150px; margin-bottom: 0;">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="all" selected="@(statusFilter == "all")">All</option>
+                    <option value="Pending" selected="@(statusFilter == "Pending")">Pending</option>
+                    <option value="Accepted" selected="@(statusFilter == "Accepted")">Accepted</option>
+                    <option value="Completed" selected="@(statusFilter == "Completed")">Completed</option>
+                    <option value="Cancelled" selected="@(statusFilter == "Cancelled")">Cancelled</option>
+                    <option value="Rejected" selected="@(statusFilter == "Rejected")">Rejected</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex: 1; min-width: 180px; margin-bottom: 0;">
+                <label class="form-label">Search (student or instructor)</label>
+                <input type="text" name="search" value="@search" class="form-input" placeholder="Name..." />
+            </div>
+            <div class="form-group" style="min-width: 150px; margin-bottom: 0;">
+                <label class="form-label">From Date</label>
+                <input type="date" name="dateFrom" value="@(dateFrom?.ToString("yyyy-MM-dd") ?? "")" class="form-input" />
+            </div>
+            <div class="form-group" style="min-width: 150px; margin-bottom: 0;">
+                <label class="form-label">To Date</label>
+                <input type="date" name="dateTo" value="@(dateTo?.ToString("yyyy-MM-dd") ?? "")" class="form-input" />
+            </div>
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="/Admin/Bookings" class="btn">Clear</a>
+        </div>
+    </form>
+
+    <!-- Results -->
+    @if (Model.Count == 0)
+    {
+        <div class="empty-state" style="padding: 4rem;">
+            <p class="text-muted">No bookings match the selected filters.</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var b in Model)
+        {
+            var paymentStatus = b.Payment?.PaymentStatus ?? "Unpaid";
+
+            <div class="card">
+                <div class="card-row">
+                    <div>
+                        <p class="card-title">@(b.LessonOffering?.Title ?? "Lesson")</p>
+                        <p class="card-subtitle">
+                            Student: @b.Student.FirstName @b.Student.LastName &mdash;
+                            Instructor: @b.Instructor.FirstName @b.Instructor.LastName
+                        </p>
+                        <div class="card-meta">
+                            <span class="card-meta-item">
+                                @(b.Schedule?.Date.ToString("MMM d, yyyy") ?? "No date")
+                            </span>
+                            <span class="card-meta-item">
+                                @(b.Schedule?.StartTime.ToString(@"hh\:mm") ?? "") - @(b.Schedule?.EndTime.ToString(@"hh\:mm") ?? "")
+                            </span>
+                            <span class="card-meta-item">
+                                Booked: @b.CreatedAt.ToString("MMM d, yyyy")
+                            </span>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                        <span class="badge badge-@b.Status.ToLower()">@b.Status</span>
+                        @if (paymentStatus == "Verified")
+                        {
+                            <span class="badge badge-completed">Paid</span>
+                        }
+                        else if (paymentStatus == "Pending")
+                        {
+                            <span class="badge badge-pending">Payment Pending</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
