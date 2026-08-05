@@ -33,10 +33,10 @@
             <p class="stat-value">@totalStudents</p>
             <p class="stat-label">Registered Students</p>
         </div>
-        <div class="stat-card">
+        <a href="#bookings-section" class="stat-card" style="text-decoration: none; color: inherit; cursor: pointer;">
             <p class="stat-value">@totalBookings</p>
             <p class="stat-label">Total Bookings</p>
-        </div>
+        </a>
     </div>
 
     <!-- Pending Applications -->
@@ -162,6 +162,49 @@
             }
         </div>
     }
+
+    <!-- Monitor Bookings -->
+    @{
+        var bookings = ViewBag.Bookings as List<Booking> ?? new List<Booking>();
+    }
+    <div id="bookings-section" style="margin-top: 3rem;">
+        <p class="detail-section-title">Monitor Bookings (@bookings.Count)</p>
+        <hr class="detail-divider" />
+
+        @if (bookings.Count == 0)
+        {
+            <p class="text-sm text-muted">No bookings in the system yet.</p>
+        }
+        else
+        {
+            @foreach (var b in bookings)
+            {
+                <div class="card">
+                    <div class="card-row">
+                        <div>
+                            <p class="card-title">@(b.LessonOffering?.Title ?? "Lesson")</p>
+                            <p class="card-subtitle">
+                                Student: @b.Student.FirstName @b.Student.LastName &mdash;
+                                Instructor: @b.Instructor.FirstName @b.Instructor.LastName
+                            </p>
+                            <div class="card-meta">
+                                <span class="card-meta-item">
+                                    @(b.Schedule?.Date.ToString("MMM d, yyyy") ?? "No date")
+                                </span>
+                                <span class="card-meta-item">
+                                    @(b.Schedule?.StartTime.ToString(@"hh\:mm") ?? "") - @(b.Schedule?.EndTime.ToString(@"hh\:mm") ?? "")
+                                </span>
+                                <span class="card-meta-item">
+                                    Booked: @b.CreatedAt.ToString("MMM d, yyyy")
+                                </span>
+                            </div>
+                        </div>
+                        <span class="badge badge-@b.Status.ToLower()">@b.Status</span>
+                    </div>
+                </div>
+            }
+        }
+    </div>
 </div>
 
 <!-- Reject Modal -->

@@ -48,6 +48,17 @@ namespace BiDE.Controllers
             ViewBag.TotalStudents = await _context.Students.CountAsync();
             ViewBag.TotalBookings = await _context.Bookings.CountAsync();
 
+            var bookings = await _context.Bookings
+                .Include(b => b.Student)
+                .Include(b => b.Instructor)
+                .Include(b => b.LessonOffering)
+                .Include(b => b.Schedule)
+                .OrderByDescending(b => b.CreatedAt)
+                .Take(50)
+                .ToListAsync();
+
+            ViewBag.Bookings = bookings;
+
             return View();
         }
 
