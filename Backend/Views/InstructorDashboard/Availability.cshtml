@@ -86,10 +86,16 @@
 @section Scripts {
 <script>
 function validateAvailability() {
+    var dateVal = document.querySelector('input[name="date"]').value;
     var start = document.querySelector('input[name="startTime"]').value;
     var end = document.querySelector('input[name="endTime"]').value;
     if (end <= start) {
         alert('End time must be after start time.');
+        return false;
+    }
+    var slotDate = new Date(dateVal + 'T' + start);
+    if (slotDate <= new Date()) {
+        alert('Cannot add an availability slot in the past.');
         return false;
     }
     return true;

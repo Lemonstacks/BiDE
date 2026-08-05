@@ -146,6 +146,14 @@ namespace BiDE.Controllers
                 return RedirectToAction("Availability");
             }
 
+            // Validate: cannot add slot in the past
+            var slotDateTime = date.Date + startTime;
+            if (slotDateTime <= DateTime.Now)
+            {
+                TempData["Error"] = "Cannot add an availability slot in the past.";
+                return RedirectToAction("Availability");
+            }
+
             var slot = new Availability
             {
                 InstructorId = instructorId.Value,
