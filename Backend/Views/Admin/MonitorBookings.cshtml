@@ -1,0 +1,115 @@
+@model List<Booking>
+@{
+    ViewData["Title"] = "Monitor Bookings";
+    var statusFilter = ViewBag.StatusFilter as string ?? "all";
+    var searchFilter = ViewBag.SearchFilter as string ?? "";
+    var success = TempData["Success"] as string;
+}
+
+<div class="page-container">
+    <div class="section-header">
+        <p class="section-label">Admin</p>
+        <h1 class="section-title">Monitor Bookings</h1>
+    </div>
+
+    @if (!string.IsNullOrEmpty(success))
+    {
+        <div class="alert alert-info">@success</div>
+    }
+
+    <!-- Filters -->
+    <form method="get" class="filter-bar">
+        <div class="form-group flex-1">
+            <label class="form-label">Search</label>
+            <input type="text" name="search" value="@searchFilter"
+                   class="form-input" placeholder="Search by student, instructor, or lesson name..." />
+        </div>
+        <div class="form-group">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+                <option value="all" selected="@(statusFilter == "all")">All Statuses</option>
+                <option value="Pending" selected="@(statusFilter == "Pending")">Pending</option>
+                <option value="Accepted" selected="@(statusFilter == "Accepted")">Accepted</option>
+                <option value="Completed" selected="@(statusFilter == "Completed")">Completed</option>
+                <option value="Cancelled" selected="@(statusFilter == "Cancelled")">Cancelled</option>
+                <option value="Rejected" selected="@(statusFilter == "Rejected")">Rejected</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary btn-sm" style="margin-top: 1.25rem;">Filter</button>
+        </div>
+    </form>
+
+    <!-- Summary Stats -->
+    <div class="grid-4" style="border: 1px solid var(--border); margin-bottom: 2rem;">
+        <div class="stat-card">
+            <p class="stat-value">@Model.Count</p>
+            <p class="stat-label">Total Bookings</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-value">@Model.Count(b => b.Status == "Pending")</p>
+            <p class="stat-label">Pending</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-value">@Model.Count(b => b.Status == "Accepted")</p>
+            <p class="stat-label">Accepted</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-value">@Model.Count(b => b.Status == "Completed")</p>
+            <p class="stat-label">Completed</p>
+        </div>
+    </div>
+
+    <!-- Bookings List -->
+    @if (Model.Count == 0)
+    {
+        <div class="empty-state">
+            <p>No bookings found</p>
+            <p class="sub">Try adjusting your filters</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var b in Model)
+        {
+            var paymentStatus = b.Payment?.PaymentStatus ?? "Unpaid";
+
+            <div class="card">
+                <div class="card-row">
+                    <div>
+                        <p class="card-title">@(b.LessonOffering?.Title ?? "Lesson")</p>
+                        <p class="card-subtitle">
+                            Student: @b.Student?.FirstName @b.Student?.LastName |
+                            Instructor: @b.Instructor?.FirstName @b.Instructor?.LastName
+                        </p>
+                        <div class="card-meta">
+                            <span class="card-meta-item">
+                                @(b.Schedule?.Date.ToString("MMM d, yyyy") ?? "No date")
+                            </span>
+                            <span class="card-meta-item">
+                                @(b.Schedule?.StartTime.ToString(@"hh\:mm") ?? "") - @(b.Schedule?.EndTime.ToString(@"hh\:mm") ?? "")
+                            </span>
+                            <span class="card-meta-item">
+                                R@(b.LessonOffering?.Price.ToString("N0") ?? "0")
+                            </span>
+                            <span class="card-meta-item">
+                                Created: @b.CreatedAt.ToString("MMM d, yyyy")
+                            </span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <span class="badge badge-@b.Status.ToLower()">@b.Status</span>
+                        @if (paymentStatus == "Verified")
+                        {
+                            <span class="badge badge-completed">Paid</span>
+                        }
+                        else if (paymentStatus == "Pending")
+                        {
+                            <span class="badge badge-pending">Payment Pending</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

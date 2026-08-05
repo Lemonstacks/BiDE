@@ -2,41 +2,44 @@
     ViewData["Title"] = "Login";
     var error = ViewBag.Error as string;
     var email = ViewBag.Email as string ?? "";
+    var redirect = ViewBag.Redirect as string ?? "";
 }
 
-<div class="page-container-narrow">
-    <div class="section-header text-center">
-        <p class="section-label">Welcome Back</p>
-        <h1 class="section-title">Sign In</h1>
+<div class="page-container-narrow" style="display:flex;align-items:center;min-height:calc(100vh - 64px);">
+    <div style="width:100%;">
+        <div class="section-header text-center">
+            <span class="section-label">Welcome Back</span>
+            <h1 class="section-title">Sign In to BiDE</h1>
+            <p class="section-subtitle" style="margin-left:auto;margin-right:auto;">Access your account to book lessons, track progress and more.</p>
+        </div>
+
+        <div class="glass-card" style="margin-top:2rem;padding:2rem;">
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="alert alert-error">@error</div>
+            }
+
+            <form method="post" asp-action="Login" asp-controller="Account">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="redirect" value="@redirect" />
+
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" value="@email" class="form-input" placeholder="you@example.com" required />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" class="form-input" placeholder="Enter your password" required />
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full btn-lg" style="margin-top:0.5rem;">Sign In</button>
+            </form>
+
+            <p style="text-align:center;margin-top:1.5rem;font-size:0.875rem;color:var(--fg-muted);">
+                Don't have an account?
+                <a href="/Account/Register" style="color:var(--primary);font-weight:600;">Sign up</a>
+            </p>
+        </div>
     </div>
-
-    @if (!string.IsNullOrEmpty(error))
-    {
-        <div class="alert alert-error">@error</div>
-    }
-
-    <form method="post" asp-action="Login" asp-controller="Account">
-        @Html.AntiForgeryToken()
-
-        <div class="form-group">
-            <label class="form-label">Email Address</label>
-            <input type="email" name="email" value="@email"
-                   class="form-input" placeholder="you@example.com" required />
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Password</label>
-            <input type="password" name="password"
-                   class="form-input" placeholder="Your password" required />
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-full" style="margin-top: 0.5rem;">
-            Sign In
-        </button>
-    </form>
-
-    <p class="text-center text-sm text-muted" style="margin-top: 2rem;">
-        Don't have an account?
-        <a href="/Account/Register" style="color: var(--primary); font-weight: 500;">Create one</a>
-    </p>
 </div>

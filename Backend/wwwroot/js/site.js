@@ -1,38 +1,83 @@
-// ===== Mobile Menu Toggle =====
-function toggleMobileMenu() {
-    const menu = document.getElementById('mobileMenu');
-    menu.classList.toggle('active');
+// ===================================================
+// BiDE - Premium Interactions & Animations
+// ===================================================
+
+// ===== Navbar Scroll Effect =====
+(function() {
+    var navbar = document.querySelector('.navbar');
+    if (!navbar) return;
+    
+    function onScroll() {
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+})();
+
+// ===== Hamburger Menu =====
+function toggleHamburgerMenu() {
+    var overlay = document.getElementById('hamburgerMenuOverlay');
+    if (!overlay) return;
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
-// Close mobile menu when clicking a link
+function closeHamburgerMenu() {
+    var overlay = document.getElementById('hamburgerMenuOverlay');
+    if (!overlay) return;
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function closeHamburgerIfOverlay(event) {
+    if (event.target === document.getElementById('hamburgerMenuOverlay')) {
+        closeHamburgerMenu();
+    }
+}
+
+// Close menu on link click
 document.addEventListener('DOMContentLoaded', function() {
-    const mobileLinks = document.querySelectorAll('.mobile-menu .nav-link');
-    mobileLinks.forEach(function(link) {
-        link.addEventListener('click', function() {
-            document.getElementById('mobileMenu').classList.remove('active');
+    document.querySelectorAll('.hamburger-menu-link').forEach(function(link) {
+        link.addEventListener('click', closeHamburgerMenu);
+    });
+});
+
+// ===== Intersection Observer Animations =====
+(function() {
+    if (!('IntersectionObserver' in window)) return;
+    
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.animate-on-scroll').forEach(function(el) {
+            observer.observe(el);
         });
     });
-});
+})();
 
-// ===== Toast Notifications =====
-function showToast(message, type = 'success') {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-    const toast = document.createElement('div');
-    toast.className = 'toast toast-' + type;
-    toast.textContent = message;
-    container.appendChild(toast);
-    setTimeout(function() { toast.remove(); }, 4000);
-}
-
-// Auto-show toasts from alert elements on page load
-document.addEventListener('DOMContentLoaded', function() {
-    var alerts = document.querySelectorAll('.alert-info, .alert-error');
-    alerts.forEach(function(alert) {
-        var type = alert.classList.contains('alert-error') ? 'error' : 'success';
-        showToast(alert.textContent.trim(), type);
+// ===== FAQ Accordion =====
+function toggleFaq(element) {
+    var item = element.closest('.faq-item');
+    if (!item) return;
+    
+    // Close others
+    document.querySelectorAll('.faq-item.active').forEach(function(other) {
+        if (other !== item) other.classList.remove('active');
     });
-});
+    
+    item.classList.toggle('active');
+}
 
 // ===== Modal Functions =====
 function openModal(modalId) {
@@ -40,10 +85,9 @@ function openModal(modalId) {
     if (!modal) return;
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
-    // Focus first input
     setTimeout(function() {
-        var firstInput = modal.querySelector('input:not([type="hidden"]), textarea, select');
-        if (firstInput) firstInput.focus();
+        var input = modal.querySelector('input:not([type="hidden"]), textarea, select');
+        if (input) input.focus();
     }, 100);
 }
 
@@ -62,72 +106,112 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Close modal on Escape key
+// Close on Escape
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-        var activeModals = document.querySelectorAll('.modal-overlay.active');
-        activeModals.forEach(function(modal) {
-            modal.classList.remove('active');
+        var overlay = document.getElementById('hamburgerMenuOverlay');
+        if (overlay && overlay.classList.contains('active')) {
+            closeHamburgerMenu(); return;
+        }
+        document.querySelectorAll('.modal-overlay.active').forEach(function(m) {
+            m.classList.remove('active');
         });
         document.body.style.overflow = '';
     }
 });
 
-// ===== Toggle Expand/Collapse =====
-function toggleExpand(id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    el.classList.toggle('hidden');
-    // Update toggle button text
-    var btn = event && event.currentTarget;
-    if (btn) {
-        var isHidden = el.classList.contains('hidden');
-        var text = btn.textContent;
-        // Toggle chevron direction is handled by CSS if needed
-    }
+// ===== Toast Notifications =====
+function showToast(message, type) {
+    var container = document.getElementById('toast-container');
+    if (!container) return;
+    var toast = document.createElement('div');
+    toast.className = 'toast toast-' + (type || 'success');
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(function() { toast.remove(); }, 4000);
 }
 
-// ===== Form Validation Helpers =====
 document.addEventListener('DOMContentLoaded', function() {
-    // Add loading state to forms on submit
-    var forms = document.querySelectorAll('form');
-    forms.forEach(function(form) {
+    document.querySelectorAll('.alert-info, .alert-error').forEach(function(alert) {
+        var type = alert.classList.contains('alert-error') ? 'error' : 'success';
+        showToast(alert.textContent.trim(), type);
+    });
+});
+
+// ===== Expand/Collapse =====
+function toggleExpand(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden');
+}
+
+// ===== Form Submit Loading =====
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('form').forEach(function(form) {
         form.addEventListener('submit', function() {
-            var submitBtn = form.querySelector('button[type="submit"]');
-            if (submitBtn && !submitBtn.disabled) {
-                submitBtn.disabled = true;
-                var originalText = submitBtn.textContent;
-                submitBtn.textContent = 'Processing...';
-                // Re-enable after 5s as safety fallback
-                setTimeout(function() {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
-                }, 5000);
+            var btn = form.querySelector('button[type="submit"]');
+            if (btn && !btn.disabled) {
+                btn.disabled = true;
+                var original = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner"></span> Processing...';
+                setTimeout(function() { btn.disabled = false; btn.innerHTML = original; }, 5000);
             }
         });
     });
 });
 
-// ===== Smooth Scroll for Anchor Links =====
+// ===== Smooth Scroll =====
 document.addEventListener('click', function(e) {
     var target = e.target.closest('a[href^="#"]');
     if (target) {
         var id = target.getAttribute('href').slice(1);
         var el = document.getElementById(id);
-        if (el) {
-            e.preventDefault();
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     }
 });
 
-// ===== Date Input Min Date (today) =====
-document.addEventListener('DOMContentLoaded', function() {
-    var dateInputs = document.querySelectorAll('input[type="date"]');
-    var today = new Date().toISOString().split('T')[0];
-    dateInputs.forEach(function(input) {
-        if (!input.min) {
-            input.min = today;
-        }
-    });
-});
+// ===== Chat Assistant =====
+function toggleChatWidget() {
+    var panel = document.getElementById('chatPanel');
+    var iconOpen = document.getElementById('chatIconOpen');
+    var iconClose = document.getElementById('chatIconClose');
+    if (!panel) return;
+    var active = panel.classList.contains('active');
+    panel.classList.toggle('active');
+    if (iconOpen) iconOpen.style.display = active ? 'block' : 'none';
+    if (iconClose) iconClose.style.display = active ? 'none' : 'block';
+    if (!active) setTimeout(function() { var i = document.getElementById('chatInput'); if (i) i.focus(); }, 200);
+}
+
+function sendChatMessage() {
+    var input = document.getElementById('chatInput');
+    var messages = document.getElementById('chatMessages');
+    if (!input || !messages) return;
+    var text = input.value.trim();
+    if (!text) return;
+    var userMsg = document.createElement('div');
+    userMsg.className = 'chat-msg chat-msg-user';
+    userMsg.textContent = text;
+    messages.appendChild(userMsg);
+    input.value = '';
+    messages.scrollTop = messages.scrollHeight;
+    setTimeout(function() {
+        var response = getChatResponse(text.toLowerCase());
+        var botMsg = document.createElement('div');
+        botMsg.className = 'chat-msg chat-msg-bot';
+        botMsg.innerHTML = response;
+        messages.appendChild(botMsg);
+        messages.scrollTop = messages.scrollHeight;
+    }, 600);
+}
+
+function getChatResponse(text) {
+    if (text.includes('book') || text.includes('lesson')) return 'To book a lesson: Open the menu, go to <strong>Find Instructors</strong>, select an instructor, then click <strong>Book Now</strong> on their profile.';
+    if (text.includes('pay') || text.includes('proof')) return 'After your booking is accepted, go to <strong>My Bookings</strong> and click <strong>Upload Proof of Payment</strong> to submit your receipt.';
+    if (text.includes('instructor') && text.includes('find')) return 'Click <strong>Find Instructors</strong> from the menu to browse verified instructors by name or location.';
+    if (text.includes('review')) return 'Go to <strong>Completed Lessons</strong> and click <strong>Leave Review</strong> to rate your instructor.';
+    if (text.includes('progress')) return 'View your lesson progress from the menu under <strong>View Lesson Progress</strong>.';
+    if (text.includes('register') || text.includes('sign up')) return 'Click <strong>Register</strong> to create an account as a Student or Instructor.';
+    if (text.includes('cancel')) return 'Go to <strong>My Bookings</strong>, find the pending booking, and click <strong>Cancel</strong>.';
+    if (text.includes('hello') || text.includes('hi')) return 'Hello! How can I help you today? Ask me about booking, payments, reviews, or anything else.';
+    return 'I can help with: <strong>Booking lessons</strong>, <strong>Payments</strong>, <strong>Reviews</strong>, <strong>Progress tracking</strong>, and <strong>Account questions</strong>. Try asking a specific question!';
+}

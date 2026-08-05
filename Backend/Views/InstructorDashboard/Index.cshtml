@@ -4,7 +4,7 @@
     var pending = ViewBag.Pending as List<Booking> ?? new List<Booking>();
     var accepted = ViewBag.Accepted as List<Booking> ?? new List<Booking>();
     var completed = ViewBag.Completed as List<Booking> ?? new List<Booking>();
-    int totalBookings = ViewBag.TotalBookings;
+    int totalBookings = ViewBag.TotalBookings ?? 0;
     var success = TempData["Success"] as string;
 }
 
@@ -67,15 +67,15 @@
     <!-- Pending Requests -->
     @if (pending.Count > 0)
     {
-        <p id="pending-section" class="detail-section-title">Pending Requests</p>
-        <div style="margin-bottom: 2rem;">
+        <p id="pending-section" class="detail-section-title">Pending Requests (@pending.Count)</p>
+        <div id="booking-requests" style="margin-bottom: 2rem;">
             @foreach (var b in pending.Take(10))
             {
                 <div class="card">
                     <div class="card-row">
                         <div>
                             <p class="card-title">@(b.LessonOffering?.Title ?? "Lesson")</p>
-                            <p class="card-subtitle">@b.Student.FirstName @b.Student.LastName (@b.Student.Email)</p>
+                            <p class="card-subtitle">@(b.Student?.FirstName ?? "") @(b.Student?.LastName ?? "") (@(b.Student?.Email ?? ""))</p>
                             <div class="card-meta">
                                 <span class="card-meta-item">
                                     @(b.Schedule?.Date.ToString("MMM d, yyyy") ?? "")
@@ -83,19 +83,17 @@
                                 <span class="card-meta-item">
                                     @(b.Schedule?.StartTime.ToString(@"hh\:mm") ?? "") - @(b.Schedule?.EndTime.ToString(@"hh\:mm") ?? "")
                                 </span>
+                                <span class="card-meta-item">
+                                    R@(b.LessonOffering?.Price.ToString("N0") ?? "0")
+                                </span>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <form method="post" asp-action="AcceptBooking" style="display:inline;">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="bookingId" value="@b.BookingId" />
-                                <button type="submit" class="btn btn-primary btn-sm">Accept</button>
-                            </form>
-                            <form method="post" asp-action="RejectBooking" style="display:inline;">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="bookingId" value="@b.BookingId" />
-                                <button type="submit" class="btn btn-destructive btn-sm">Reject</button>
-                            </form>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span class="badge badge-pending">Pending</span>
+                            <button type="button" class="btn btn-sm"
+                                    onclick="openRespondModal(@b.BookingId, '@(b.LessonOffering?.Title ?? "Lesson")', '@(b.Student?.FirstName ?? "") @(b.Student?.LastName ?? "")', '@(b.Schedule?.Date.ToString("yyyy-MM-dd") ?? "")', '@(b.Schedule?.StartTime.ToString("hh\\:mm") ?? "")')">
+                                Respond
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -116,7 +114,7 @@
                     <div class="card-row">
                         <div>
                             <p class="card-title">@(b.LessonOffering?.Title ?? "Lesson")</p>
-                            <p class="card-subtitle">@b.Student.FirstName @b.Student.LastName</p>
+                            <p class="card-subtitle">@(b.Student?.FirstName ?? "") @(b.Student?.LastName ?? "")</p>
                             <div class="card-meta">
                                 <span class="card-meta-item">
                                     @(b.Schedule?.Date.ToString("MMM d, yyyy") ?? "") | @(b.Schedule?.StartTime.ToString(@"hh\:mm") ?? "") - @(b.Schedule?.EndTime.ToString(@"hh\:mm") ?? "")
@@ -149,3 +147,57 @@
         </div>
     }
 </div>
+
+<!-- Respond to Request Modal (UC14) -->
+<div class="modal-overlay" id="respondModal">
+    <div class="modal" style="position: relative;">
+        <button class="modal-close" onclick="closeModal('respondModal')">&times;</button>
+        <h3 class="modal-title">Respond to Request</h3>
+
+        <div style="padding: 0.75rem; background: var(--bg-muted); margin-bottom: 1rem; font-size: 0.875rem;">
+            <p class="font-bold" id="respond-lesson-title"></p>
+            <p class="text-muted mt-1" id="respond-student-name"></p>
+            <p class="text-muted mt-1" id="respond-schedule-info"></p>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Response Note (optional)</label>
+            <textarea id="respond-note" class="form-textarea" rows="3"
+                      placeholder="Optional note to the student..."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+            <form method="post" asp-action="AcceptBooking" style="flex: 1;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="bookingId" id="respond-accept-booking-id" value="" />
+                <button type="submit" class="btn btn-primary btn-full">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:0.25rem;"><polyline points="20 6 9 17 4 12"/></svg>
+                    Accept
+                </button>
+            </form>
+            <form method="post" asp-action="RejectBooking" style="flex: 1;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="bookingId" id="respond-reject-booking-id" value="" />
+                <input type="hidden" name="reason" id="respond-reject-reason" value="" />
+                <button type="submit" class="btn btn-destructive btn-full" onclick="document.getElementById('respond-reject-reason').value = document.getElementById('respond-note').value;">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:0.25rem;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Reject
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function openRespondModal(bookingId, lessonTitle, studentName, date, time) {
+    document.getElementById('respond-accept-booking-id').value = bookingId;
+    document.getElementById('respond-reject-booking-id').value = bookingId;
+    document.getElementById('respond-lesson-title').textContent = lessonTitle;
+    document.getElementById('respond-student-name').textContent = studentName + ' \u00B7 ' + date + ' \u00B7 ' + time;
+    document.getElementById('respond-schedule-info').textContent = '';
+    document.getElementById('respond-note').value = '';
+    openModal('respondModal');
+}
+</script>
+}

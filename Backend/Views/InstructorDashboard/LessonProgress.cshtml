@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = "Lesson Progress";
     var success = TempData["Success"] as string;
+    // Group bookings by student (UC20: "1st selects Student, then Lesson")
+    var byStudent = Model.GroupBy(b => b.StudentId).ToList();
 }
 
 <div class="page-container">
@@ -24,57 +26,82 @@
     }
     else
     {
-        @foreach (var b in Model)
-        {
-            var entries = b.LessonProgresses?.ToList() ?? new List<LessonProgress>();
+        <p class="text-sm text-muted" style="margin-bottom: 2rem;">Select a student, then choose a lesson to add progress.</p>
 
-            <div class="card">
-                <div class="card-row">
+        <!-- Step 1: Select Student -->
+        @foreach (var group in byStudent)
+        {
+            var student = group.First().Student;
+            var studentBookings = group.ToList();
+
+            <div style="margin-bottom: 2rem;">
+                <div style="padding: 0.75rem 1rem; background: var(--bg-muted); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: space-between;"
+                     onclick="toggleExpand('student-@student.StudentId')">
                     <div>
-                        <p class="card-title">@(b.LessonOffering?.Title ?? "Lesson")</p>
-                        <p class="card-subtitle">@b.Student.FirstName @b.Student.LastName (@b.Student.Email)</p>
-                        <div class="card-meta">
-                            <span class="card-meta-item">
-                                @(b.Schedule?.Date.ToString("MMM d, yyyy") ?? "") | @(b.Schedule?.StartTime.ToString(@"hh\:mm") ?? "")
-                            </span>
-                        </div>
+                        <p style="font-weight: 600;">@student.FirstName @student.LastName</p>
+                        <p class="text-xs text-muted">@student.Email | @studentBookings.Count lesson(s)</p>
                     </div>
-                    <button type="button" class="btn btn-sm"
-                            onclick="openProgressModal(@b.BookingId, '@(b.LessonOffering?.Title ?? "Lesson")', '@b.Student.FirstName @b.Student.LastName')">
-                        + Add Progress
-                    </button>
+                    <span class="text-sm text-muted">&#9660;</span>
                 </div>
 
-                @if (entries.Count > 0)
-                {
-                    <div class="progress-section">
-                        <p class="detail-section-title" style="margin-bottom: 0.5rem;">Progress Records</p>
-                        @foreach (var e in entries)
-                        {
-                            <div class="progress-entry">
-                                <div class="progress-header">
-                                    <span class="progress-date">@e.ProgressDate.ToString("MMM d, yyyy")</span>
-                                    <span class="progress-rating">@e.CompletionStatus</span>
+                <!-- Step 2: Select Lesson (shown after selecting student) -->
+                <div id="student-@student.StudentId" class="hidden" style="border: 1px solid var(--border); border-top: none;">
+                    @foreach (var b in studentBookings)
+                    {
+                        var entries = b.LessonProgresses?.ToList() ?? new List<LessonProgress>();
+
+                        <div style="padding: 1.25rem; border-bottom: 1px solid var(--border);">
+                            <div class="card-row">
+                                <div>
+                                    <p class="card-title">@(b.LessonOffering?.Title ?? "Lesson")</p>
+                                    <div class="card-meta">
+                                        <span class="card-meta-item">
+                                            @(b.Schedule?.Date.ToString("MMM d, yyyy") ?? "") | @(b.Schedule?.StartTime.ToString(@"hh\:mm") ?? "")
+                                        </span>
+                                        <span class="card-meta-item">
+                                            Progress entries: @entries.Count
+                                        </span>
+                                    </div>
                                 </div>
-                                @if (!string.IsNullOrEmpty(e.Feedback))
-                                {
-                                    <p style="margin-top: 0.25rem;">@e.Feedback</p>
-                                }
-                                @if (e.Duration > 0)
-                                {
-                                    <p class="text-xs text-muted mt-1">Duration: @e.Duration min</p>
-                                }
+                                <button type="button" class="btn btn-primary btn-sm"
+                                        onclick="openProgressModal(@b.BookingId, '@(b.LessonOffering?.Title ?? "Lesson")', '@student.FirstName @student.LastName')">
+                                    + Add Progress
+                                </button>
                             </div>
-                        }
-                    </div>
-                }
+
+                            @if (entries.Count > 0)
+                            {
+                                <div class="progress-section">
+                                    <p class="detail-section-title" style="margin-bottom: 0.5rem;">Progress Records</p>
+                                    @foreach (var e in entries)
+                                    {
+                                        <div class="progress-entry">
+                                            <div class="progress-header">
+                                                <span class="progress-date">@e.ProgressDate.ToString("MMM d, yyyy")</span>
+                                                <span class="progress-rating">@e.CompletionStatus</span>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(e.Feedback))
+                                            {
+                                                <p style="margin-top: 0.25rem;">@e.Feedback</p>
+                                            }
+                                            @if (e.Duration > 0)
+                                            {
+                                                <p class="text-xs text-muted mt-1">Duration: @e.Duration min</p>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
             </div>
         }
     }
 </div>
 
 
-<!-- Add Progress Modal -->
+<!-- Add Progress Modal (UC20: Provide Lesson Feedback) -->
 <div class="modal-overlay" id="progressModal">
     <div class="modal" style="position: relative;">
         <button class="modal-close" onclick="closeModal('progressModal')">&times;</button>
@@ -97,7 +124,7 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Status</label>
+                    <label class="form-label">Progress Rating (1-5)</label>
                     <select name="completionStatus" class="form-select">
                         <option value="In Progress">In Progress</option>
                         <option value="Needs Improvement">Needs Improvement</option>

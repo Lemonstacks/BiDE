@@ -16,17 +16,18 @@ namespace BiDE.Controllers
 
         // GET: /Account/Login
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login(string? redirect)
         {
             if (HttpContext.Session.GetInt32("UserId") != null)
                 return RedirectToAction("Index", "Home");
+            ViewBag.Redirect = redirect;
             return View();
         }
 
         // POST: /Account/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(string email, string password)
+        public async Task<IActionResult> Login(string email, string password, string? redirect)
         {
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
@@ -43,7 +44,9 @@ namespace BiDE.Controllers
                 HttpContext.Session.SetString("UserRole", "Student");
                 HttpContext.Session.SetString("UserName", $"{student.FirstName} {student.LastName}");
                 HttpContext.Session.SetString("UserEmail", student.Email);
-                return RedirectToAction("Index", "Home");
+
+                // Always take student to Find Instructors after login
+                return RedirectToAction("Index", "Instructors");
             }
 
             // Check Instructor
@@ -72,6 +75,7 @@ namespace BiDE.Controllers
 
             ViewBag.Error = "Invalid email or password.";
             ViewBag.Email = email;
+            ViewBag.Redirect = redirect;
             return View();
         }
 

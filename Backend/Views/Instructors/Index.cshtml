@@ -8,18 +8,18 @@
 
 <div class="page-container">
     <div class="section-header">
-        <p class="section-label">Search</p>
+        <span class="section-label">Search</span>
         <h1 class="section-title">Find Your Instructor</h1>
+        <p class="section-subtitle">Browse verified driving instructors by name, location or specialization.</p>
     </div>
 
-    <!-- Search & Filter -->
-    <form method="get" class="search-bar">
+    <!-- Search -->
+    <form method="get" class="search-bar" style="margin-top:2rem;">
         <div class="search-input-wrap">
-            <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
             </svg>
-            <input type="text" name="search" value="@search"
-                   class="form-input" placeholder="Search by name or location..." />
+            <input type="text" name="search" value="@search" class="form-input" placeholder="Search by name or location..." />
         </div>
         <select name="specialization" class="form-select search-select">
             <option value="all">All Types</option>
@@ -28,7 +28,7 @@
                 <option value="@cert" selected="@(specialization == cert)">@cert</option>
             }
         </select>
-        <button type="submit" class="btn btn-primary btn-sm">Search</button>
+        <button type="submit" class="btn btn-primary">Search</button>
     </form>
 
     <!-- Results -->
@@ -41,26 +41,26 @@
     }
     else
     {
-        <div class="grid-3" style="margin-top: 2rem;">
+        <div class="grid-3" style="margin-top:2.5rem;">
             @foreach (var i in Model)
             {
-                <a href="/Instructors/Detail/@i.InstructorId" class="instructor-card">
+                <a href="/Instructors/Detail/@i.InstructorId" class="instructor-card animate-on-scroll">
                     <div class="instructor-card-img">
-                        @i.FirstName[0]@i.LastName[0]
+                        @if (!string.IsNullOrEmpty(i.ProfilePicture))
+                        { <img src="@i.ProfilePicture" alt="@i.FirstName @i.LastName" loading="lazy" /> }
+                        else
+                        { @i.FirstName[0]@i.LastName[0] }
                     </div>
                     <div class="instructor-card-body">
                         <p class="instructor-card-name">@i.FirstName @i.LastName</p>
                         @if (!string.IsNullOrEmpty(i.Suburb))
-                        {
-                            <p class="instructor-card-location">@i.Suburb</p>
-                        }
+                        { <p class="instructor-card-location">&#128205; @i.Suburb</p> }
                         <div class="instructor-card-meta">
-                            <span class="text-sm text-muted">@i.Experience yrs exp</span>
+                            <span>@i.Experience yrs exp</span>
                             @if (!string.IsNullOrEmpty(i.Certification))
-                            {
-                                <span class="text-sm text-muted">@i.Certification</span>
-                            }
+                            { <span>@i.Certification</span> }
                         </div>
+                        <p style="margin-top:1rem;font-size:0.8125rem;font-weight:600;color:var(--primary);">View Profile &rarr;</p>
                     </div>
                 </a>
             }

@@ -17,6 +17,15 @@ namespace BiDE.Controllers
         // GET: /Instructors
         public async Task<IActionResult> Index(string? search, string? specialization)
         {
+            // Only registered students can search for instructors (FSSB: student must be logged in)
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var role = HttpContext.Session.GetString("UserRole");
+            if (userId == null)
+            {
+                TempData["Error"] = "Please log in to find instructors.";
+                return RedirectToAction("Login", "Account");
+            }
+
             var query = _context.Instructors
                 .Where(i => i.Status == InstructorStatus.Approved && i.IsVerified);
 

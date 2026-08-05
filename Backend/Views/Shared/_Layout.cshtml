@@ -7,88 +7,97 @@
     <link rel="stylesheet" href="~/css/site.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- Navigation -->
     <nav class="navbar">
         <div class="navbar-container">
-            <a href="/" class="navbar-brand">BiDE</a>
-            <div class="navbar-links">
-                <a href="/Instructors" class="nav-link">Find Instructors</a>
-                @if (Context.Session.GetInt32("UserId") != null)
-                {
-                    var role = Context.Session.GetString("UserRole");
-                    @if (role == "Student")
-                    {
-                        <a href="/Student/Bookings" class="nav-link">My Bookings</a>
-                        <a href="/Student/LessonProgress" class="nav-link">Progress</a>
-                        <a href="/Student/CompletedLessons" class="nav-link">Completed</a>
-                    }
-                    @if (role == "Instructor")
-                    {
-                        <a href="/InstructorDashboard" class="nav-link">Dashboard</a>
-                        <a href="/InstructorDashboard/Offerings" class="nav-link">Offerings</a>
-                        <a href="/InstructorDashboard/Availability" class="nav-link">Availability</a>
-                        <a href="/InstructorDashboard/Payments" class="nav-link">Payments</a>
-                    }
-                    @if (role == "Admin")
-                    {
-                        <a href="/Admin" class="nav-link">Admin Panel</a>
-                    }
-                    <a href="/Profile" class="nav-link">Profile</a>
-                    <a href="/Account/Logout" class="nav-link nav-link-muted">Logout</a>
-                }
-                else
-                {
-                    <a href="/Account/Login" class="nav-link">Login</a>
-                    <a href="/Account/Register" class="nav-link btn-primary-sm">Register</a>
-                }
-            </div>
-            <button class="navbar-toggle" onclick="toggleMobileMenu()">
+            <a href="/" class="navbar-brand">
+                <img src="@Url.Content("~/images/logo.png")" alt="BiDE" style="height:40px;width:auto;" />
+            </a>
+            <button class="navbar-toggle" onclick="toggleHamburgerMenu()" aria-label="Open menu">
                 <span></span><span></span><span></span>
             </button>
         </div>
-        <!-- Mobile menu -->
-        <div class="mobile-menu" id="mobileMenu">
-            <a href="/Instructors" class="nav-link">Find Instructors</a>
-            @if (Context.Session.GetInt32("UserId") != null)
-            {
-                var role = Context.Session.GetString("UserRole");
-                @if (role == "Student")
-                {
-                    <a href="/Student/Bookings" class="nav-link">My Bookings</a>
-                    <a href="/Student/LessonProgress" class="nav-link">Progress</a>
-                    <a href="/Student/CompletedLessons" class="nav-link">Completed</a>
-                }
-                @if (role == "Instructor")
-                {
-                    <a href="/InstructorDashboard" class="nav-link">Dashboard</a>
-                    <a href="/InstructorDashboard/Offerings" class="nav-link">Offerings</a>
-                    <a href="/InstructorDashboard/Availability" class="nav-link">Availability</a>
-                }
-                @if (role == "Admin")
-                {
-                    <a href="/Admin" class="nav-link">Admin Panel</a>
-                }
-                <a href="/Profile" class="nav-link">Profile</a>
-                <a href="/Account/Logout" class="nav-link">Logout</a>
-            }
-            else
-            {
-                <a href="/Account/Login" class="nav-link">Login</a>
-                <a href="/Account/Register" class="nav-link">Register</a>
-            }
+        <div class="hamburger-menu-overlay" id="hamburgerMenuOverlay" onclick="closeHamburgerIfOverlay(event)">
+            <div class="hamburger-menu">
+                <div class="hamburger-menu-header">
+                    <span class="hamburger-menu-brand">BiDE</span>
+                    <button class="hamburger-menu-close" onclick="closeHamburgerMenu()">&times;</button>
+                </div>
+                <div class="hamburger-menu-body">
+                    @if (Context.Session.GetInt32("UserId") != null)
+                    {
+                        var role = Context.Session.GetString("UserRole");
+                        var userName = Context.Session.GetString("UserName") ?? "User";
+                        <div class="hamburger-menu-user">
+                            <p class="hamburger-menu-user-name">@userName</p>
+                            <p class="hamburger-menu-user-role">@role</p>
+                        </div>
+                        @if (role == "Student")
+                        {
+                            <div class="hamburger-menu-section">
+                                <p class="hamburger-menu-section-label">Navigation</p>
+                                <a href="/Instructors" class="hamburger-menu-link">Find Instructors</a>
+                                <a href="/Student/Bookings" class="hamburger-menu-link">My Bookings</a>
+                                <a href="/Student/LessonProgress" class="hamburger-menu-link">View Lesson Progress</a>
+                                <a href="/Student/CompletedLessons" class="hamburger-menu-link">Completed Lessons</a>
+                            </div>
+                            <div class="hamburger-menu-section">
+                                <p class="hamburger-menu-section-label">Account</p>
+                                <a href="/Profile" class="hamburger-menu-link">Edit Profile</a>
+                                <a href="/Account/Logout" class="hamburger-menu-link hamburger-menu-link-muted">Logout</a>
+                            </div>
+                        }
+                        @if (role == "Instructor")
+                        {
+                            <div class="hamburger-menu-section">
+                                <p class="hamburger-menu-section-label">Navigation</p>
+                                <a href="/InstructorDashboard" class="hamburger-menu-link">Dashboard</a>
+                                <a href="/InstructorDashboard/Offerings" class="hamburger-menu-link">Lesson Offerings</a>
+                                <a href="/InstructorDashboard/Availability" class="hamburger-menu-link">Manage Availability</a>
+                                <a href="/InstructorDashboard/Index#booking-requests" class="hamburger-menu-link">Booking Requests</a>
+                                <a href="/InstructorDashboard/Payments" class="hamburger-menu-link">Verify Payment</a>
+                                <a href="/InstructorDashboard/LessonProgress" class="hamburger-menu-link">Lesson Progress</a>
+                            </div>
+                            <div class="hamburger-menu-section">
+                                <p class="hamburger-menu-section-label">Account</p>
+                                <a href="/Profile" class="hamburger-menu-link">Edit Profile</a>
+                                <a href="/Account/Logout" class="hamburger-menu-link hamburger-menu-link-muted">Logout</a>
+                            </div>
+                        }
+                        @if (role == "Admin")
+                        {
+                            <div class="hamburger-menu-section">
+                                <p class="hamburger-menu-section-label">Administration</p>
+                                <a href="/Admin" class="hamburger-menu-link">Instructor Applications</a>
+                                <a href="/Admin/ManageUsers" class="hamburger-menu-link">Manage Users</a>
+                                <a href="/Admin/MonitorBookings" class="hamburger-menu-link">Monitor Bookings</a>
+                                <a href="/Admin/ViewPayments" class="hamburger-menu-link">View Payments</a>
+                            </div>
+                            <div class="hamburger-menu-section">
+                                <p class="hamburger-menu-section-label">Account</p>
+                                <a href="/Profile" class="hamburger-menu-link">Edit Profile</a>
+                                <a href="/Account/Logout" class="hamburger-menu-link hamburger-menu-link-muted">Logout</a>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="hamburger-menu-section">
+                            <p class="hamburger-menu-section-label">Get Started</p>
+                            <a href="/Account/Login" class="hamburger-menu-link">Login</a>
+                            <a href="/Account/Register" class="hamburger-menu-link">Sign Up</a>
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
     </nav>
 
-    <!-- Toast notifications -->
     <div id="toast-container" class="toast-container"></div>
-
-    <!-- Main content -->
-    <main>
-        @RenderBody()
-    </main>
+    <main>@RenderBody()</main>
 
     <!-- Footer -->
     <footer class="footer">
@@ -96,22 +105,23 @@
             <div class="footer-grid">
                 <div>
                     <h3 class="footer-brand">BiDE</h3>
-                    <p class="footer-text">Your trusted platform for connecting with qualified driving instructors.</p>
+                    <p class="footer-text">The premium driving lesson marketplace connecting learners with verified instructors.</p>
                 </div>
                 <div>
                     <h4 class="footer-heading">Students</h4>
                     <a href="/Instructors" class="footer-link">Find Instructors</a>
                     <a href="/Student/Bookings" class="footer-link">My Bookings</a>
+                    <a href="/Student/LessonProgress" class="footer-link">Progress</a>
                 </div>
                 <div>
                     <h4 class="footer-heading">Instructors</h4>
-                    <a href="/Account/Register" class="footer-link">Become an Instructor</a>
-                    <a href="/InstructorDashboard" class="footer-link">Instructor Dashboard</a>
+                    <a href="/Account/Register" class="footer-link">Become Instructor</a>
+                    <a href="/InstructorDashboard" class="footer-link">Dashboard</a>
                 </div>
                 <div>
                     <h4 class="footer-heading">Support</h4>
-                    <a href="#" class="footer-link">Help Center</a>
-                    <a href="#" class="footer-link">Contact Us</a>
+                    <a href="#" class="footer-link">Help Centre</a>
+                    <a href="#" class="footer-link">Contact</a>
                 </div>
             </div>
             <div class="footer-bottom">
@@ -119,6 +129,27 @@
             </div>
         </div>
     </footer>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget">
+        <button class="chat-widget-toggle" onclick="toggleChatWidget()" aria-label="Chat">
+            <svg id="chatIconOpen" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            <svg id="chatIconClose" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="chat-widget-panel" id="chatPanel">
+            <div class="chat-widget-header">
+                <div><p class="chat-widget-header-title">BiDE Assistant</p><p class="chat-widget-header-subtitle">How can I help?</p></div>
+                <button class="chat-widget-header-close" onclick="toggleChatWidget()">&times;</button>
+            </div>
+            <div class="chat-widget-messages" id="chatMessages">
+                <div class="chat-msg chat-msg-bot"><p>Hi! Ask me about booking, payments, reviews, or anything else.</p></div>
+            </div>
+            <div class="chat-widget-input">
+                <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendChatMessage();" />
+                <button onclick="sendChatMessage()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+            </div>
+        </div>
+    </div>
 
     <script src="~/js/site.js"></script>
     @await RenderSectionAsync("Scripts", required: false)

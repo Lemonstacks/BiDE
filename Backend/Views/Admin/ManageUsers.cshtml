@@ -1,0 +1,162 @@
+@{
+    ViewData["Title"] = "Manage Users";
+    var students = ViewBag.Students as List<Student> ?? new List<Student>();
+    var instructors = ViewBag.Instructors as List<Instructor> ?? new List<Instructor>();
+    var admins = ViewBag.Admins as List<Admin> ?? new List<Admin>();
+    var roleFilter = ViewBag.RoleFilter as string ?? "all";
+    var searchFilter = ViewBag.SearchFilter as string ?? "";
+    var success = TempData["Success"] as string;
+}
+
+<div class="page-container">
+    <div class="section-header">
+        <p class="section-label">Admin</p>
+        <h1 class="section-title">Manage Users</h1>
+    </div>
+
+    @if (!string.IsNullOrEmpty(success))
+    {
+        <div class="alert alert-info">@success</div>
+    }
+
+    <!-- Summary Stats -->
+    <div class="grid-4" style="border: 1px solid var(--border); margin-bottom: 2rem;">
+        <div class="stat-card">
+            <p class="stat-value">@(students.Count + instructors.Count + admins.Count)</p>
+            <p class="stat-label">Total Users</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-value">@students.Count</p>
+            <p class="stat-label">Students</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-value">@instructors.Count</p>
+            <p class="stat-label">Instructors</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-value">@admins.Count</p>
+            <p class="stat-label">Admins</p>
+        </div>
+    </div>
+
+    <!-- Students Section -->
+    <div style="margin-bottom: 3rem;">
+        <p class="detail-section-title">Students (@students.Count)</p>
+        <hr class="detail-divider" />
+
+        @if (students.Count == 0)
+        {
+            <p class="text-sm text-muted">No students registered.</p>
+        }
+        else
+        {
+            @foreach (var s in students)
+            {
+                <div class="card">
+                    <div class="card-row">
+                        <div>
+                            <p class="card-title">@s.FirstName @s.LastName</p>
+                            <p class="card-subtitle">@s.Email</p>
+                            <div class="card-meta">
+                                @if (!string.IsNullOrEmpty(s.Contact))
+                                {
+                                    <span class="card-meta-item">@s.Contact</span>
+                                }
+                                @if (!string.IsNullOrEmpty(s.Suburb))
+                                {
+                                    <span class="card-meta-item">@s.Suburb</span>
+                                }
+                                <span class="card-meta-item">Joined: @s.CreatedAt.ToString("MMM d, yyyy")</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span class="badge badge-completed">Student</span>
+                            <form method="post" asp-action="DeactivateStudent" style="display:inline;"
+                                  onsubmit="return confirm('Remove @s.FirstName @s.LastName? This cannot be undone.');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="studentId" value="@s.StudentId" />
+                                <button type="submit" class="btn btn-destructive btn-sm">Deactivate</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Instructors Section -->
+    <div style="margin-bottom: 3rem;">
+        <p class="detail-section-title">Instructors (@instructors.Count)</p>
+        <hr class="detail-divider" />
+
+        @if (instructors.Count == 0)
+        {
+            <p class="text-sm text-muted">No instructors registered.</p>
+        }
+        else
+        {
+            @foreach (var i in instructors)
+            {
+                <div class="card">
+                    <div class="card-row">
+                        <div>
+                            <p class="card-title">@i.FirstName @i.LastName</p>
+                            <p class="card-subtitle">@i.Email</p>
+                            <div class="card-meta">
+                                @if (!string.IsNullOrEmpty(i.Contact))
+                                {
+                                    <span class="card-meta-item">@i.Contact</span>
+                                }
+                                @if (!string.IsNullOrEmpty(i.Suburb))
+                                {
+                                    <span class="card-meta-item">@i.Suburb</span>
+                                }
+                                <span class="card-meta-item">@i.Experience yrs exp</span>
+                                <span class="card-meta-item">Joined: @i.ApplicationDate.ToString("MMM d, yyyy")</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span class="badge badge-@i.Status.ToString().ToLower()">@i.Status</span>
+                            @if (i.Status == InstructorStatus.Approved)
+                            {
+                                <form method="post" asp-action="Suspend" style="display:inline;"
+                                      onsubmit="return confirm('Suspend @i.FirstName @i.LastName?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="instructorId" value="@i.InstructorId" />
+                                    <button type="submit" class="btn btn-destructive btn-sm">Suspend</button>
+                                </form>
+                            }
+                            else if (i.Status == InstructorStatus.Suspended)
+                            {
+                                <form method="post" asp-action="Reinstate" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="instructorId" value="@i.InstructorId" />
+                                    <button type="submit" class="btn btn-sm">Reinstate</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Admins Section -->
+    <div>
+        <p class="detail-section-title">Admins (@admins.Count)</p>
+        <hr class="detail-divider" />
+
+        @foreach (var a in admins)
+        {
+            <div class="card">
+                <div class="card-row">
+                    <div>
+                        <p class="card-title">@a.FirstName @a.LastName</p>
+                        <p class="card-subtitle">@a.Email</p>
+                    </div>
+                    <span class="badge badge-completed">Admin</span>
+                </div>
+            </div>
+        }
+    </div>
+</div>

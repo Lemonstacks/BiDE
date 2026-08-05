@@ -133,5 +133,120 @@ namespace BiDE.Controllers
             TempData["Success"] = $"{instructor.FirstName} {instructor.LastName} has been reinstated.";
             return RedirectToAction("Index");
         }
+
+        // GET: /Admin/ViewPayments
+        public async Task<IActionResult> ViewPayments(string? status, string? search)
+        {
+            var adminId = GetAdminId();
+            if (adminId == null) return RedirectToAction("Login", "Account");
+
+            var query = _context.Payments
+                .Include(p => p.Booking)
+                    .ThenInclude(b => b.Student)
+                .Include(p => p.Booking)
+                    .ThenInclude(b => b.LessonOffering)
+                .Include(p => p.Booking)
+                    .ThenInclude(b => b.Instructor)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(status) && status != "all")
+            {
+                query = query.Where(p => p.PaymentStatus == status);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.ToLower();
+                query = query.Where(p =>
+                    p.Booking.Student.FirstName.ToLower().Contains(term) ||
+                    p.Booking.Student.LastName.ToLower().Contains(term) ||
+                    p.Booking.Student.Email.ToLower().Contains(term) ||
+                    p.Booking.Instructor.FirstName.ToLower().Contains(term) ||
+                    p.Booking.Instructor.LastName.ToLower().Contains(term));
+            }
+
+            var payments = await query
+                .OrderByDescending(p => p.PaymentDate)
+                .ToListAsync();
+
+            ViewBag.StatusFilter = status ?? "all";
+            ViewBag.SearchFilter = search ?? "";
+            return View(payments);
+        }
+
+        // GET: /Admin/MonitorBookings
+        public async Task<IActionResult> MonitorBookings(string? status, string? search)
+        {
+            var adminId = GetAdminId();
+            if (adminId == null) return RedirectToAction("Login", "Account");
+
+            var query = _context.Bookings
+                .Include(b => b.Student)
+                .Include(b => b.Instructor)
+                .Include(b => b.LessonOffering)
+                .Include(b => b.Schedule)
+                .Include(b => b.Payment)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(status) && status != "all")
+            {
+                query = query.Where(b => b.Status == status);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.ToLower();
+                query = query.Where(b =>
+                    b.Student.FirstName.ToLower().Contains(term) ||
+                    b.Student.LastName.ToLower().Contains(term) ||
+                    b.Instructor.FirstName.ToLower().Contains(term) ||
+                    b.Instructor.LastName.ToLower().Contains(term) ||
+                    (b.LessonOffering != null && b.LessonOffering.Title.ToLower().Contains(term)));
+            }
+
+            var bookings = await query
+                .OrderByDescending(b => b.CreatedAt)
+                .ToListAsync();
+
+            ViewBag.StatusFilter = status ?? "all";
+            ViewBag.SearchFilter = search ?? "";
+            return View(bookings);
+        }
+
+        // GET: /Admin/ManageUsers
+        public async Task<IActionResult> ManageUsers(string? role, string? search)
+        {
+            var adminId = GetAdminId();
+            if (adminId == null) return RedirectToAction("Login", "Account");
+
+            var students = await _context.Students.ToListAsync();
+            var instructors = await _context.Instructors.ToListAsync();
+            var admins = await _context.Admins.ToListAsync();
+
+            ViewBag.Students = students;
+            ViewBag.Instructors = instructors;
+            ViewBag.Admins = admins;
+            ViewBag.RoleFilter = role ?? "all";
+            ViewBag.SearchFilter = search ?? "";
+            return View();
+        }
+
+        // POST: /Admin/DeactivateStudent
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeactivateStudent(int studentId)
+        {
+            var adminId = GetAdminId();
+            if (adminId == null) return RedirectToAction("Login", "Account");
+
+            var student = await _context.Students.FindAsync(studentId);
+            if (student == null) return NotFound();
+
+            _context.Students.Remove(student);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"{student.FirstName} {student.LastName} has been removed.";
+            return RedirectToAction("ManageUsers");
+        }
     }
 }

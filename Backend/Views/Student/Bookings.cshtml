@@ -44,7 +44,7 @@
                         <div class="card-row">
                             <div>
                                 <p class="card-title">@(b.LessonOffering?.Title ?? "Lesson")</p>
-                                <p class="card-subtitle">@b.Instructor.FirstName @b.Instructor.LastName</p>
+                                <p class="card-subtitle">@b.Instructor?.FirstName @b.Instructor?.LastName</p>
                                 <div class="card-meta">
                                     <span class="card-meta-item">
                                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -79,7 +79,7 @@
                                 {
                                     <button type="button" class="btn btn-primary btn-sm"
                                             onclick="openPaymentModal(@b.BookingId, '@(b.LessonOffering?.Title ?? "Lesson")', '@(b.LessonOffering?.Price.ToString("N0") ?? "0")')">
-                                        Pay
+                                        Upload Proof of Payment
                                     </button>
                                 }
 
@@ -108,7 +108,7 @@
                         <div class="card-row">
                             <div>
                                 <p class="card-title">@(b.LessonOffering?.Title ?? "Lesson")</p>
-                                <p class="card-subtitle">@b.Instructor.FirstName @b.Instructor.LastName</p>
+                                <p class="card-subtitle">@b.Instructor?.FirstName @b.Instructor?.LastName</p>
                                 <div class="card-meta">
                                     <span class="card-meta-item">
                                         @(b.Schedule?.Date.ToString("MMM d, yyyy") ?? "")
@@ -158,7 +158,7 @@
 <div class="modal-overlay" id="paymentModal">
     <div class="modal" style="position: relative;">
         <button class="modal-close" onclick="closeModal('paymentModal')">&times;</button>
-        <h3 class="modal-title">Submit Payment</h3>
+        <h3 class="modal-title">Upload Proof of Payment</h3>
 
         <div style="padding: 0.75rem; background: var(--bg-muted); margin-bottom: 1rem; font-size: 0.875rem;">
             <p class="font-bold" id="payment-lesson-title"></p>
@@ -171,7 +171,7 @@
 
             <div class="form-group">
                 <label class="form-label">Payment Method *</label>
-                <select name="paymentMethod" class="form-select" required>
+                <select name="paymentMethod" id="paymentMethodSelect" class="form-select" required onchange="toggleProofUpload()">
                     <option value="">-- Select --</option>
                     <option value="EFT">EFT / Bank Transfer</option>
                     <option value="Cash">Cash</option>
@@ -179,10 +179,14 @@
                 </select>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="proofUploadGroup">
                 <label class="form-label">Proof of Payment *</label>
-                <input type="file" name="proofOfPayment" accept="image/*,.pdf" class="form-input" required />
+                <input type="file" name="proofOfPayment" id="proofFileInput" accept="image/*,.pdf" class="form-input" required />
                 <p class="text-xs text-muted mt-1">Upload a screenshot or PDF of your payment confirmation.</p>
+            </div>
+
+            <div id="cashPaymentNote" style="display:none;padding:1rem;background:var(--primary-light);border-radius:var(--radius);margin-bottom:1rem;font-size:0.875rem;color:var(--fg);">
+                <strong>Cash Payment:</strong> No upload needed. Your instructor will verify the cash payment in person.
             </div>
 
             <button type="submit" class="btn btn-primary btn-full">Submit Payment</button>
@@ -201,7 +205,29 @@ function openPaymentModal(bookingId, title, amount) {
     document.getElementById('payment-booking-id').value = bookingId;
     document.getElementById('payment-lesson-title').textContent = title;
     document.getElementById('payment-amount').textContent = amount;
+    // Reset
+    document.getElementById('paymentMethodSelect').value = '';
+    document.getElementById('proofUploadGroup').style.display = 'block';
+    document.getElementById('cashPaymentNote').style.display = 'none';
+    document.getElementById('proofFileInput').required = true;
     openModal('paymentModal');
+}
+
+function toggleProofUpload() {
+    var method = document.getElementById('paymentMethodSelect').value;
+    var proofGroup = document.getElementById('proofUploadGroup');
+    var cashNote = document.getElementById('cashPaymentNote');
+    var fileInput = document.getElementById('proofFileInput');
+    if (method === 'Cash') {
+        proofGroup.style.display = 'none';
+        cashNote.style.display = 'block';
+        fileInput.required = false;
+        fileInput.value = '';
+    } else {
+        proofGroup.style.display = 'block';
+        cashNote.style.display = 'none';
+        fileInput.required = true;
+    }
 }
 </script>
 }
