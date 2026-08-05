@@ -139,6 +139,13 @@ namespace BiDE.Controllers
             var instructorId = GetInstructorId();
             if (instructorId == null) return RedirectToAction("Login", "Account");
 
+            // Validate: end time must be after start time
+            if (endTime <= startTime)
+            {
+                TempData["Error"] = "End time must be after start time.";
+                return RedirectToAction("Availability");
+            }
+
             var slot = new Availability
             {
                 InstructorId = instructorId.Value,

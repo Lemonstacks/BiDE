@@ -14,9 +14,14 @@
     {
         <div class="alert alert-info">@success</div>
     }
+    @if (TempData["Error"] is string errorMsg && !string.IsNullOrEmpty(errorMsg))
+    {
+        <div class="alert alert-error">@errorMsg</div>
+    }
 
     <!-- Add New Slot -->
-    <form method="post" asp-action="AddAvailability" class="card" style="padding: 1.5rem; margin-bottom: 2.5rem;">
+    <form method="post" asp-action="AddAvailability" class="card" style="padding: 1.5rem; margin-bottom: 2.5rem;"
+          onsubmit="return validateAvailability()">
         @Html.AntiForgeryToken()
         <p class="detail-section-title" style="margin-bottom: 1rem;">Add Availability Slot</p>
         <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
@@ -77,3 +82,17 @@
         }
     }
 </div>
+
+@section Scripts {
+<script>
+function validateAvailability() {
+    var start = document.querySelector('input[name="startTime"]').value;
+    var end = document.querySelector('input[name="endTime"]').value;
+    if (end <= start) {
+        alert('End time must be after start time.');
+        return false;
+    }
+    return true;
+}
+</script>
+}
