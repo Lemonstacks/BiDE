@@ -223,6 +223,32 @@ namespace BiDE.Controllers
             var instructors = await _context.Instructors.ToListAsync();
             var admins = await _context.Admins.ToListAsync();
 
+            // Apply search filter
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.ToLower();
+                students = students.Where(s =>
+                    s.FirstName.ToLower().Contains(term) ||
+                    s.LastName.ToLower().Contains(term) ||
+                    s.Email.ToLower().Contains(term)).ToList();
+                instructors = instructors.Where(i =>
+                    i.FirstName.ToLower().Contains(term) ||
+                    i.LastName.ToLower().Contains(term) ||
+                    i.Email.ToLower().Contains(term)).ToList();
+                admins = admins.Where(a =>
+                    a.FirstName.ToLower().Contains(term) ||
+                    a.LastName.ToLower().Contains(term) ||
+                    a.Email.ToLower().Contains(term)).ToList();
+            }
+
+            // Apply role filter
+            if (!string.IsNullOrWhiteSpace(role) && role != "all")
+            {
+                if (role == "Student") { instructors = new List<Instructor>(); admins = new List<Admin>(); }
+                else if (role == "Instructor") { students = new List<Student>(); admins = new List<Admin>(); }
+                else if (role == "Admin") { students = new List<Student>(); instructors = new List<Instructor>(); }
+            }
+
             ViewBag.Students = students;
             ViewBag.Instructors = instructors;
             ViewBag.Admins = admins;
@@ -242,10 +268,27 @@ namespace BiDE.Controllers
             var student = await _context.Students.FindAsync(studentId);
             if (student == null) return NotFound();
 
-            _context.Students.Remove(student);
-            await _context.SaveChangesAsync();
+            // Check for active bookings
+            var activeBookings = await _context.Bookings
+                .AnyAsync(b => b.StudentId == studentId &&
+                    (b.Status == "Pending" || b.Status == "Accepted"));
+            if (activeBookings)
+            {
+                TempData["Error"] = $"Cannot remove {student.FirstName} {student.LastName} — they have active bookings.";
+                return RedirectToAction("ManageUsers");
+            }
 
-            TempData["Success"] = $"{student.FirstName} {student.LastName} has been removed.";
+            try
+            {
+                _context.Students.Remove(student);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"{student.FirstName} {student.LastName} has been removed.";
+            }
+            catch (Exception)
+            {
+                TempData["Error"] = $"Unable to remove {student.FirstName} {student.LastName}. They may have existing bookings or reviews.";
+            }
+
             return RedirectToAction("ManageUsers");
         }
     }

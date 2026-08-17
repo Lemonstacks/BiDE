@@ -111,6 +111,18 @@ namespace BiDE.Controllers
                 return View();
             }
 
+            if (password.Length < 6)
+            {
+                ViewBag.Error = "Password must be at least 6 characters.";
+                return View();
+            }
+
+            if (!email.Contains("@") || !email.Contains("."))
+            {
+                ViewBag.Error = "Please enter a valid email address.";
+                return View();
+            }
+
             if (role != "Student" && role != "Instructor")
             {
                 ViewBag.Error = "Please select a valid role.";
