@@ -12,6 +12,10 @@
     <div id="live-map" style="height: 550px; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);"></div>
 
     <div id="map-status" class="alert alert-info" style="margin-top: 1rem; display: none;"></div>
+
+    <form id="antiforgery-form" style="display:none;">
+        @Html.AntiForgeryToken()
+    </form>
 </div>
 
 <!-- Leaflet CSS -->
