@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Manage Availability";
     var success = TempData["Success"] as string;
+    var error = TempData["Error"] as string;
 }
 
 <div class="page-container" style="max-width: 800px;">
@@ -14,15 +15,19 @@
     {
         <div class="alert alert-info">@success</div>
     }
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <div class="alert alert-error">@error</div>
+    }
 
     <!-- Add New Slot -->
-    <form method="post" asp-action="AddAvailability" class="card" style="padding: 1.5rem; margin-bottom: 2.5rem;">
+    <form method="post" asp-action="AddAvailability" class="card" style="padding: 1.5rem; margin-bottom: 2.5rem;" onsubmit="return validateSlot()">
         @Html.AntiForgeryToken()
         <p class="detail-section-title" style="margin-bottom: 1rem;">Add Availability Slot</p>
         <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
             <div class="form-group" style="flex: 1; min-width: 160px; margin-bottom: 0;">
                 <label class="form-label">Date</label>
-                <input type="date" name="date" class="form-input" required />
+                <input type="date" name="date" id="slot-date" class="form-input" required min="@DateTime.Now.ToString("yyyy-MM-dd")" />
             </div>
             <div class="form-group" style="min-width: 130px; margin-bottom: 0;">
                 <label class="form-label">Start Time</label>
@@ -49,7 +54,9 @@
     {
         @foreach (var s in Model)
         {
-            <div class="card">
+            var isPast = (s.Date.Date + s.EndTime) < DateTime.Now;
+
+            <div class="card" style="@(isPast ? "opacity: 0.4; pointer-events: none;" : "")">
                 <div class="card-row">
                     <div style="display: flex; align-items: center; gap: 1.5rem;">
                         <span class="font-mono text-xs" style="text-transform: uppercase; letter-spacing: 0.1em; width: 120px;">
@@ -58,11 +65,18 @@
                         <span style="font-size: 0.875rem; font-weight: 500;">
                             @s.StartTime.ToString(@"hh\:mm") - @s.EndTime.ToString(@"hh\:mm")
                         </span>
-                        <span class="badge badge-@(s.AvailabilityStatus == "Available" ? "approved" : "pending")">
-                            @s.AvailabilityStatus
-                        </span>
+                        @if (isPast)
+                        {
+                            <span class="badge" style="background: rgba(255,255,255,0.1); color: #999;">Passed</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-@(s.AvailabilityStatus == "Available" ? "approved" : "pending")">
+                                @s.AvailabilityStatus
+                            </span>
+                        }
                     </div>
-                    @if (s.AvailabilityStatus == "Available")
+                    @if (s.AvailabilityStatus == "Available" && !isPast)
                     {
                         <form method="post" asp-action="DeleteAvailability">
                             @Html.AntiForgeryToken()
@@ -85,7 +99,7 @@ function validateSlot() {
     var startVal = document.getElementById('slot-start').value;
     var endVal = document.getElementById('slot-end').value;
 
-    if (!dateVal || !startVal || !endVal) return true; // let required handle it
+    if (!dateVal || !startVal || !endVal) return true;
 
     var now = new Date();
     var slotStart = new Date(dateVal + 'T' + startVal);
