@@ -1,0 +1,57 @@
+@{
+    ViewData["Title"] = "Go Live";
+    var instructor = ViewBag.Instructor as BiDE.Models.Instructor;
+}
+
+<div class="page-container" style="max-width: 600px;">
+    <div class="section-header">
+        <p class="section-label">Instructor</p>
+        <h1 class="section-title">Go Live on Map</h1>
+        <p class="text-sm text-muted" style="margin-top: 0.5rem;">Share your location so students can find and book you in real time.</p>
+    </div>
+
+    <div class="card" style="padding: 2rem; text-align: center;">
+        <div id="live-status" style="margin-bottom: 1.5rem;">
+            <div id="status-offline">
+                <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="opacity: 0.4; margin-bottom: 0.75rem;">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+                <p class="text-muted">You are currently offline</p>
+            </div>
+            <div id="status-online" style="display: none;">
+                <svg width="48" height="48" fill="none" stroke="#22c55e" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom: 0.75rem;">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+                <p style="color: #22c55e; font-weight: 600;">You are live on the map</p>
+                <p class="text-sm text-muted" id="coords-display" style="margin-top: 0.25rem;"></p>
+            </div>
+        </div>
+
+        <button id="btn-go-live" class="btn btn-primary" onclick="goLive()" style="width: 100%; padding: 0.875rem;">
+            Go Live
+        </button>
+        <button id="btn-go-offline" class="btn btn-destructive" onclick="goOffline()" style="width: 100%; padding: 0.875rem; display: none;">
+            Go Offline
+        </button>
+    </div>
+
+    <div id="live-map-preview" style="height: 300px; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-top: 1.5rem; display: none;"></div>
+</div>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- SignalR JS Client -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+@section Scripts {
+<script>
+    const instructorId = @(instructor?.InstructorId ?? 0);
+    const instructorName = "@(instructor?.FirstName) @(instructor?.LastName)";
+    const vehicleType = "@(instructor?.Certification ?? "Manual")";
+</script>
+<script src="~/js/golive.js"></script>
+}

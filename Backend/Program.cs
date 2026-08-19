@@ -1,10 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using BiDE.Data;
+using BiDE.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 // Register the database context with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -42,5 +44,7 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHub<InstructorHub>("/instructorHub");
 
 app.Run();

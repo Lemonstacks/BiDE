@@ -445,5 +445,18 @@ namespace BiDE.Controllers
             TempData["Success"] = "Payment rejected.";
             return RedirectToAction("Payments");
         }
+
+        // GET: /InstructorDashboard/GoLive
+        public async Task<IActionResult> GoLive()
+        {
+            var instructorId = GetInstructorId();
+            if (instructorId == null) return RedirectToAction("Login", "Account");
+
+            var instructor = await _context.Instructors.FindAsync(instructorId.Value);
+            if (instructor == null) return RedirectToAction("Login", "Account");
+
+            ViewBag.Instructor = instructor;
+            return View();
+        }
     }
 }

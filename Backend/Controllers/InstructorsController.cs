@@ -1,17 +1,21 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
 using BiDE.Data;
 using BiDE.Models;
+using BiDE.Hubs;
 
 namespace BiDE.Controllers
 {
     public class InstructorsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IHubContext<InstructorHub> _hubContext;
 
-        public InstructorsController(ApplicationDbContext context)
+        public InstructorsController(ApplicationDbContext context, IHubContext<InstructorHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         // GET: /Instructors
@@ -167,6 +171,78 @@ namespace BiDE.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Booking submitted successfully! The instructor will review your request.";
+            return RedirectToAction("Bookings", "Student");
+        }
+
+        // GET: /Instructors/LiveMap
+        public IActionResult LiveMap()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var role = HttpContext.Session.GetString("UserRole");
+            if (userId == null || role != "Student")
+            {
+                TempData["Error"] = "Please log in as a student to view the live map.";
+                return RedirectToAction("Login", "Account");
+            }
+            return View();
+        }
+
+        // POST: /Instructors/BookRealTime
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BookRealTime(int instructorId)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var role = HttpContext.Session.GetString("UserRole");
+
+            if (userId == null || role != "Student")
+            {
+                TempData["Error"] = "Please log in as a student to book.";
+                return RedirectToAction("Login", "Account");
+            }
+
+            var instructor = await _context.Instructors.FindAsync(instructorId);
+            if (instructor == null || instructor.Status != InstructorStatus.Approved)
+            {
+                TempData["Error"] = "Instructor is not available.";
+                return RedirectToAction("LiveMap");
+            }
+
+            // Find the next available slot for this instructor
+            var nextSlot = await _context.Availabilities
+                .Where(a => a.InstructorId == instructorId && a.AvailabilityStatus == "Available" && a.Date >= DateTime.Today)
+                .OrderBy(a => a.Date).ThenBy(a => a.StartTime)
+                .FirstOrDefaultAsync();
+
+            // Find any offering from this instructor
+            var offering = await _context.LessonOfferings
+                .Where(o => o.InstructorId == instructorId)
+                .FirstOrDefaultAsync();
+
+            if (nextSlot == null || offering == null)
+            {
+                TempData["Error"] = "This instructor has no available slots or offerings. Try the standard booking instead.";
+                return RedirectToAction("LiveMap");
+            }
+
+            var booking = new Booking
+            {
+                InstructorId = instructorId,
+                StudentId = userId.Value,
+                ScheduleId = nextSlot.AvailabilityId,
+                OfferId = offering.OfferId,
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Bookings.Add(booking);
+            nextSlot.AvailabilityStatus = "Booked";
+            await _context.SaveChangesAsync();
+
+            // Remove instructor from all live maps via SignalR
+            await _hubContext.Clients.All.SendAsync("InstructorRemoved", instructorId);
+
+            TempData["Success"] = "Booking request sent! The instructor will be notified.";
             return RedirectToAction("Bookings", "Student");
         }
     }

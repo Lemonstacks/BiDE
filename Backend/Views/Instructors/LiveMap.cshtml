@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Live Map";
+}
+
+<div class="page-container">
+    <div class="section-header">
+        <p class="section-label">Student</p>
+        <h1 class="section-title">Find Instructors Near You</h1>
+        <p class="text-sm text-muted" style="margin-top: 0.5rem;">Available instructors appear on the map in real time. Click a marker to view details and book.</p>
+    </div>
+
+    <div id="live-map" style="height: 550px; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);"></div>
+
+    <div id="map-status" class="alert alert-info" style="margin-top: 1rem; display: none;"></div>
+</div>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- SignalR JS Client -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+@section Scripts {
+<script src="~/js/livemap.js"></script>
+}
