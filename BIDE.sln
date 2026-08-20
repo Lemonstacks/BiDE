@@ -7,6 +7,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{1AE8
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BIDE", "Backend\BIDE.csproj", "{395A201F-B26D-4C8C-8570-517ABCAD0742}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend.Tests", "Backend.Tests", "{C0C6E044-CB20-653A-D6C2-4CA8FE87111B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiDE.Tests", "Backend.Tests\BiDE.Tests.csproj", "{8770F94C-3491-4648-8A53-D2FE8D8B8B67}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,11 +33,24 @@ Global
 		{395A201F-B26D-4C8C-8570-517ABCAD0742}.Release|x64.Build.0 = Release|Any CPU
 		{395A201F-B26D-4C8C-8570-517ABCAD0742}.Release|x86.ActiveCfg = Release|Any CPU
 		{395A201F-B26D-4C8C-8570-517ABCAD0742}.Release|x86.Build.0 = Release|Any CPU
+		{8770F94C-3491-4648-8A53-D2FE8D8B8B67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8770F94C-3491-4648-8A53-D2FE8D8B8B67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8770F94C-3491-4648-8A53-D2FE8D8B8B67}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8770F94C-3491-4648-8A53-D2FE8D8B8B67}.Debug|x64.Build.0 = Debug|Any CPU
+		{8770F94C-3491-4648-8A53-D2FE8D8B8B67}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8770F94C-3491-4648-8A53-D2FE8D8B8B67}.Debug|x86.Build.0 = Debug|Any CPU
+		{8770F94C-3491-4648-8A53-D2FE8D8B8B67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8770F94C-3491-4648-8A53-D2FE8D8B8B67}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8770F94C-3491-4648-8A53-D2FE8D8B8B67}.Release|x64.ActiveCfg = Release|Any CPU
+		{8770F94C-3491-4648-8A53-D2FE8D8B8B67}.Release|x64.Build.0 = Release|Any CPU
+		{8770F94C-3491-4648-8A53-D2FE8D8B8B67}.Release|x86.ActiveCfg = Release|Any CPU
+		{8770F94C-3491-4648-8A53-D2FE8D8B8B67}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{395A201F-B26D-4C8C-8570-517ABCAD0742} = {1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}
+		{8770F94C-3491-4648-8A53-D2FE8D8B8B67} = {C0C6E044-CB20-653A-D6C2-4CA8FE87111B}
 	EndGlobalSection
 EndGlobal
