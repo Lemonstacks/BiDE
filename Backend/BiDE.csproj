@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>BiDE</RootNamespace>
+    <NoWarn>CS8602</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
