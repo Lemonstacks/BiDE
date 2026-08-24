@@ -108,6 +108,12 @@ namespace BiDE.Controllers
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.InstructorId == instructorId.Value);
             if (booking == null) return NotFound();
 
+            if (booking.Status != "Accepted")
+            {
+                TempData["Error"] = "Only accepted bookings can be marked as completed.";
+                return RedirectToAction("Index");
+            }
+
             booking.Status = "Completed";
             booking.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -138,6 +144,33 @@ namespace BiDE.Controllers
         {
             var instructorId = GetInstructorId();
             if (instructorId == null) return RedirectToAction("Login", "Account");
+
+            // Validate: end time must be after start time
+            if (endTime <= startTime)
+            {
+                TempData["Error"] = "End time must be after start time.";
+                return RedirectToAction("Availability");
+            }
+
+            // Validate: cannot add slot in the past
+            var slotDateTime = date.Date + startTime;
+            if (slotDateTime <= DateTime.Now)
+            {
+                TempData["Error"] = "Cannot add an availability slot in the past.";
+                return RedirectToAction("Availability");
+            }
+
+            // Validate: no overlapping slots
+            var overlapping = await _context.Availabilities
+                .AnyAsync(a => a.InstructorId == instructorId.Value &&
+                    a.Date == date.Date &&
+                    a.StartTime < endTime &&
+                    a.EndTime > startTime);
+            if (overlapping)
+            {
+                TempData["Error"] = "This slot overlaps with an existing availability.";
+                return RedirectToAction("Availability");
+            }
 
             var slot = new Availability
             {
@@ -200,6 +233,18 @@ namespace BiDE.Controllers
             var instructorId = GetInstructorId();
             if (instructorId == null) return RedirectToAction("Login", "Account");
 
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                TempData["Error"] = "Title is required.";
+                return RedirectToAction("Offerings");
+            }
+
+            if (price < 0)
+            {
+                TempData["Error"] = "Price cannot be negative.";
+                return RedirectToAction("Offerings");
+            }
+
             var offering = new LessonOffering
             {
                 InstructorId = instructorId.Value,
@@ -224,6 +269,18 @@ namespace BiDE.Controllers
         {
             var instructorId = GetInstructorId();
             if (instructorId == null) return RedirectToAction("Login", "Account");
+
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                TempData["Error"] = "Title is required.";
+                return RedirectToAction("Offerings");
+            }
+
+            if (price < 0)
+            {
+                TempData["Error"] = "Price cannot be negative.";
+                return RedirectToAction("Offerings");
+            }
 
             var offering = await _context.LessonOfferings
                 .FirstOrDefaultAsync(o => o.OfferId == offerId && o.InstructorId == instructorId.Value);
@@ -286,9 +343,27 @@ namespace BiDE.Controllers
             var instructorId = GetInstructorId();
             if (instructorId == null) return RedirectToAction("Login", "Account");
 
+            if (string.IsNullOrWhiteSpace(feedback))
+            {
+                TempData["Error"] = "Feedback is required.";
+                return RedirectToAction("LessonProgress");
+            }
+
+            if (duration <= 0)
+            {
+                TempData["Error"] = "Duration must be greater than 0.";
+                return RedirectToAction("LessonProgress");
+            }
+
             var booking = await _context.Bookings
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.InstructorId == instructorId.Value);
             if (booking == null) return NotFound();
+
+            if (booking.Status != "Accepted")
+            {
+                TempData["Error"] = "Can only add progress to accepted bookings.";
+                return RedirectToAction("LessonProgress");
+            }
 
             var progress = new Models.LessonProgress
             {

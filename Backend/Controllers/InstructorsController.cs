@@ -118,6 +118,37 @@ namespace BiDE.Controllers
                 return RedirectToAction("Detail", new { id = instructorId });
             }
 
+            // Validate offering and schedule belong to the same instructor
+            if (offering.InstructorId != instructorId || schedule.InstructorId != instructorId)
+            {
+                TempData["Error"] = "Offering and schedule must belong to the selected instructor.";
+                return RedirectToAction("Detail", new { id = instructorId });
+            }
+
+            // Verify the slot is still available
+            if (schedule.AvailabilityStatus != "Available")
+            {
+                TempData["Error"] = "This time slot is no longer available. Please choose another.";
+                return RedirectToAction("Detail", new { id = instructorId });
+            }
+
+            // Verify the instructor is still approved
+            var instructor = await _context.Instructors.FindAsync(instructorId);
+            if (instructor == null || instructor.Status != InstructorStatus.Approved || !instructor.IsVerified)
+            {
+                TempData["Error"] = "This instructor is no longer available for bookings.";
+                return RedirectToAction("Index");
+            }
+
+            // Prevent duplicate booking for same slot
+            var existingBooking = await _context.Bookings
+                .AnyAsync(b => b.ScheduleId == scheduleId && b.Status != "Cancelled" && b.Status != "Rejected");
+            if (existingBooking)
+            {
+                TempData["Error"] = "This time slot has already been booked.";
+                return RedirectToAction("Detail", new { id = instructorId });
+            }
+
             var booking = new Booking
             {
                 InstructorId = instructorId,

@@ -53,6 +53,28 @@ namespace BiDE.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null) return RedirectToAction("Login", "Account");
 
+            if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) || string.IsNullOrWhiteSpace(contact))
+            {
+                TempData["Error"] = "First name, last name, and contact are required.";
+                return RedirectToAction("Index");
+            }
+
+            if (profilePicture != null && profilePicture.Length > 0)
+            {
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                var ext = Path.GetExtension(profilePicture.FileName).ToLower();
+                if (!allowedExtensions.Contains(ext))
+                {
+                    TempData["Error"] = "Profile picture must be a JPG, PNG, or GIF image.";
+                    return RedirectToAction("Index");
+                }
+                if (profilePicture.Length > 3 * 1024 * 1024)
+                {
+                    TempData["Error"] = "Profile picture must be less than 3MB.";
+                    return RedirectToAction("Index");
+                }
+            }
+
             var student = await _context.Students.FindAsync(userId.Value);
             if (student == null) return NotFound();
 
@@ -100,6 +122,34 @@ namespace BiDE.Controllers
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null) return RedirectToAction("Login", "Account");
+
+            if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) || string.IsNullOrWhiteSpace(contact))
+            {
+                TempData["Error"] = "First name, last name, and contact are required.";
+                return RedirectToAction("Index");
+            }
+
+            if (experience < 0)
+            {
+                TempData["Error"] = "Experience cannot be negative.";
+                return RedirectToAction("Index");
+            }
+
+            if (profilePicture != null && profilePicture.Length > 0)
+            {
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                var ext = Path.GetExtension(profilePicture.FileName).ToLower();
+                if (!allowedExtensions.Contains(ext))
+                {
+                    TempData["Error"] = "Profile picture must be a JPG, PNG, or GIF image.";
+                    return RedirectToAction("Index");
+                }
+                if (profilePicture.Length > 3 * 1024 * 1024)
+                {
+                    TempData["Error"] = "Profile picture must be less than 3MB.";
+                    return RedirectToAction("Index");
+                }
+            }
 
             var instructor = await _context.Instructors.FindAsync(userId.Value);
             if (instructor == null) return NotFound();
@@ -154,12 +204,36 @@ namespace BiDE.Controllers
             var instructor = await _context.Instructors.FindAsync(userId.Value);
             if (instructor == null) return NotFound();
 
-            _context.Instructors.Remove(instructor);
-            await _context.SaveChangesAsync();
+            // Check for active bookings
+            var activeBookings = await _context.Bookings
+                .AnyAsync(b => b.InstructorId == userId.Value &&
+                    (b.Status == "Pending" || b.Status == "Accepted"));
+            if (activeBookings)
+            {
+                TempData["Error"] = "Cannot delete profile while you have active bookings. Please complete or reject them first.";
+                return RedirectToAction("Index");
+            }
 
-            HttpContext.Session.Clear();
-            TempData["Success"] = "Instructor profile deleted.";
-            return RedirectToAction("Login", "Account");
+            try
+            {
+                var availabilities = _context.Availabilities.Where(a => a.InstructorId == userId.Value);
+                _context.Availabilities.RemoveRange(availabilities);
+
+                var offerings = _context.LessonOfferings.Where(o => o.InstructorId == userId.Value);
+                _context.LessonOfferings.RemoveRange(offerings);
+
+                _context.Instructors.Remove(instructor);
+                await _context.SaveChangesAsync();
+
+                HttpContext.Session.Clear();
+                TempData["Success"] = "Instructor profile deleted.";
+                return RedirectToAction("Login", "Account");
+            }
+            catch (Exception)
+            {
+                TempData["Error"] = "Unable to delete profile. Please contact support.";
+                return RedirectToAction("Index");
+            }
         }
     }
 }

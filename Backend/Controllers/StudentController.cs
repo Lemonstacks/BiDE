@@ -98,6 +98,12 @@ namespace BiDE.Controllers
 
             if (booking == null) return NotFound();
 
+            if (booking.Status != "Pending" && booking.Status != "Accepted")
+            {
+                TempData["Error"] = "Only pending or accepted bookings can be cancelled.";
+                return RedirectToAction("Bookings");
+            }
+
             booking.Status = "Cancelled";
             booking.CancellationReason = reason;
             booking.CancelledBy = "Student";
@@ -121,6 +127,12 @@ namespace BiDE.Controllers
         {
             var studentId = GetStudentId();
             if (studentId == null) return RedirectToAction("Login", "Account");
+
+            if (rating < 1 || rating > 5)
+            {
+                TempData["Error"] = "Rating must be between 1 and 5.";
+                return RedirectToAction("CompletedLessons");
+            }
 
             var booking = await _context.Bookings
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.StudentId == studentId.Value);
@@ -160,6 +172,37 @@ namespace BiDE.Controllers
         {
             var studentId = GetStudentId();
             if (studentId == null) return RedirectToAction("Login", "Account");
+
+            // Validate payment method
+            var validMethods = new[] { "EFT", "Cash", "Card" };
+            if (string.IsNullOrWhiteSpace(paymentMethod) || !validMethods.Contains(paymentMethod))
+            {
+                TempData["Error"] = "Please select a valid payment method.";
+                return RedirectToAction("Bookings");
+            }
+
+            // Validate file upload
+            if (proofOfPayment == null || proofOfPayment.Length == 0)
+            {
+                TempData["Error"] = "Proof of payment file is required.";
+                return RedirectToAction("Bookings");
+            }
+
+            // File size limit: 5MB
+            if (proofOfPayment.Length > 5 * 1024 * 1024)
+            {
+                TempData["Error"] = "File size must be less than 5MB.";
+                return RedirectToAction("Bookings");
+            }
+
+            // File type validation
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
+            var extension = Path.GetExtension(proofOfPayment.FileName).ToLower();
+            if (!allowedExtensions.Contains(extension))
+            {
+                TempData["Error"] = "Only JPG, PNG, and PDF files are allowed.";
+                return RedirectToAction("Bookings");
+            }
 
             var booking = await _context.Bookings
                 .Include(b => b.LessonOffering)
