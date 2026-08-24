@@ -806,3 +806,62 @@ main { min-height: 100vh; }
     .section { padding: 4rem 1.25rem; }
     .navbar { padding: 0.75rem 1.25rem; }
 }
+
+/* ===== HERO VIDEO BACKGROUND ===== */
+.hero-video-bg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* ===== PAGE HEADER BACKGROUNDS ===== */
+.page-header-bg {
+    position: relative;
+    padding: 8rem 2rem 4rem;
+    overflow: hidden;
+}
+.page-header-bg::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0;
+}
+.page-header-bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.7) 100%);
+    z-index: 1;
+}
+.page-header-bg > * {
+    position: relative;
+    z-index: 2;
+}
+.page-header-bg .section-header .section-label {
+    color: rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.2);
+}
+.page-header-bg .section-header .section-title {
+    color: #ffffff;
+}
+.page-header-bg .section-header .section-subtitle,
+.page-header-bg .section-header p {
+    color: rgba(255,255,255,0.8);
+}
+
+/* Individual page backgrounds */
+.page-header-bg.bg-find-instructor::before { background-image: url('/images/pages/find-instructor.jpg'); }
+.page-header-bg.bg-instructor-detail::before { background-image: url('/images/pages/instructor-detail.jpg'); }
+.page-header-bg.bg-login::before { background-image: url('/images/pages/login.jpg'); }
+.page-header-bg.bg-register::before { background-image: url('/images/pages/register.jpg'); }
+.page-header-bg.bg-student-dashboard::before { background-image: url('/images/pages/student-dashboard.jpg'); }
+.page-header-bg.bg-instructor-dashboard::before { background-image: url('/images/pages/instructor-dashboard.jpg'); }
+
+@media (max-width: 768px) {
+    .page-header-bg { padding: 6rem 1.25rem 3rem; }
+}

@@ -6,12 +6,15 @@
     var certifications = ViewBag.Certifications as List<string> ?? new List<string>();
 }
 
-<div class="page-container">
+<div class="page-header-bg bg-find-instructor">
     <div class="section-header">
         <span class="section-label">Search</span>
         <h1 class="section-title">Find Your Instructor</h1>
         <p class="section-subtitle">Browse verified driving instructors by name, location or specialization.</p>
     </div>
+</div>
+
+<div class="page-container" style="padding-top:3rem;">
 
     <!-- Search -->
     <form method="get" class="search-bar" style="margin-top:2rem;">
