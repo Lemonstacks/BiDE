@@ -181,27 +181,30 @@ namespace BiDE.Controllers
                 return RedirectToAction("Bookings");
             }
 
-            // Validate file upload
-            if (proofOfPayment == null || proofOfPayment.Length == 0)
+            // Validate file upload (not required for Cash payments)
+            if (paymentMethod != "Cash")
             {
-                TempData["Error"] = "Proof of payment file is required.";
-                return RedirectToAction("Bookings");
-            }
+                if (proofOfPayment == null || proofOfPayment.Length == 0)
+                {
+                    TempData["Error"] = "Proof of payment file is required for EFT and Card payments.";
+                    return RedirectToAction("Bookings");
+                }
 
-            // File size limit: 5MB
-            if (proofOfPayment.Length > 5 * 1024 * 1024)
-            {
-                TempData["Error"] = "File size must be less than 5MB.";
-                return RedirectToAction("Bookings");
-            }
+                // File size limit: 5MB
+                if (proofOfPayment.Length > 5 * 1024 * 1024)
+                {
+                    TempData["Error"] = "File size must be less than 5MB.";
+                    return RedirectToAction("Bookings");
+                }
 
-            // File type validation
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
-            var extension = Path.GetExtension(proofOfPayment.FileName).ToLower();
-            if (!allowedExtensions.Contains(extension))
-            {
-                TempData["Error"] = "Only JPG, PNG, and PDF files are allowed.";
-                return RedirectToAction("Bookings");
+                // File type validation
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
+                var extension = Path.GetExtension(proofOfPayment.FileName).ToLower();
+                if (!allowedExtensions.Contains(extension))
+                {
+                    TempData["Error"] = "Only JPG, PNG, and PDF files are allowed.";
+                    return RedirectToAction("Bookings");
+                }
             }
 
             var booking = await _context.Bookings
