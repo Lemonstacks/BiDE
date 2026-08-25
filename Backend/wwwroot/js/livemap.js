@@ -48,11 +48,8 @@
                 '<div style="min-width:180px;padding:4px;">' +
                 '<p style="font-weight:700;margin:0 0 4px 0;font-size:14px;">' + data.name + '</p>' +
                 '<p style="margin:0 0 8px 0;font-size:12px;color:#666;">Transmission: <strong>' + data.vehicleType + '</strong></p>' +
-                '<form method="post" action="/Instructors/BookRealTime">' +
-                '<input type="hidden" name="instructorId" value="' + data.instructorId + '" />' +
-                '<input type="hidden" name="__RequestVerificationToken" value="' + (document.querySelector('input[name=__RequestVerificationToken]') ? document.querySelector('input[name=__RequestVerificationToken]').value : '') + '" />' +
-                '<button type="submit" style="background:#2563eb;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;width:100%;font-size:13px;font-weight:500;">Book Now</button>' +
-                '</form></div>'
+                '<a href="/Instructors/Detail/' + data.instructorId + '" style="display:block;background:#2563eb;color:#fff;text-align:center;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:500;">View Profile</a>' +
+                '</div>'
             );
 
             markers[key] = marker;
