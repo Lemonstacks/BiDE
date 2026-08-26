@@ -11,11 +11,25 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar">
+    @{
+        var isLoggedIn = Context.Session.GetInt32("UserId") != null;
+        var currentPath = Context.Request.Path.Value?.ToLower() ?? "";
+        var isLandingPage = currentPath == "/" || currentPath == "/home" || currentPath == "/home/index" || currentPath == "/instructors" || currentPath == "/instructors/index";
+        var navClass = (isLoggedIn && !isLandingPage) ? "navbar navbar-sticky" : "navbar";
+    }
+    <nav class="@navClass">
         <div class="navbar-container">
             <a href="/" class="navbar-brand">
                 <img src="@Url.Content("~/images/logo.png")" alt="BiDE" style="height:40px;width:auto;" />
             </a>
+
+            <!-- Typing Animation (only shows when not logged in) -->
+            @if (!isLoggedIn)
+            {
+                <div class="navbar-typing">
+                    <span id="typingText"></span><span class="typing-cursor">|</span>
+                </div>
+            }
 
             <!-- Desktop Nav (hidden on mobile) -->
             <div class="navbar-desktop">
@@ -24,29 +38,33 @@
                     var desktopRole = Context.Session.GetString("UserRole");
                     @if (desktopRole == "Student")
                     {
-                        <a href="/Instructors" class="nav-link">Instructors</a>
-                        <a href="/Instructors/LiveMap" class="nav-link">Live Map</a>
-                        <a href="/Student/Bookings" class="nav-link">Bookings</a>
-                        <a href="/Student/LessonProgress" class="nav-link">Progress</a>
-                        <a href="/Student/CompletedLessons" class="nav-link">Completed</a>
+                        <a href="/Instructors" class="nav-link">Find Instructors</a>
+                        <a href="/Student/Bookings" class="nav-link">My Bookings</a>
+                        <a href="/Student/LessonProgress" class="nav-link">Lesson Progress</a>
+                        <a href="/Student/CompletedLessons" class="nav-link">Completed Lessons</a>
+                        <a href="/Profile" class="nav-link">Edit Profile</a>
+                        <a href="/Account/Logout" class="nav-link nav-link-muted">Logout</a>
                     }
                     @if (desktopRole == "Instructor")
                     {
                         <a href="/InstructorDashboard" class="nav-link">Dashboard</a>
-                        <a href="/InstructorDashboard/Offerings" class="nav-link">Offerings</a>
-                        <a href="/InstructorDashboard/Availability" class="nav-link">Availability</a>
-                        <a href="/InstructorDashboard/Payments" class="nav-link">Payments</a>
-                        <a href="/InstructorDashboard/GoLive" class="nav-link">Go Live</a>
+                        <a href="/InstructorDashboard/Offerings" class="nav-link">Lesson Offerings</a>
+                        <a href="/InstructorDashboard/Availability" class="nav-link">Manage Availability</a>
+                        <a href="/InstructorDashboard/Index#booking-requests" class="nav-link">Booking Requests</a>
+                        <a href="/InstructorDashboard/Payments" class="nav-link">Verify Payment</a>
+                        <a href="/InstructorDashboard/LessonProgress" class="nav-link">Lesson Progress</a>
+                        <a href="/Profile" class="nav-link">Edit Profile</a>
+                        <a href="/Account/Logout" class="nav-link nav-link-muted">Logout</a>
                     }
                     @if (desktopRole == "Admin")
                     {
-                        <a href="/Admin" class="nav-link">Applications</a>
-                        <a href="/Admin/ManageUsers" class="nav-link">Users</a>
-                        <a href="/Admin/MonitorBookings" class="nav-link">Bookings</a>
-                        <a href="/Admin/ViewPayments" class="nav-link">Payments</a>
+                        <a href="/Admin" class="nav-link">Instructor Applications</a>
+                        <a href="/Admin/ManageUsers" class="nav-link">Manage Users</a>
+                        <a href="/Admin/MonitorBookings" class="nav-link">Monitor Bookings</a>
+                        <a href="/Admin/ViewPayments" class="nav-link">View Payments</a>
+                        <a href="/Profile" class="nav-link">Edit Profile</a>
+                        <a href="/Account/Logout" class="nav-link nav-link-muted">Logout</a>
                     }
-                    <a href="/Profile" class="nav-link">Profile</a>
-                    <a href="/Account/Logout" class="nav-link nav-link-muted">Logout</a>
                 }
                 else
                 {
