@@ -244,8 +244,9 @@ namespace BiDE.Controllers
                 // Update existing payment record
                 booking.Payment.PaymentMethod = paymentMethod;
                 booking.Payment.ProofOfPayment = proofPath;
-                booking.Payment.PaymentStatus = "Pending";
+                booking.Payment.PaymentStatus = paymentMethod == "Cash" ? "Verified" : "Pending";
                 booking.Payment.PaymentDate = DateTime.UtcNow;
+                if (paymentMethod == "Cash") booking.Payment.VerificationDate = DateTime.UtcNow;
             }
             else
             {
@@ -257,15 +258,23 @@ namespace BiDE.Controllers
                     Amount = booking.LessonOffering?.Price ?? 0,
                     PaymentMethod = paymentMethod,
                     ProofOfPayment = proofPath,
-                    PaymentStatus = "Pending",
+                    PaymentStatus = paymentMethod == "Cash" ? "Verified" : "Pending",
                     PaymentDate = DateTime.UtcNow
                 };
+                if (paymentMethod == "Cash") payment.VerificationDate = DateTime.UtcNow;
                 _context.Payments.Add(payment);
             }
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Payment submitted. Your instructor will verify it shortly.";
+            if (paymentMethod == "Cash")
+            {
+                TempData["Success"] = "Cash payment confirmed. Your lesson is ready to go!";
+            }
+            else
+            {
+                TempData["Success"] = "Payment submitted. Your instructor will verify it shortly.";
+            }
             return RedirectToAction("Bookings");
         }
     }

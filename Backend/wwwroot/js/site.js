@@ -215,3 +215,44 @@ function getChatResponse(text) {
     if (text.includes('hello') || text.includes('hi')) return 'Hello! How can I help you today? Ask me about booking, payments, reviews, or anything else.';
     return 'I can help with: <strong>Booking lessons</strong>, <strong>Payments</strong>, <strong>Reviews</strong>, <strong>Progress tracking</strong>, and <strong>Account questions</strong>. Try asking a specific question!';
 }
+
+
+// ===== Navbar Typing Animation =====
+(function() {
+    var texts = ['BiDE', 'Drive. Book. Learn.', 'BiDE', 'Find Your Instructor', 'BiDE', 'Track Your Progress'];
+    var el = document.getElementById('typingText');
+    if (!el) return;
+    var textIndex = 0;
+    var charIndex = 0;
+    var isDeleting = false;
+    var typeSpeed = 100;
+    var deleteSpeed = 60;
+    var pauseAfterType = 2000;
+    var pauseAfterDelete = 500;
+
+    function type() {
+        var current = texts[textIndex];
+        if (!isDeleting) {
+            el.textContent = current.substring(0, charIndex + 1);
+            charIndex++;
+            if (charIndex === current.length) {
+                isDeleting = true;
+                setTimeout(type, pauseAfterType);
+            } else {
+                setTimeout(type, typeSpeed);
+            }
+        } else {
+            el.textContent = current.substring(0, charIndex - 1);
+            charIndex--;
+            if (charIndex === 0) {
+                isDeleting = false;
+                textIndex = (textIndex + 1) % texts.length;
+                setTimeout(type, pauseAfterDelete);
+            } else {
+                setTimeout(type, deleteSpeed);
+            }
+        }
+    }
+
+    setTimeout(type, 1000);
+})();

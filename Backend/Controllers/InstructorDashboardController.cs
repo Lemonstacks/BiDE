@@ -105,12 +105,21 @@ namespace BiDE.Controllers
             if (instructorId == null) return RedirectToAction("Login", "Account");
 
             var booking = await _context.Bookings
+                .Include(b => b.Payment)
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.InstructorId == instructorId.Value);
             if (booking == null) return NotFound();
 
             if (booking.Status != "Accepted")
             {
                 TempData["Error"] = "Only accepted bookings can be marked as completed.";
+                return RedirectToAction("Index");
+            }
+
+            // Check payment is verified before allowing completion
+            var paymentStatus = booking.Payment?.PaymentStatus ?? "Unpaid";
+            if (paymentStatus != "Verified")
+            {
+                TempData["Error"] = "Cannot mark as complete. The student has not paid yet.";
                 return RedirectToAction("Index");
             }
 

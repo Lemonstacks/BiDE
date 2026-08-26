@@ -49,7 +49,7 @@
                             <div class="progress-entry">
                                 <div class="progress-header">
                                     <span class="progress-date">@e.ProgressDate.ToString("MMM d, yyyy")</span>
-                                    <span class="progress-rating">@e.CompletionStatus</span>
+                                    <span class="progress-rating">Rating: @e.CompletionStatus</span>
                                 </div>
                                 @if (!string.IsNullOrEmpty(e.Feedback))
                                 {

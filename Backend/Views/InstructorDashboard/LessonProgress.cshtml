@@ -78,7 +78,7 @@
                                         <div class="progress-entry">
                                             <div class="progress-header">
                                                 <span class="progress-date">@e.ProgressDate.ToString("MMM d, yyyy")</span>
-                                                <span class="progress-rating">@e.CompletionStatus</span>
+                                                <span class="progress-rating">Rating: @e.CompletionStatus</span>
                                             </div>
                                             @if (!string.IsNullOrEmpty(e.Feedback))
                                             {
@@ -124,13 +124,13 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Progress Rating (1-5)</label>
-                    <select name="completionStatus" class="form-select">
-                        <option value="In Progress">In Progress</option>
-                        <option value="Needs Improvement">Needs Improvement</option>
-                        <option value="Good Progress">Good Progress</option>
-                        <option value="Excellent">Excellent</option>
-                        <option value="Ready for Test">Ready for Test</option>
+                    <label class="form-label">Rating (1-5) *</label>
+                    <select name="completionStatus" class="form-select" required>
+                        <option value="1/5">1/5 - Needs Improvement</option>
+                        <option value="2/5">2/5 - Below Average</option>
+                        <option value="3/5">3/5 - Average</option>
+                        <option value="4/5" selected>4/5 - Good</option>
+                        <option value="5/5">5/5 - Excellent</option>
                     </select>
                 </div>
                 <div class="form-group">
