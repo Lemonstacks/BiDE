@@ -64,12 +64,8 @@
                                     <input type="hidden" name="paymentId" value="@p.PaymentId" />
                                     <button type="submit" class="btn btn-primary btn-sm">Verify</button>
                                 </form>
-                                <form method="post" asp-action="RejectPayment" style="display:inline;">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="paymentId" value="@p.PaymentId" />
-                                    <button type="submit" class="btn btn-destructive btn-sm"
-                                            onclick="return confirm('Reject this payment?')">Reject</button>
-                                </form>
+                                <button type="button" class="btn btn-destructive btn-sm"
+                                        onclick="openRejectModal(@p.PaymentId)">Reject</button>
                             </div>
                         </div>
                     </div>
@@ -118,6 +114,10 @@
                                     <span class="card-meta-item">R@(p.Amount.ToString("N0"))</span>
                                     <span class="card-meta-item">@p.PaymentMethod</span>
                                 </div>
+                                @if (!string.IsNullOrEmpty(p.RejectionReason))
+                                {
+                                    <p class="text-xs text-destructive mt-1">Reason: @p.RejectionReason</p>
+                                }
                             </div>
                             <span class="badge badge-rejected">Rejected</span>
                         </div>
@@ -127,3 +127,34 @@
         }
     }
 </div>
+
+<!-- Reject Payment Modal -->
+<div class="modal-overlay" id="rejectPaymentModal">
+    <div class="modal" style="position: relative;">
+        <button class="modal-close" onclick="closeModal('rejectPaymentModal')">&times;</button>
+        <h3 class="modal-title">Reject Payment</h3>
+        <p class="text-sm text-muted" style="margin-bottom: 1rem;">Let the student know why so they can resubmit correctly.</p>
+        <form method="post" asp-action="RejectPayment">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="paymentId" id="reject-payment-id" value="" />
+            <div class="form-group">
+                <label class="form-label">Reason (optional)</label>
+                <textarea name="reason" class="form-textarea" rows="3"
+                          placeholder="e.g. Amount does not match, proof is unclear, no reference number..."></textarea>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button type="button" class="btn" onclick="closeModal('rejectPaymentModal')" style="flex:1;">Cancel</button>
+                <button type="submit" class="btn btn-destructive" style="flex:1;">Confirm Rejection</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function openRejectModal(paymentId) {
+    document.getElementById('reject-payment-id').value = paymentId;
+    openModal('rejectPaymentModal');
+}
+</script>
+}

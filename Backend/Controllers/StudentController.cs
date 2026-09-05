@@ -246,6 +246,7 @@ namespace BiDE.Controllers
                 booking.Payment.ProofOfPayment = proofPath;
                 booking.Payment.PaymentStatus = paymentMethod == "Cash" ? "Verified" : "Pending";
                 booking.Payment.PaymentDate = DateTime.UtcNow;
+                booking.Payment.RejectionReason = null;
                 if (paymentMethod == "Cash") booking.Payment.VerificationDate = DateTime.UtcNow;
             }
             else

@@ -90,6 +90,12 @@
                                 }
                             </div>
                         </div>
+                        @if (paymentStatus == "Rejected" && !string.IsNullOrEmpty(payment?.RejectionReason))
+                        {
+                            <p class="text-xs text-destructive" style="margin-top: 0.75rem;">
+                                Payment rejected: @payment.RejectionReason. Please upload a corrected proof of payment.
+                            </p>
+                        }
                     </div>
                 }
             </div>

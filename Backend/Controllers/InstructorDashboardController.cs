@@ -438,7 +438,7 @@ namespace BiDE.Controllers
         // POST: /InstructorDashboard/RejectPayment
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RejectPayment(int paymentId)
+        public async Task<IActionResult> RejectPayment(int paymentId, string? reason)
         {
             var instructorId = GetInstructorId();
             if (instructorId == null) return RedirectToAction("Login", "Account");
@@ -448,6 +448,7 @@ namespace BiDE.Controllers
             if (payment == null) return NotFound();
 
             payment.PaymentStatus = "Rejected";
+            payment.RejectionReason = reason;
             payment.VerificationDate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
