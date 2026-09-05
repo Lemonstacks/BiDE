@@ -33,6 +33,9 @@ namespace BiDE.Models
 
         public DateTime? VerificationDate { get; set; }
 
+        [StringLength(500)]
+        public string? RejectionReason { get; set; }
+
         // Navigation properties
         [ForeignKey("BookingId")]
         public Booking Booking { get; set; } = null!;

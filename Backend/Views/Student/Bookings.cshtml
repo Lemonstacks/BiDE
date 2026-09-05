@@ -90,6 +90,41 @@
                                 }
                             </div>
                         </div>
+
+                        @{
+                            var stepRequested = true;
+                            var stepAccepted = b.Status == "Accepted" || b.Status == "Completed";
+                            var stepPaid = paymentStatus == "Verified";
+                            var stepCompleted = b.Status == "Completed";
+                        }
+                        <div class="booking-timeline">
+                            <div class="timeline-step @(stepRequested ? "done" : "")">
+                                <span class="timeline-dot"></span>
+                                <span class="timeline-label">Requested</span>
+                            </div>
+                            <div class="timeline-bar @(stepAccepted ? "done" : "")"></div>
+                            <div class="timeline-step @(stepAccepted ? "done" : "")">
+                                <span class="timeline-dot"></span>
+                                <span class="timeline-label">Accepted</span>
+                            </div>
+                            <div class="timeline-bar @(stepPaid ? "done" : "")"></div>
+                            <div class="timeline-step @(stepPaid ? "done" : "")">
+                                <span class="timeline-dot"></span>
+                                <span class="timeline-label">Paid</span>
+                            </div>
+                            <div class="timeline-bar @(stepCompleted ? "done" : "")"></div>
+                            <div class="timeline-step @(stepCompleted ? "done" : "")">
+                                <span class="timeline-dot"></span>
+                                <span class="timeline-label">Completed</span>
+                            </div>
+                        </div>
+
+                        @if (paymentStatus == "Rejected" && !string.IsNullOrEmpty(payment?.RejectionReason))
+                        {
+                            <p class="text-xs text-destructive" style="margin-top: 0.75rem;">
+                                Payment rejected: @payment.RejectionReason. Please upload a corrected proof of payment.
+                            </p>
+                        }
                     </div>
                 }
             </div>
