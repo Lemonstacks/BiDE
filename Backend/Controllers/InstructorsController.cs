@@ -19,7 +19,7 @@ namespace BiDE.Controllers
         }
 
         // GET: /Instructors
-        public async Task<IActionResult> Index(string? search, string? specialization)
+        public async Task<IActionResult> Index(string? search, string? filterBy)
         {
             // Only registered students can search for instructors (FSSB: student must be logged in)
             var userId = HttpContext.Session.GetInt32("UserId");
@@ -42,26 +42,18 @@ namespace BiDE.Controllers
                     (i.Suburb != null && i.Suburb.ToLower().Contains(term)));
             }
 
-            if (!string.IsNullOrWhiteSpace(specialization) && specialization != "all")
+            // Apply sorting based on filter selection
+            query = filterBy switch
             {
-                query = query.Where(i =>
-                    i.Certification != null && i.Certification.Contains(specialization));
-            }
+                "location" => query.OrderBy(i => i.Suburb),
+                "experience" => query.OrderByDescending(i => i.Experience),
+                _ => query.OrderByDescending(i => i.Experience) // default (All Types)
+            };
 
-            var instructors = await query
-                .OrderByDescending(i => i.Experience)
-                .ToListAsync();
-
-            // Get all unique certifications for the filter dropdown
-            var allCertifications = await _context.Instructors
-                .Where(i => i.Status == InstructorStatus.Approved && i.Certification != null)
-                .Select(i => i.Certification!)
-                .Distinct()
-                .ToListAsync();
+            var instructors = await query.ToListAsync();
 
             ViewBag.Search = search;
-            ViewBag.Specialization = specialization;
-            ViewBag.Certifications = allCertifications;
+            ViewBag.FilterBy = filterBy ?? "all";
 
             return View(instructors);
         }

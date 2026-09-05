@@ -981,3 +981,41 @@ main { min-height: 100vh; margin: 0; padding: 0; }
 body:has(.navbar-sticky) .page-header-bg { padding-top: 5rem; }
 body:has(.navbar-sticky) .page-container { padding-top: 5rem; }
 body:has(.navbar-sticky) .page-container-narrow { padding-top: 5rem; }
+
+/* ===== LANDING PAGE BODY BACKGROUND ===== */
+.landing-body-bg {
+    position: relative;
+    background-image: url('/images/body-bg.png.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+.landing-body-bg::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: rgba(255, 255, 255, 0.45);
+    z-index: 0;
+}
+.landing-body-bg > * {
+    position: relative;
+    z-index: 1;
+}
+@media (max-width: 768px) {
+    .landing-body-bg { background-attachment: scroll; }
+}
+
+/* Glassy cards on landing body background so image shows through */
+.landing-body-bg .feature-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+.landing-body-bg .faq-item {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+.landing-body-bg .faq-question {
+    background: transparent;
+}

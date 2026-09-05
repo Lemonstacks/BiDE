@@ -2,8 +2,7 @@
 @{
     ViewData["Title"] = "Find Instructors";
     var search = ViewBag.Search as string ?? "";
-    var specialization = ViewBag.Specialization as string ?? "all";
-    var certifications = ViewBag.Certifications as List<string> ?? new List<string>();
+    var filterBy = ViewBag.FilterBy as string ?? "all";
 }
 
 <div class="page-header-bg bg-find-instructor">
@@ -24,13 +23,6 @@
             </svg>
             <input type="text" name="search" value="@search" class="form-input" placeholder="Search by name or location..." />
         </div>
-        <select name="specialization" class="form-select search-select">
-            <option value="all">All Types</option>
-            @foreach (var cert in certifications)
-            {
-                <option value="@cert" selected="@(specialization == cert)">@cert</option>
-            }
-        </select>
         <button type="submit" class="btn btn-primary">Search</button>
     </form>
 

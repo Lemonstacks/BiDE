@@ -96,36 +96,52 @@ namespace BiDE.Controllers
             string contact, string password, string confirmPassword,
             string role, string? suburb)
         {
+            // Preserve entered values so the form isn't cleared on validation error
+            void PreserveInput()
+            {
+                ViewBag.FirstName = firstName;
+                ViewBag.LastName = lastName;
+                ViewBag.Email = email;
+                ViewBag.Contact = contact;
+                ViewBag.Suburb = suburb;
+                ViewBag.Role = role;
+            }
+
             // Validation
             if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) ||
                 string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) ||
                 string.IsNullOrWhiteSpace(contact))
             {
                 ViewBag.Error = "Please fill in all required fields.";
+                PreserveInput();
                 return View();
             }
 
             if (password != confirmPassword)
             {
                 ViewBag.Error = "Passwords do not match.";
+                PreserveInput();
                 return View();
             }
 
             if (password.Length < 6)
             {
                 ViewBag.Error = "Password must be at least 6 characters.";
+                PreserveInput();
                 return View();
             }
 
             if (!email.Contains("@") || !email.Contains("."))
             {
                 ViewBag.Error = "Please enter a valid email address.";
+                PreserveInput();
                 return View();
             }
 
             if (role != "Student" && role != "Instructor")
             {
                 ViewBag.Error = "Please select a valid role.";
+                PreserveInput();
                 return View();
             }
 
@@ -137,6 +153,7 @@ namespace BiDE.Controllers
             if (existingStudent || existingInstructor || existingAdmin)
             {
                 ViewBag.Error = "An account with this email already exists.";
+                PreserveInput();
                 return View();
             }
 
