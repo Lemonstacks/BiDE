@@ -151,6 +151,7 @@ namespace BiDE.Controllers
                 StudentId = userId.Value,
                 ScheduleId = scheduleId,
                 OfferId = offerId,
+                AgreedPrice = offering.Price,
                 Status = "Pending",
                 CreatedAt = DateTime.UtcNow
             };
@@ -223,6 +224,7 @@ namespace BiDE.Controllers
                 StudentId = userId.Value,
                 ScheduleId = nextSlot.AvailabilityId,
                 OfferId = offering.OfferId,
+                AgreedPrice = offering.Price,
                 Status = "Pending",
                 CreatedAt = DateTime.UtcNow
             };

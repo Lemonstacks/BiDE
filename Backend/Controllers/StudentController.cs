@@ -168,7 +168,7 @@ namespace BiDE.Controllers
         // POST: /Student/SubmitPayment
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SubmitPayment(int bookingId, string paymentMethod, IFormFile proofOfPayment)
+        public async Task<IActionResult> SubmitPayment(int bookingId, string paymentMethod, string? paymentReference, IFormFile proofOfPayment)
         {
             var studentId = GetStudentId();
             if (studentId == null) return RedirectToAction("Login", "Account");
@@ -178,6 +178,13 @@ namespace BiDE.Controllers
             if (string.IsNullOrWhiteSpace(paymentMethod) || !validMethods.Contains(paymentMethod))
             {
                 TempData["Error"] = "Please select a valid payment method.";
+                return RedirectToAction("Bookings");
+            }
+
+            // EFT requires a payment reference so the instructor can match the bank deposit
+            if (paymentMethod == "EFT" && string.IsNullOrWhiteSpace(paymentReference))
+            {
+                TempData["Error"] = "Please enter the payment reference used for your EFT.";
                 return RedirectToAction("Bookings");
             }
 
@@ -243,6 +250,7 @@ namespace BiDE.Controllers
             {
                 // Update existing payment record
                 booking.Payment.PaymentMethod = paymentMethod;
+                booking.Payment.PaymentReference = paymentReference;
                 booking.Payment.ProofOfPayment = proofPath;
                 booking.Payment.PaymentStatus = paymentMethod == "Cash" ? "Verified" : "Pending";
                 booking.Payment.PaymentDate = DateTime.UtcNow;
@@ -256,8 +264,9 @@ namespace BiDE.Controllers
                 {
                     BookingId = bookingId,
                     InstructorId = booking.InstructorId,
-                    Amount = booking.LessonOffering?.Price ?? 0,
+                    Amount = booking.AgreedPrice > 0 ? booking.AgreedPrice : (booking.LessonOffering?.Price ?? 0),
                     PaymentMethod = paymentMethod,
+                    PaymentReference = paymentReference,
                     ProofOfPayment = proofPath,
                     PaymentStatus = paymentMethod == "Cash" ? "Verified" : "Pending",
                     PaymentDate = DateTime.UtcNow

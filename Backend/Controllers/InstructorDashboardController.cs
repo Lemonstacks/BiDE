@@ -22,7 +22,7 @@ namespace BiDE.Controllers
         }
 
         // GET: /InstructorDashboard
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? sort)
         {
             var instructorId = GetInstructorId();
             if (instructorId == null) return RedirectToAction("Login", "Account");
@@ -39,11 +39,23 @@ namespace BiDE.Controllers
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
+            var pending = bookings.Where(b => b.Status == "Pending").ToList();
+
+            // Sort pending requests
+            pending = sort switch
+            {
+                "lesson_date" => pending.OrderBy(b => b.Schedule?.Date).ThenBy(b => b.Schedule?.StartTime).ToList(),
+                "oldest" => pending.OrderBy(b => b.CreatedAt).ToList(),
+                "student" => pending.OrderBy(b => b.Student.FirstName).ThenBy(b => b.Student.LastName).ToList(),
+                _ => pending.OrderByDescending(b => b.CreatedAt).ToList() // newest (default)
+            };
+
             ViewBag.Instructor = instructor;
-            ViewBag.Pending = bookings.Where(b => b.Status == "Pending").ToList();
+            ViewBag.Pending = pending;
             ViewBag.Accepted = bookings.Where(b => b.Status == "Accepted").ToList();
             ViewBag.Completed = bookings.Where(b => b.Status == "Completed").ToList();
             ViewBag.TotalBookings = bookings.Count;
+            ViewBag.Sort = sort ?? "newest";
 
             return View();
         }
@@ -424,10 +436,19 @@ namespace BiDE.Controllers
             if (instructorId == null) return RedirectToAction("Login", "Account");
 
             var payment = await _context.Payments
+                .Include(p => p.Booking)
                 .FirstOrDefaultAsync(p => p.PaymentId == paymentId && p.InstructorId == instructorId.Value);
             if (payment == null) return NotFound();
 
+            // Cannot verify payment for a cancelled or rejected booking
+            if (payment.Booking != null && (payment.Booking.Status == "Cancelled" || payment.Booking.Status == "Rejected"))
+            {
+                TempData["Error"] = "Cannot verify payment for a cancelled or rejected booking.";
+                return RedirectToAction("Payments");
+            }
+
             payment.PaymentStatus = "Verified";
+            payment.RejectionReason = null;
             payment.VerificationDate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 

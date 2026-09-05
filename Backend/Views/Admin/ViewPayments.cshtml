@@ -3,6 +3,8 @@
     ViewData["Title"] = "View Payments";
     var statusFilter = ViewBag.StatusFilter as string ?? "all";
     var searchFilter = ViewBag.SearchFilter as string ?? "";
+    var dateFrom = ViewBag.DateFrom as DateTime?;
+    var dateTo = ViewBag.DateTo as DateTime?;
     var success = TempData["Success"] as string;
 }
 
@@ -34,7 +36,19 @@
             </select>
         </div>
         <div class="form-group">
+            <label class="form-label">From</label>
+            <input type="date" name="dateFrom" value="@(dateFrom?.ToString("yyyy-MM-dd") ?? "")" class="form-input" />
+        </div>
+        <div class="form-group">
+            <label class="form-label">To</label>
+            <input type="date" name="dateTo" value="@(dateTo?.ToString("yyyy-MM-dd") ?? "")" class="form-input" />
+        </div>
+        <div class="form-group">
             <button type="submit" class="btn btn-primary btn-sm" style="margin-top: 1.25rem;">Filter</button>
+        </div>
+        <div class="form-group">
+            <a href="@Url.Action("ExportPayments", new { status = statusFilter, search = searchFilter, dateFrom = dateFrom?.ToString("yyyy-MM-dd"), dateTo = dateTo?.ToString("yyyy-MM-dd") })"
+               class="btn btn-sm" style="margin-top: 1.25rem;">Export CSV</a>
         </div>
     </form>
 
@@ -49,12 +63,12 @@
             <p class="stat-label">Awaiting Verification</p>
         </div>
         <div class="stat-card">
-            <p class="stat-value">@Model.Count(p => p.PaymentStatus == "Verified")</p>
-            <p class="stat-label">Verified</p>
+            <p class="stat-value">R@(Model.Where(p => p.PaymentStatus == "Verified").Sum(p => p.Amount).ToString("N0"))</p>
+            <p class="stat-label">Verified Revenue</p>
         </div>
         <div class="stat-card">
-            <p class="stat-value">R@(Model.Where(p => p.PaymentStatus == "Verified").Sum(p => p.Amount).ToString("N0"))</p>
-            <p class="stat-label">Total Verified Amount</p>
+            <p class="stat-value">R@(Model.Where(p => p.PaymentStatus == "Pending").Sum(p => p.Amount).ToString("N0"))</p>
+            <p class="stat-label">Pending Revenue</p>
         </div>
     </div>
 
@@ -81,6 +95,10 @@
                         <div class="card-meta">
                             <span class="card-meta-item">R@(p.Amount.ToString("N0"))</span>
                             <span class="card-meta-item">@(p.PaymentMethod ?? "N/A")</span>
+                            @if (!string.IsNullOrEmpty(p.PaymentReference))
+                            {
+                                <span class="card-meta-item">Ref: <strong>@p.PaymentReference</strong></span>
+                            }
                             <span class="card-meta-item">@(p.PaymentDate?.ToString("MMM d, yyyy") ?? "N/A")</span>
                             @if (!string.IsNullOrEmpty(p.ProofOfPayment))
                             {
@@ -89,6 +107,10 @@
                                 </span>
                             }
                         </div>
+                        @if (p.PaymentStatus == "Rejected" && !string.IsNullOrEmpty(p.RejectionReason))
+                        {
+                            <p class="text-xs text-destructive mt-1">Rejected: @p.RejectionReason</p>
+                        }
                     </div>
                     <div>
                         <span class="badge badge-@p.PaymentStatus?.ToLower()">@p.PaymentStatus</span>

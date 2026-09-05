@@ -24,6 +24,10 @@ namespace BiDE.Models
         [StringLength(50)]
         public string Status { get; set; } = "Pending";
 
+        // Price locked in at time of booking (protects against later offering price changes)
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal AgreedPrice { get; set; }
+
         // Cancellation/Rescheduling fields
         [StringLength(500)]
         public string? CancellationReason { get; set; }

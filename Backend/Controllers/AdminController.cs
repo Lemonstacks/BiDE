@@ -135,11 +135,52 @@ namespace BiDE.Controllers
         }
 
         // GET: /Admin/ViewPayments
-        public async Task<IActionResult> ViewPayments(string? status, string? search)
+        public async Task<IActionResult> ViewPayments(string? status, string? search, DateTime? dateFrom, DateTime? dateTo)
         {
             var adminId = GetAdminId();
             if (adminId == null) return RedirectToAction("Login", "Account");
 
+            var payments = await BuildPaymentQuery(status, search, dateFrom, dateTo).ToListAsync();
+
+            ViewBag.StatusFilter = status ?? "all";
+            ViewBag.SearchFilter = search ?? "";
+            ViewBag.DateFrom = dateFrom;
+            ViewBag.DateTo = dateTo;
+            return View(payments);
+        }
+
+        // GET: /Admin/ExportPayments
+        public async Task<IActionResult> ExportPayments(string? status, string? search, DateTime? dateFrom, DateTime? dateTo)
+        {
+            var adminId = GetAdminId();
+            if (adminId == null) return RedirectToAction("Login", "Account");
+
+            var payments = await BuildPaymentQuery(status, search, dateFrom, dateTo).ToListAsync();
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("PaymentId,Student,Instructor,Lesson,Amount,Method,Reference,Status,PaymentDate,VerificationDate");
+            foreach (var p in payments)
+            {
+                string Csv(string? v) => "\"" + (v ?? "").Replace("\"", "\"\"") + "\"";
+                sb.AppendLine(string.Join(",",
+                    p.PaymentId,
+                    Csv($"{p.Booking?.Student?.FirstName} {p.Booking?.Student?.LastName}"),
+                    Csv($"{p.Booking?.Instructor?.FirstName} {p.Booking?.Instructor?.LastName}"),
+                    Csv(p.Booking?.LessonOffering?.Title),
+                    p.Amount.ToString("F2"),
+                    Csv(p.PaymentMethod),
+                    Csv(p.PaymentReference),
+                    Csv(p.PaymentStatus),
+                    Csv(p.PaymentDate?.ToString("yyyy-MM-dd")),
+                    Csv(p.VerificationDate?.ToString("yyyy-MM-dd"))));
+            }
+
+            var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+            return File(bytes, "text/csv", $"payments_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
+        }
+
+        private IQueryable<Payment> BuildPaymentQuery(string? status, string? search, DateTime? dateFrom, DateTime? dateTo)
+        {
             var query = _context.Payments
                 .Include(p => p.Booking)
                     .ThenInclude(b => b.Student)
@@ -165,13 +206,17 @@ namespace BiDE.Controllers
                     p.Booking.Instructor.LastName.ToLower().Contains(term));
             }
 
-            var payments = await query
-                .OrderByDescending(p => p.PaymentDate)
-                .ToListAsync();
+            if (dateFrom.HasValue)
+            {
+                query = query.Where(p => p.PaymentDate >= dateFrom.Value);
+            }
+            if (dateTo.HasValue)
+            {
+                var inclusiveTo = dateTo.Value.Date.AddDays(1);
+                query = query.Where(p => p.PaymentDate < inclusiveTo);
+            }
 
-            ViewBag.StatusFilter = status ?? "all";
-            ViewBag.SearchFilter = search ?? "";
-            return View(payments);
+            return query.OrderByDescending(p => p.PaymentDate);
         }
 
         // GET: /Admin/MonitorBookings

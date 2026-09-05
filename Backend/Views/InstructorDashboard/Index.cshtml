@@ -67,8 +67,21 @@
     <!-- Pending Requests -->
     @if (pending.Count > 0)
     {
-        <p id="pending-section" class="detail-section-title">Pending Requests (@pending.Count)</p>
-        <div id="booking-requests" style="margin-bottom: 2rem;">
+        var currentSort = ViewBag.Sort as string ?? "newest";
+        <div id="pending-section" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+            <p class="detail-section-title" style="margin:0;">Pending Requests (@pending.Count)</p>
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+                <label class="text-xs text-muted" for="sortRequests">Sort by</label>
+                <select id="sortRequests" class="form-select" style="width:auto; padding:0.4rem 0.75rem;"
+                        onchange="window.location.href='/InstructorDashboard?sort=' + this.value + '#booking-requests'">
+                    <option value="newest" selected="@(currentSort == "newest")">Newest request</option>
+                    <option value="oldest" selected="@(currentSort == "oldest")">Oldest request</option>
+                    <option value="lesson_date" selected="@(currentSort == "lesson_date")">Lesson date</option>
+                    <option value="student" selected="@(currentSort == "student")">Student name</option>
+                </select>
+            </div>
+        </div>
+        <div id="booking-requests" style="margin-bottom: 2rem; margin-top: 1rem;">
             @foreach (var b in pending.Take(10))
             {
                 <div class="card">

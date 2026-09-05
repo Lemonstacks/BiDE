@@ -214,6 +214,13 @@
                 </select>
             </div>
 
+            <div class="form-group" id="referenceGroup" style="display:none;">
+                <label class="form-label">Payment Reference *</label>
+                <input type="text" name="paymentReference" id="paymentReferenceInput" class="form-input"
+                       placeholder="e.g. the reference you used on the EFT" maxlength="100" />
+                <p class="text-xs text-muted mt-1">This helps your instructor match the deposit to your booking.</p>
+            </div>
+
             <div class="form-group" id="proofUploadGroup">
                 <label class="form-label">Proof of Payment *</label>
                 <input type="file" name="proofOfPayment" id="proofFileInput" accept="image/*,.pdf" class="form-input" required />
@@ -244,6 +251,8 @@ function openPaymentModal(bookingId, title, amount) {
     document.getElementById('paymentMethodSelect').value = '';
     document.getElementById('proofUploadGroup').style.display = 'block';
     document.getElementById('cashPaymentNote').style.display = 'none';
+    document.getElementById('referenceGroup').style.display = 'none';
+    document.getElementById('paymentReferenceInput').required = false;
     document.getElementById('proofFileInput').required = true;
     openModal('paymentModal');
 }
@@ -253,6 +262,18 @@ function toggleProofUpload() {
     var proofGroup = document.getElementById('proofUploadGroup');
     var cashNote = document.getElementById('cashPaymentNote');
     var fileInput = document.getElementById('proofFileInput');
+    var refGroup = document.getElementById('referenceGroup');
+    var refInput = document.getElementById('paymentReferenceInput');
+
+    // Reference field only for EFT
+    if (method === 'EFT') {
+        refGroup.style.display = 'block';
+        refInput.required = true;
+    } else {
+        refGroup.style.display = 'none';
+        refInput.required = false;
+    }
+
     if (method === 'Cash') {
         proofGroup.style.display = 'none';
         cashNote.style.display = 'block';
