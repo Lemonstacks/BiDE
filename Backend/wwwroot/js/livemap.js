@@ -5,8 +5,8 @@
 
     const map = L.map('live-map', { zoomControl: false }).setView([-26.2041, 28.0473], 12);
 
-    // Dark themed tiles to match the app
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    // CARTO Voyager tiles - clean, colorful, modern
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap &copy; CARTO',
         maxZoom: 20
     }).addTo(map);
