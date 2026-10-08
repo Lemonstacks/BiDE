@@ -31,8 +31,21 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
+// Skip HTTPS redirect in development so LAN devices stay on fast plain HTTP
+// (the dev HTTPS cert is untrusted on other devices and slows the handshake)
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
+// Cache static assets (css/js/images) so repeat loads are instant
+app.UseStaticFiles(new Microsoft.AspNetCore.Builder.StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers["Cache-Control"] = "public,max-age=3600";
+    }
+});
 
 app.UseRouting();
 
