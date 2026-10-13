@@ -24,6 +24,27 @@ namespace BiDE.Models
         [StringLength(50)]
         public string Status { get; set; } = "Pending";
 
+        // Price locked in at time of booking (protects against later offering price changes)
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal AgreedPrice { get; set; }
+
+        // Cancellation/Rescheduling fields
+        [StringLength(500)]
+        public string? CancellationReason { get; set; }
+
+        [StringLength(50)]
+        public string? CancelledBy { get; set; }
+
+        public DateTime? CancelledAt { get; set; }
+
+        public DateTime? RescheduledAt { get; set; }
+
+        public int? OriginalScheduleId { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? UpdatedAt { get; set; }
+
         // Navigation properties
         [ForeignKey("InstructorId")]
         public Instructor Instructor { get; set; } = null!;
@@ -36,6 +57,9 @@ namespace BiDE.Models
 
         [ForeignKey("OfferId")]
         public LessonOffering LessonOffering { get; set; } = null!;
+
+        [ForeignKey("OriginalScheduleId")]
+        public Availability? OriginalSchedule { get; set; }
 
         public Payment? Payment { get; set; }
         public Review? Review { get; set; }

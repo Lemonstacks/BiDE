@@ -61,6 +61,17 @@ namespace BiDE.Migrations
                         .IsUnique();
 
                     b.ToTable("Admins");
+
+                    b.HasData(
+                        new
+                        {
+                            AdminId = 1,
+                            Contact = "0712345678",
+                            Email = "admin@bide.com",
+                            FirstName = "System",
+                            LastName = "Administrator",
+                            Password = "Admin123"
+                        });
                 });
 
             modelBuilder.Entity("BiDE.Models.Availability", b =>
@@ -75,6 +86,9 @@ namespace BiDE.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
@@ -103,11 +117,34 @@ namespace BiDE.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BookingId"));
 
+                    b.Property<decimal>("AgreedPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CancelledBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("InstructorId")
                         .HasColumnType("int");
 
                     b.Property<int>("OfferId")
                         .HasColumnType("int");
+
+                    b.Property<int?>("OriginalScheduleId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("RescheduledAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("ScheduleId")
                         .HasColumnType("int");
@@ -120,11 +157,16 @@ namespace BiDE.Migrations
                     b.Property<int>("StudentId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("BookingId");
 
                     b.HasIndex("InstructorId");
 
                     b.HasIndex("OfferId");
+
+                    b.HasIndex("OriginalScheduleId");
 
                     b.HasIndex("ScheduleId");
 
@@ -141,6 +183,15 @@ namespace BiDE.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("InstructorId"));
 
+                    b.Property<DateTime>("ApplicationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ApprovalDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ApprovedByAdminId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Certification")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -149,6 +200,9 @@ namespace BiDE.Migrations
                         .IsRequired()
                         .HasMaxLength(15)
                         .HasColumnType("nvarchar(15)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -176,11 +230,24 @@ namespace BiDE.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("ProfilePicture")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
                     b.Property<string>("Suburb")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("InstructorId");
+
+                    b.HasIndex("ApprovedByAdminId");
 
                     b.HasIndex("Email")
                         .IsUnique();
@@ -195,6 +262,9 @@ namespace BiDE.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OfferId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -284,12 +354,20 @@ namespace BiDE.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("PaymentReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("PaymentStatus")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("ProofOfPayment")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("RejectionReason")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
@@ -327,10 +405,15 @@ namespace BiDE.Migrations
                     b.Property<DateTime>("ReviewDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
                     b.HasKey("ReviewId");
 
                     b.HasIndex("BookingId")
                         .IsUnique();
+
+                    b.HasIndex("StudentId");
 
                     b.ToTable("Reviews");
                 });
@@ -347,6 +430,9 @@ namespace BiDE.Migrations
                         .IsRequired()
                         .HasMaxLength(15)
                         .HasColumnType("nvarchar(15)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -365,6 +451,10 @@ namespace BiDE.Migrations
 
                     b.Property<string>("Password")
                         .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ProfilePicture")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
@@ -405,6 +495,11 @@ namespace BiDE.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("BiDE.Models.Availability", "OriginalSchedule")
+                        .WithMany()
+                        .HasForeignKey("OriginalScheduleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("BiDE.Models.Availability", "Schedule")
                         .WithMany("Bookings")
                         .HasForeignKey("ScheduleId")
@@ -421,9 +516,21 @@ namespace BiDE.Migrations
 
                     b.Navigation("LessonOffering");
 
+                    b.Navigation("OriginalSchedule");
+
                     b.Navigation("Schedule");
 
                     b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("BiDE.Models.Instructor", b =>
+                {
+                    b.HasOne("BiDE.Models.Admin", "ApprovedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("ApprovedByAdminId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ApprovedByAdmin");
                 });
 
             modelBuilder.Entity("BiDE.Models.LessonOffering", b =>
@@ -475,7 +582,15 @@ namespace BiDE.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("BiDE.Models.Student", "Student")
+                        .WithMany("Reviews")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Booking");
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("BiDE.Models.Availability", b =>
@@ -511,6 +626,8 @@ namespace BiDE.Migrations
             modelBuilder.Entity("BiDE.Models.Student", b =>
                 {
                     b.Navigation("Bookings");
+
+                    b.Navigation("Reviews");
                 });
 #pragma warning restore 612, 618
         }

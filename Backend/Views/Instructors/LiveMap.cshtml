@@ -1,0 +1,54 @@
+@{
+    ViewData["Title"] = "Live Map";
+}
+
+<div class="page-container">
+    <div class="section-header" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:1rem;">
+        <div>
+            <p class="section-label">Student</p>
+            <h1 class="section-title">Find Instructors Near You</h1>
+            <p class="text-sm text-muted" style="margin-top: 0.5rem;">Available instructors appear live on the map. Click a card or marker to view a profile.</p>
+        </div>
+        <div class="livemap-live-badge">
+            <span class="livemap-live-dot"></span>
+            <span id="available-count">0</span>&nbsp;live
+        </div>
+    </div>
+
+    <div class="livemap-grid">
+        <!-- Map (3/4) -->
+        <div class="livemap-map-wrap">
+            <div id="live-map"></div>
+        </div>
+
+        <!-- Sidebar (1/4) -->
+        <div class="livemap-sidebar">
+            <p class="livemap-sidebar-title">Available Now</p>
+            <div id="instructor-list">
+                <div id="list-empty" class="livemap-empty">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.4; margin-bottom:0.5rem;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <p class="text-sm text-muted">Waiting for instructors to go live...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="map-status" class="alert alert-info" style="margin-top: 1rem; display: none;"></div>
+
+    <form id="antiforgery-form" style="display:none;">
+        @Html.AntiForgeryToken()
+    </form>
+</div>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- SignalR JS Client -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+@section Scripts {
+<script src="~/js/livemap.js"></script>
+}

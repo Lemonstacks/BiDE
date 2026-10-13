@@ -34,6 +34,15 @@ namespace BiDE.Data
             modelBuilder.Entity<Admin>()
                 .HasIndex(a => a.Email).IsUnique();
 
+            // Instructor -> Admin (approval relationship)
+            modelBuilder.Entity<Instructor>(entity =>
+            {
+                entity.HasOne(i => i.ApprovedByAdmin)
+                      .WithMany()
+                      .HasForeignKey(i => i.ApprovedByAdminId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
             // Instructor -> Availability (one-to-many)
             modelBuilder.Entity<Availability>(entity =>
             {
@@ -74,6 +83,12 @@ namespace BiDE.Data
                       .WithMany(lo => lo.Bookings)
                       .HasForeignKey(b => b.OfferId)
                       .OnDelete(DeleteBehavior.Restrict);
+
+                // Original schedule for rescheduled bookings
+                entity.HasOne(b => b.OriginalSchedule)
+                      .WithMany()
+                      .HasForeignKey(b => b.OriginalScheduleId)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
             // Booking -> LessonProgress (one-to-many)
@@ -106,7 +121,23 @@ namespace BiDE.Data
                       .WithOne(b => b.Review)
                       .HasForeignKey<Review>(r => r.BookingId)
                       .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(r => r.Student)
+                      .WithMany(s => s.Reviews)
+                      .HasForeignKey(r => r.StudentId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
+            // Seed Admin (password: Admin123)
+            modelBuilder.Entity<Admin>().HasData(
+                new Admin
+                {
+                    AdminId = 1,
+                    FirstName = "System",
+                    LastName = "Administrator",
+                    Contact = "0712345678",
+                    Email = "admin@bide.com",
+                    Password = "Admin123"
+                });
         }
     }
 }

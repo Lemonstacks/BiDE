@@ -1,0 +1,156 @@
+@model List<Booking>
+@{
+    ViewData["Title"] = "Lesson Progress";
+    var success = TempData["Success"] as string;
+    // Group bookings by student (UC20: "1st selects Student, then Lesson")
+    var byStudent = Model.GroupBy(b => b.StudentId).ToList();
+}
+
+<div class="page-container">
+    <div class="section-header">
+        <p class="section-label">Instructor</p>
+        <h1 class="section-title">Lesson Progress</h1>
+    </div>
+
+    @if (!string.IsNullOrEmpty(success))
+    {
+        <div class="alert alert-info">@success</div>
+    }
+
+    @if (Model.Count == 0)
+    {
+        <div class="empty-state" style="padding: 4rem;">
+            <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin: 0 auto 0.75rem; opacity: 0.3;"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+            <p class="text-muted">No accepted bookings to record progress for.</p>
+        </div>
+    }
+    else
+    {
+        <p class="text-sm text-muted" style="margin-bottom: 2rem;">Select a student, then choose a lesson to add progress.</p>
+
+        <!-- Step 1: Select Student -->
+        @foreach (var group in byStudent)
+        {
+            var student = group.First().Student;
+            var studentBookings = group.ToList();
+
+            <div style="margin-bottom: 2rem;">
+                <div style="padding: 0.75rem 1rem; background: var(--bg-muted); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: space-between;"
+                     onclick="toggleExpand('student-@student.StudentId')">
+                    <div>
+                        <p style="font-weight: 600;">@student.FirstName @student.LastName</p>
+                        <p class="text-xs text-muted">@student.Email | @studentBookings.Count lesson(s)</p>
+                    </div>
+                    <span class="text-sm text-muted">&#9660;</span>
+                </div>
+
+                <!-- Step 2: Select Lesson (shown after selecting student) -->
+                <div id="student-@student.StudentId" class="hidden" style="border: 1px solid var(--border); border-top: none;">
+                    @foreach (var b in studentBookings)
+                    {
+                        var entries = b.LessonProgresses?.ToList() ?? new List<LessonProgress>();
+
+                        <div style="padding: 1.25rem; border-bottom: 1px solid var(--border);">
+                            <div class="card-row">
+                                <div>
+                                    <p class="card-title">@(b.LessonOffering?.Title ?? "Lesson")</p>
+                                    <div class="card-meta">
+                                        <span class="card-meta-item">
+                                            @(b.Schedule?.Date.ToString("MMM d, yyyy") ?? "") | @(b.Schedule?.StartTime.ToString(@"hh\:mm") ?? "")
+                                        </span>
+                                        <span class="card-meta-item">
+                                            Progress entries: @entries.Count
+                                        </span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm"
+                                        onclick="openProgressModal(@b.BookingId, '@(b.LessonOffering?.Title ?? "Lesson")', '@student.FirstName @student.LastName')">
+                                    + Add Progress
+                                </button>
+                            </div>
+
+                            @if (entries.Count > 0)
+                            {
+                                <div class="progress-section">
+                                    <p class="detail-section-title" style="margin-bottom: 0.5rem;">Progress Records</p>
+                                    @foreach (var e in entries)
+                                    {
+                                        <div class="progress-entry">
+                                            <div class="progress-header">
+                                                <span class="progress-date">@e.ProgressDate.ToString("MMM d, yyyy")</span>
+                                                <span class="progress-rating">Rating: @e.CompletionStatus</span>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(e.Feedback))
+                                            {
+                                                <p style="margin-top: 0.25rem;">@e.Feedback</p>
+                                            }
+                                            @if (e.Duration > 0)
+                                            {
+                                                <p class="text-xs text-muted mt-1">Duration: @e.Duration min</p>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+
+
+<!-- Add Progress Modal (UC20: Provide Lesson Feedback) -->
+<div class="modal-overlay" id="progressModal">
+    <div class="modal" style="position: relative;">
+        <button class="modal-close" onclick="closeModal('progressModal')">&times;</button>
+        <h3 class="modal-title">Record Progress</h3>
+
+        <div style="padding: 0.75rem; background: var(--bg-muted); margin-bottom: 1rem; font-size: 0.875rem;">
+            <p class="font-bold" id="progress-lesson-title"></p>
+            <p class="text-muted text-xs mt-1" id="progress-student-name"></p>
+        </div>
+
+        <form method="post" asp-action="AddProgress">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="bookingId" id="progress-booking-id" value="" />
+
+            <div class="form-group">
+                <label class="form-label">Feedback / Notes *</label>
+                <textarea name="feedback" class="form-textarea" rows="3" required
+                          placeholder="How did the lesson go?"></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Rating (1-5) *</label>
+                    <select name="completionStatus" class="form-select" required>
+                        <option value="1/5">1/5 - Needs Improvement</option>
+                        <option value="2/5">2/5 - Below Average</option>
+                        <option value="3/5">3/5 - Average</option>
+                        <option value="4/5" selected>4/5 - Good</option>
+                        <option value="5/5">5/5 - Excellent</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Duration (min)</label>
+                    <input type="number" name="duration" class="form-input" min="0" value="60" placeholder="e.g. 60" />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">Save Progress</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function openProgressModal(bookingId, title, student) {
+    document.getElementById('progress-booking-id').value = bookingId;
+    document.getElementById('progress-lesson-title').textContent = title;
+    document.getElementById('progress-student-name').textContent = student;
+    openModal('progressModal');
+}
+</script>
+}

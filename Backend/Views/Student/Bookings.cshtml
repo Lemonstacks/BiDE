@@ -1,0 +1,289 @@
+@{
+    ViewData["Title"] = "My Bookings";
+    var active = ViewBag.Active as List<Booking> ?? new List<Booking>();
+    var past = ViewBag.Past as List<Booking> ?? new List<Booking>();
+    var success = TempData["Success"] as string;
+    var error = TempData["Error"] as string;
+}
+
+<div class="page-container">
+    <div class="section-header">
+        <p class="section-label">Student</p>
+        <h1 class="section-title">My Bookings</h1>
+    </div>
+
+    @if (!string.IsNullOrEmpty(success))
+    {
+        <div class="alert alert-info">@success</div>
+    }
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <div class="alert alert-error">@error</div>
+    }
+
+    @if (active.Count == 0 && past.Count == 0)
+    {
+        <div class="empty-state">
+            <p>No bookings yet</p>
+            <p class="sub">Browse instructors to book your first lesson</p>
+            <a href="/Instructors" class="btn btn-primary" style="margin-top: 1.5rem;">Find Instructors</a>
+        </div>
+    }
+    else
+    {
+        @if (active.Count > 0)
+        {
+            <p class="detail-section-title">Active</p>
+            <div style="margin-bottom: 3rem;">
+                @foreach (var b in active)
+                {
+                    var payment = b.Payment;
+                    var paymentStatus = payment?.PaymentStatus ?? "Unpaid";
+
+                    <div class="card">
+                        <div class="card-row">
+                            <div>
+                                <p class="card-title">@(b.LessonOffering?.Title ?? "Lesson")</p>
+                                <p class="card-subtitle">@b.Instructor?.FirstName @b.Instructor?.LastName</p>
+                                <div class="card-meta">
+                                    <span class="card-meta-item">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                        @(b.Schedule?.Date.ToString("MMM d, yyyy") ?? "")
+                                    </span>
+                                    <span class="card-meta-item">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                        @(b.Schedule?.StartTime.ToString(@"hh\:mm") ?? "") - @(b.Schedule?.EndTime.ToString(@"hh\:mm") ?? "")
+                                    </span>
+                                    <span class="card-meta-item">
+                                        R@(b.LessonOffering?.Price.ToString("N0") ?? "0")
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                                <span class="badge badge-@b.Status.ToLower()">@b.Status</span>
+
+                                @if (paymentStatus == "Verified")
+                                {
+                                    <span class="badge badge-completed">Paid</span>
+                                }
+                                else if (paymentStatus == "Pending")
+                                {
+                                    <span class="badge badge-pending">Payment Pending</span>
+                                }
+                                else if (paymentStatus == "Rejected")
+                                {
+                                    <span class="badge badge-rejected">Payment Rejected</span>
+                                }
+
+                                @if (b.Status == "Accepted" && paymentStatus != "Verified" && paymentStatus != "Pending")
+                                {
+                                    <button type="button" class="btn btn-primary btn-sm"
+                                            onclick="openPaymentModal(@b.BookingId, '@(b.LessonOffering?.Title ?? "Lesson")', '@(b.LessonOffering?.Price.ToString("N0") ?? "0")')">
+                                        Upload Proof of Payment
+                                    </button>
+                                }
+
+                                @if (b.Status == "Pending")
+                                {
+                                    <button type="button" class="btn btn-destructive btn-sm"
+                                            onclick="openCancelModal(@b.BookingId)">Cancel</button>
+                                }
+                            </div>
+                        </div>
+
+                        @{
+                            var stepRequested = true;
+                            var stepAccepted = b.Status == "Accepted" || b.Status == "Completed";
+                            var stepPaid = paymentStatus == "Verified";
+                            var stepCompleted = b.Status == "Completed";
+                        }
+                        <div class="booking-timeline">
+                            <div class="timeline-step @(stepRequested ? "done" : "")">
+                                <span class="timeline-dot"></span>
+                                <span class="timeline-label">Requested</span>
+                            </div>
+                            <div class="timeline-bar @(stepAccepted ? "done" : "")"></div>
+                            <div class="timeline-step @(stepAccepted ? "done" : "")">
+                                <span class="timeline-dot"></span>
+                                <span class="timeline-label">Accepted</span>
+                            </div>
+                            <div class="timeline-bar @(stepPaid ? "done" : "")"></div>
+                            <div class="timeline-step @(stepPaid ? "done" : "")">
+                                <span class="timeline-dot"></span>
+                                <span class="timeline-label">Paid</span>
+                            </div>
+                            <div class="timeline-bar @(stepCompleted ? "done" : "")"></div>
+                            <div class="timeline-step @(stepCompleted ? "done" : "")">
+                                <span class="timeline-dot"></span>
+                                <span class="timeline-label">Completed</span>
+                            </div>
+                        </div>
+
+                        @if (paymentStatus == "Rejected" && !string.IsNullOrEmpty(payment?.RejectionReason))
+                        {
+                            <p class="text-xs text-destructive" style="margin-top: 0.75rem;">
+                                Payment rejected: @payment.RejectionReason. Please upload a corrected proof of payment.
+                            </p>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
+        @if (past.Count > 0)
+        {
+            <p class="detail-section-title">History</p>
+            <div>
+                @foreach (var b in past)
+                {
+                    var payment = b.Payment;
+                    var paymentStatus = payment?.PaymentStatus ?? "Unpaid";
+
+                    <div class="card">
+                        <div class="card-row">
+                            <div>
+                                <p class="card-title">@(b.LessonOffering?.Title ?? "Lesson")</p>
+                                <p class="card-subtitle">@b.Instructor?.FirstName @b.Instructor?.LastName</p>
+                                <div class="card-meta">
+                                    <span class="card-meta-item">
+                                        @(b.Schedule?.Date.ToString("MMM d, yyyy") ?? "")
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span class="badge badge-@b.Status.ToLower()">@b.Status</span>
+                                @if (paymentStatus == "Verified")
+                                {
+                                    <span class="badge badge-completed">Paid</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+
+<!-- Cancel Modal -->
+<div class="modal-overlay" id="cancelModal">
+    <div class="modal" style="position: relative;">
+        <button class="modal-close" onclick="closeModal('cancelModal')">&times;</button>
+        <h3 class="modal-title">Cancel Booking</h3>
+        <p class="text-sm text-muted" style="margin-bottom: 1rem;">Are you sure? This action cannot be undone.</p>
+
+        <form method="post" asp-action="CancelBooking" asp-controller="Student">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="bookingId" id="cancel-booking-id" value="" />
+            <div class="form-group">
+                <label class="form-label">Reason (optional)</label>
+                <textarea name="reason" class="form-textarea" rows="3"
+                          placeholder="Let the instructor know why..."></textarea>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button type="button" class="btn" onclick="closeModal('cancelModal')" style="flex:1;">Keep Booking</button>
+                <button type="submit" class="btn btn-destructive" style="flex:1;">Yes, Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-overlay" id="paymentModal">
+    <div class="modal" style="position: relative;">
+        <button class="modal-close" onclick="closeModal('paymentModal')">&times;</button>
+        <h3 class="modal-title">Upload Proof of Payment</h3>
+
+        <div style="padding: 0.75rem; background: var(--bg-muted); margin-bottom: 1rem; font-size: 0.875rem;">
+            <p class="font-bold" id="payment-lesson-title"></p>
+            <p class="text-muted text-xs mt-1">Amount: R<span id="payment-amount"></span></p>
+        </div>
+
+        <form method="post" asp-action="SubmitPayment" asp-controller="Student" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="bookingId" id="payment-booking-id" value="" />
+
+            <div class="form-group">
+                <label class="form-label">Payment Method *</label>
+                <select name="paymentMethod" id="paymentMethodSelect" class="form-select" required onchange="toggleProofUpload()">
+                    <option value="">-- Select --</option>
+                    <option value="EFT">EFT / Bank Transfer</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="referenceGroup" style="display:none;">
+                <label class="form-label">Payment Reference *</label>
+                <input type="text" name="paymentReference" id="paymentReferenceInput" class="form-input"
+                       placeholder="e.g. the reference you used on the EFT" maxlength="100" />
+                <p class="text-xs text-muted mt-1">This helps your instructor match the deposit to your booking.</p>
+            </div>
+
+            <div class="form-group" id="proofUploadGroup">
+                <label class="form-label">Proof of Payment *</label>
+                <input type="file" name="proofOfPayment" id="proofFileInput" accept="image/*,.pdf" class="form-input" required />
+                <p class="text-xs text-muted mt-1">Upload a screenshot or PDF of your payment confirmation.</p>
+            </div>
+
+            <div id="cashPaymentNote" style="display:none;padding:1rem;background:var(--primary-light);border-radius:var(--radius);margin-bottom:1rem;font-size:0.875rem;color:var(--fg);">
+                <strong>Cash Payment:</strong> No upload needed. Your instructor will verify the cash payment in person.
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">Submit Payment</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function openCancelModal(bookingId) {
+    document.getElementById('cancel-booking-id').value = bookingId;
+    openModal('cancelModal');
+}
+
+function openPaymentModal(bookingId, title, amount) {
+    document.getElementById('payment-booking-id').value = bookingId;
+    document.getElementById('payment-lesson-title').textContent = title;
+    document.getElementById('payment-amount').textContent = amount;
+    // Reset
+    document.getElementById('paymentMethodSelect').value = '';
+    document.getElementById('proofUploadGroup').style.display = 'block';
+    document.getElementById('cashPaymentNote').style.display = 'none';
+    document.getElementById('referenceGroup').style.display = 'none';
+    document.getElementById('paymentReferenceInput').required = false;
+    document.getElementById('proofFileInput').required = true;
+    openModal('paymentModal');
+}
+
+function toggleProofUpload() {
+    var method = document.getElementById('paymentMethodSelect').value;
+    var proofGroup = document.getElementById('proofUploadGroup');
+    var cashNote = document.getElementById('cashPaymentNote');
+    var fileInput = document.getElementById('proofFileInput');
+    var refGroup = document.getElementById('referenceGroup');
+    var refInput = document.getElementById('paymentReferenceInput');
+
+    // Reference field only for EFT
+    if (method === 'EFT') {
+        refGroup.style.display = 'block';
+        refInput.required = true;
+    } else {
+        refGroup.style.display = 'none';
+        refInput.required = false;
+    }
+
+    if (method === 'Cash') {
+        proofGroup.style.display = 'none';
+        cashNote.style.display = 'block';
+        fileInput.required = false;
+        fileInput.value = '';
+    } else {
+        proofGroup.style.display = 'block';
+        cashNote.style.display = 'none';
+        fileInput.required = true;
+    }
+}
+</script>
+}
