@@ -1211,3 +1211,27 @@ body:has(.navbar-sticky) .page-container-narrow { padding-top: 5rem; }
 .timeline-bar.done {
     background: #22c55e;
 }
+
+/* ===== Mapbox-specific overrides ===== */
+/* "You are here" blue dot */
+.map-you-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #2563eb;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px rgba(37,99,235,0.4), 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* Mapbox popup styled to match the dark theme */
+.map-popup-wrap .mapboxgl-popup-content {
+    background: rgba(20,22,32,0.96);
+    color: #fff;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    padding: 12px 14px;
+}
+.map-popup-wrap .mapboxgl-popup-tip { border-top-color: rgba(20,22,32,0.96); border-bottom-color: rgba(20,22,32,0.96); }
+.map-popup-wrap .mapboxgl-popup-close-button { color: rgba(255,255,255,0.6); font-size: 18px; }
+
+/* Mapbox nav controls on light tiles */
+.livemap-map-wrap .mapboxgl-ctrl-group { background: #fff; }

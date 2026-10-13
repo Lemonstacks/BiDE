@@ -103,17 +103,23 @@
 
     function updatePreviewMap(lat, lng) {
         if (!previewMap) {
-            previewMap = L.map('live-map-preview').setView([lat, lng], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors',
-                maxZoom: 18
-            }).addTo(previewMap);
+            mapboxgl.accessToken = window.MAPBOX_TOKEN;
+            previewMap = new mapboxgl.Map({
+                container: 'live-map-preview',
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: [lng, lat],
+                zoom: 15
+            });
 
-            previewMarker = L.marker([lat, lng]).addTo(previewMap);
-            previewMarker.bindPopup("You are here").openPopup();
+            var el = document.createElement('div');
+            el.className = 'map-you-dot';
+            previewMarker = new mapboxgl.Marker(el)
+                .setLngLat([lng, lat])
+                .setPopup(new mapboxgl.Popup({ offset: 16 }).setHTML('<div class="map-popup"><strong>You are here</strong></div>'))
+                .addTo(previewMap);
         } else {
-            previewMarker.setLatLng([lat, lng]);
-            previewMap.panTo([lat, lng]);
+            previewMarker.setLngLat([lng, lat]);
+            previewMap.panTo([lng, lat]);
         }
     }
 

@@ -1,34 +1,56 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     ViewData["Title"] = "Live Map";
+    var mapboxToken = Configuration["Mapbox:Token"];
 }
 
-<div class="page-container">
-    <div class="section-header" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:1rem;">
+<div class="market-shell">
+    <!-- Heading -->
+    <div class="page-heading">
         <div>
-            <p class="section-label">Student</p>
-            <h1 class="section-title">Find Instructors Near You</h1>
-            <p class="text-sm text-muted" style="margin-top: 0.5rem;">Available instructors appear live on the map. Click a card or marker to view a profile.</p>
+            <p class="eyebrow">LIVE AVAILABILITY</p>
+            <h1>
+                Instructors near you
+                <span class="live-badge"><i></i><span id="available-count">0</span> live now</span>
+            </h1>
+            <p>Ready when you are. Book a lesson and start driving today.</p>
         </div>
-        <div class="livemap-live-badge">
-            <span class="livemap-live-dot"></span>
-            <span id="available-count">0</span>&nbsp;live
+        <div class="filters" id="transmission-filters">
+            <button type="button" class="active" data-filter="all">All instructors</button>
+            <button type="button" data-filter="Automatic">Automatic</button>
+            <button type="button" data-filter="Manual">Manual</button>
         </div>
     </div>
 
-    <div class="livemap-grid">
-        <!-- Map (3/4) -->
-        <div class="livemap-map-wrap">
-            <div id="live-map"></div>
+    <!-- Map + Sidebar -->
+    <div class="market-grid">
+        <!-- Map -->
+        <div class="map-wrap">
+            <div id="live-map" style="width:100%; height:100%;"></div>
+            <div class="map-chip">
+                <span id="map-area">Your area</span>
+                <span class="live-badge compact"><i></i><span id="chip-count">0</span> live now</span>
+            </div>
         </div>
 
-        <!-- Sidebar (1/4) -->
-        <div class="livemap-sidebar">
-            <p class="livemap-sidebar-title">Available Now</p>
-            <div id="instructor-list">
-                <div id="list-empty" class="livemap-empty">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.4; margin-bottom:0.5rem;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    <p class="text-sm text-muted">Waiting for instructors to go live...</p>
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="side-heading">
+                <div>
+                    <strong>Available now</strong>
+                    <span>Updated moments ago</span>
                 </div>
+                <span id="side-count">0</span>
+            </div>
+            <div class="cards" id="instructor-list">
+                <p id="list-empty" class="text-sm" style="color:#848d9d; padding:1rem 0;">Waiting for instructors to go live...</p>
+            </div>
+            <div class="trust-note">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span>
+                    <strong>Every instructor is verified</strong>
+                    DVSA approved, insured and background checked.
+                </span>
             </div>
         </div>
     </div>
@@ -40,15 +62,16 @@
     </form>
 </div>
 
-<!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Mapbox GL JS -->
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.css" rel="stylesheet" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.js"></script>
 
 <!-- SignalR JS Client -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
 
 @section Scripts {
+<script>
+    window.MAPBOX_TOKEN = "@mapboxToken";
+</script>
 <script src="~/js/livemap.js"></script>
 }

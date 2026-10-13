@@ -1,6 +1,11 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     ViewData["Title"] = "Go Live";
     var instructor = ViewBag.Instructor as BiDE.Models.Instructor;
+    var mapboxToken = Configuration["Mapbox:Token"];
+    var price = ViewBag.Price ?? 0m;
+    var rating = ViewBag.Rating ?? 0.0;
+    var lessonsCount = ViewBag.LessonsCount ?? 0;
 }
 
 <div class="page-container" style="max-width: 600px;">
@@ -38,20 +43,23 @@
     <div id="live-map-preview" style="height: 300px; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-top: 1.5rem; display: none;"></div>
 </div>
 
-<!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Mapbox GL JS -->
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.css" rel="stylesheet" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.js"></script>
 
 <!-- SignalR JS Client -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
 
 @section Scripts {
 <script>
+    window.MAPBOX_TOKEN = "@mapboxToken";
     const instructorId = @(instructor?.InstructorId ?? 0);
     const instructorName = "@(instructor?.FirstName) @(instructor?.LastName)";
     const vehicleType = "@(instructor?.Certification ?? "Manual")";
+    const instructorPhoto = "@(instructor?.ProfilePicture ?? "")";
+    const instructorRating = @rating;
+    const instructorLessons = @lessonsCount;
+    const instructorPrice = @price;
 </script>
 <script src="~/js/golive.js"></script>
 }
