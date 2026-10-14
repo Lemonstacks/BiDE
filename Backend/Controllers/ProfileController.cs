@@ -120,20 +120,16 @@ namespace BiDE.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateInstructor(
             string firstName, string lastName, string contact,
-            string? suburb, string? certification, int experience, IFormFile? profilePicture)
+            string? suburb, string? certification, IFormFile? profilePicture)
         {
+            // Note: Experience is intentionally not accepted here. It is a verified
+            // credential managed by an administrator, so instructors cannot self-edit it.
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null) return RedirectToAction("Login", "Account");
 
             if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) || string.IsNullOrWhiteSpace(contact))
             {
                 TempData["Error"] = "First name, last name, and contact are required.";
-                return RedirectToAction("Index");
-            }
-
-            if (experience < 0)
-            {
-                TempData["Error"] = "Experience cannot be negative.";
                 return RedirectToAction("Index");
             }
 
@@ -161,7 +157,7 @@ namespace BiDE.Controllers
             instructor.Contact = contact;
             instructor.Suburb = suburb;
             instructor.Certification = certification;
-            instructor.Experience = experience;
+            // Experience is admin-managed and deliberately not updated here.
 
             if (profilePicture != null && profilePicture.Length > 0)
             {
