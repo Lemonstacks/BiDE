@@ -16,7 +16,7 @@
 
     @if (!string.IsNullOrEmpty(success))
     {
-        <div class="alert alert-info">@success</div>
+        <div class="alert alert-success">@success</div>
     }
 
     <!-- Stats Overview -->
@@ -46,7 +46,7 @@
 
         @if (pending.Count == 0)
         {
-            <p class="text-sm text-muted">No pending applications.</p>
+            <div class="empty-state"><p>No pending applications</p><p class="sub">New instructor applications will appear here for review.</p></div>
         }
         else
         {
@@ -95,7 +95,7 @@
 
         @if (approved.Count == 0)
         {
-            <p class="text-sm text-muted">No approved instructors yet.</p>
+            <div class="empty-state"><p>No approved instructors yet</p></div>
         }
         else
         {
@@ -166,17 +166,17 @@
 
 <!-- Reject Modal -->
 <div class="modal-overlay" id="rejectModal">
-    <div class="modal" style="position: relative;">
-        <button class="modal-close" onclick="closeModal('rejectModal')">&times;</button>
-        <h3 class="modal-title">Reject Application</h3>
+    <div class="modal" style="position: relative;" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
+        <button class="modal-close" onclick="closeModal('rejectModal')" aria-label="Close">&times;</button>
+        <h3 class="modal-title" id="rejectModalTitle">Reject Application</h3>
         <p class="text-sm text-muted mb-4" id="reject-name"></p>
 
         <form method="post" asp-action="Reject">
             @Html.AntiForgeryToken()
             <input type="hidden" name="instructorId" id="reject-instructor-id" value="" />
             <div class="form-group">
-                <label class="form-label">Reason (optional)</label>
-                <textarea name="reason" class="form-textarea" rows="3"
+                <label class="form-label" for="reject-app-reason">Reason (optional)</label>
+                <textarea name="reason" id="reject-app-reason" class="form-textarea" rows="3"
                           placeholder="Provide a reason for rejection..."></textarea>
             </div>
             <div style="display: flex; gap: 0.75rem;">

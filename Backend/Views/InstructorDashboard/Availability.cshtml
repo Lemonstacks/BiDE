@@ -13,7 +13,7 @@
 
     @if (!string.IsNullOrEmpty(success))
     {
-        <div class="alert alert-info">@success</div>
+        <div class="alert alert-success">@success</div>
     }
     @if (!string.IsNullOrEmpty(error))
     {
@@ -26,28 +26,30 @@
         <p class="detail-section-title" style="margin-bottom: 1rem;">Add Availability Slot</p>
         <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
             <div class="form-group" style="flex: 1; min-width: 160px; margin-bottom: 0;">
-                <label class="form-label">Date</label>
+                <label class="form-label" for="slot-date">Date</label>
                 <input type="date" name="date" id="slot-date" class="form-input" required min="@DateTime.Now.ToString("yyyy-MM-dd")" />
             </div>
             <div class="form-group" style="min-width: 130px; margin-bottom: 0;">
-                <label class="form-label">Start Time</label>
+                <label class="form-label" for="slot-start">Start Time</label>
                 <input type="time" name="startTime" id="slot-start" value="09:00" class="form-input" required />
             </div>
             <div class="form-group" style="min-width: 130px; margin-bottom: 0;">
-                <label class="form-label">End Time</label>
+                <label class="form-label" for="slot-end">End Time</label>
                 <input type="time" name="endTime" id="slot-end" value="17:00" class="form-input" required />
             </div>
             <button type="submit" class="btn btn-primary">
                 + Add
             </button>
         </div>
+        <p class="text-sm" id="slot-error" style="display:none;color:var(--destructive);margin-top:0.75rem;"></p>
     </form>
 
     <!-- Existing Slots -->
     @if (Model.Count == 0)
     {
         <div class="empty-state" style="padding: 3rem;">
-            <p class="text-muted">No availability slots set yet.</p>
+            <p>No availability slots set yet</p>
+            <p class="sub">Use the form above to add the times you are open for lessons.</p>
         </div>
     }
     else
@@ -81,8 +83,8 @@
                         <form method="post" asp-action="DeleteAvailability">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@s.AvailabilityId" />
-                            <button type="submit" class="btn btn-icon btn-destructive" title="Remove">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                            <button type="submit" class="btn btn-icon btn-destructive" title="Remove slot" aria-label="Remove slot">
+                                <svg aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                             </button>
                         </form>
                     }
@@ -94,7 +96,17 @@
 
 @section Scripts {
 <script>
+function showSlotError(msg) {
+    var el = document.getElementById('slot-error');
+    if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+function clearSlotError() {
+    var el = document.getElementById('slot-error');
+    if (el) { el.textContent = ''; el.style.display = 'none'; }
+}
+
 function validateSlot() {
+    clearSlotError();
     var dateVal = document.getElementById('slot-date').value;
     var startVal = document.getElementById('slot-start').value;
     var endVal = document.getElementById('slot-end').value;
@@ -103,14 +115,16 @@ function validateSlot() {
 
     var now = new Date();
     var slotStart = new Date(dateVal + 'T' + startVal);
+    var slotEnd = new Date(dateVal + 'T' + endVal);
 
     if (slotStart <= now) {
-        alert('Cannot add a slot in the past. Please pick a future date and time.');
+        showSlotError('Cannot add a slot in the past. Please pick a future date and time.');
         return false;
     }
 
-    if (endVal <= startVal) {
-        alert('End time must be after start time.');
+    // Compare as real times, not strings.
+    if (slotEnd <= slotStart) {
+        showSlotError('End time must be after start time.');
         return false;
     }
 

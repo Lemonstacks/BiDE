@@ -14,19 +14,19 @@
 
     @if (!string.IsNullOrEmpty(success))
     {
-        <div class="alert alert-info">@success</div>
+        <div class="alert alert-success">@success</div>
     }
 
     <!-- Filters -->
     <form method="get" class="filter-bar">
         <div class="form-group flex-1">
-            <label class="form-label">Search</label>
-            <input type="text" name="search" value="@searchFilter"
+            <label class="form-label" for="mb-search">Search</label>
+            <input type="text" name="search" id="mb-search" value="@searchFilter"
                    class="form-input" placeholder="Search by student, instructor, or lesson name..." />
         </div>
         <div class="form-group">
-            <label class="form-label">Status</label>
-            <select name="status" class="form-select">
+            <label class="form-label" for="mb-status">Status</label>
+            <select name="status" id="mb-status" class="form-select">
                 <option value="all" selected="@(statusFilter == "all")">All Statuses</option>
                 <option value="Pending" selected="@(statusFilter == "Pending")">Pending</option>
                 <option value="Accepted" selected="@(statusFilter == "Accepted")">Accepted</option>

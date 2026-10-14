@@ -16,7 +16,7 @@
 
     @if (!string.IsNullOrEmpty(success))
     {
-        <div class="alert alert-info">@success</div>
+        <div class="alert alert-success">@success</div>
     }
 
     <!-- Summary Stats -->
@@ -46,7 +46,7 @@
 
         @if (students.Count == 0)
         {
-            <p class="text-sm text-muted">No students registered.</p>
+            <div class="empty-state"><p>No students registered</p></div>
         }
         else
         {
@@ -91,7 +91,7 @@
 
         @if (instructors.Count == 0)
         {
-            <p class="text-sm text-muted">No instructors registered.</p>
+            <div class="empty-state"><p>No instructors registered</p></div>
         }
         else
         {

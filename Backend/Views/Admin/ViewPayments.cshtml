@@ -16,19 +16,19 @@
 
     @if (!string.IsNullOrEmpty(success))
     {
-        <div class="alert alert-info">@success</div>
+        <div class="alert alert-success">@success</div>
     }
 
     <!-- Filters -->
     <form method="get" class="filter-bar">
         <div class="form-group flex-1">
-            <label class="form-label">Search</label>
-            <input type="text" name="search" value="@searchFilter"
+            <label class="form-label" for="vp-search">Search</label>
+            <input type="text" name="search" id="vp-search" value="@searchFilter"
                    class="form-input" placeholder="Search by student or instructor name..." />
         </div>
         <div class="form-group">
-            <label class="form-label">Status</label>
-            <select name="status" class="form-select">
+            <label class="form-label" for="vp-status">Status</label>
+            <select name="status" id="vp-status" class="form-select">
                 <option value="all" selected="@(statusFilter == "all")">All Statuses</option>
                 <option value="Pending" selected="@(statusFilter == "Pending")">Pending</option>
                 <option value="Verified" selected="@(statusFilter == "Verified")">Verified</option>
@@ -36,12 +36,12 @@
             </select>
         </div>
         <div class="form-group">
-            <label class="form-label">From</label>
-            <input type="date" name="dateFrom" value="@(dateFrom?.ToString("yyyy-MM-dd") ?? "")" class="form-input" />
+            <label class="form-label" for="vp-from">From</label>
+            <input type="date" name="dateFrom" id="vp-from" value="@(dateFrom?.ToString("yyyy-MM-dd") ?? "")" class="form-input" />
         </div>
         <div class="form-group">
-            <label class="form-label">To</label>
-            <input type="date" name="dateTo" value="@(dateTo?.ToString("yyyy-MM-dd") ?? "")" class="form-input" />
+            <label class="form-label" for="vp-to">To</label>
+            <input type="date" name="dateTo" id="vp-to" value="@(dateTo?.ToString("yyyy-MM-dd") ?? "")" class="form-input" />
         </div>
         <div class="form-group">
             <button type="submit" class="btn btn-primary btn-sm" style="margin-top: 1.25rem;">Filter</button>
@@ -103,7 +103,7 @@
                             @if (!string.IsNullOrEmpty(p.ProofOfPayment))
                             {
                                 <span class="card-meta-item">
-                                    <a href="@p.ProofOfPayment" target="_blank" style="color: var(--primary); text-decoration: underline;">View Proof</a>
+                                    <a href="@p.ProofOfPayment" target="_blank" rel="noopener" aria-label="View proof of payment in a new tab" style="color: var(--primary); text-decoration: underline;">View Proof</a>
                                 </span>
                             }
                         </div>

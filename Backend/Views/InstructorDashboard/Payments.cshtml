@@ -15,13 +15,14 @@
 
     @if (!string.IsNullOrEmpty(success))
     {
-        <div class="alert alert-info">@success</div>
+        <div class="alert alert-success">@success</div>
     }
 
     @if (Model.Count == 0)
     {
         <div class="empty-state" style="padding: 4rem;">
-            <p class="text-muted">No payments submitted yet. Payments will appear here once students submit proof of payment.</p>
+            <p>No payments submitted yet</p>
+            <p class="sub">Payments appear here once students submit proof of payment.</p>
         </div>
     }
     else
@@ -40,7 +41,7 @@
                                 <p class="card-subtitle">@p.Booking?.Student?.FirstName @p.Booking?.Student?.LastName (@p.Booking?.Student?.Email)</p>
                                 <div class="card-meta">
                                     <span class="card-meta-item">
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                        <svg aria-hidden="true" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                                         @(p.Booking?.Schedule?.Date.ToString("MMM d, yyyy") ?? "")
                                     </span>
                                     <span class="card-meta-item">
@@ -59,7 +60,7 @@
                                 </div>
                                 @if (!string.IsNullOrEmpty(p.ProofOfPayment) && (p.ProofOfPayment.EndsWith(".jpg") || p.ProofOfPayment.EndsWith(".jpeg") || p.ProofOfPayment.EndsWith(".png")))
                                 {
-                                    <a href="@p.ProofOfPayment" target="_blank">
+                                    <a href="@p.ProofOfPayment" target="_blank" rel="noopener" aria-label="Open proof of payment in a new tab">
                                         <img src="@p.ProofOfPayment" alt="Proof of payment" style="max-width: 160px; max-height: 120px; border-radius: 8px; border: 1px solid var(--border); margin-top: 0.75rem; object-fit: cover;" />
                                     </a>
                                 }
@@ -67,7 +68,7 @@
                             <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                                 @if (!string.IsNullOrEmpty(p.ProofOfPayment))
                                 {
-                                    <a href="@p.ProofOfPayment" target="_blank" class="btn btn-sm">View Proof</a>
+                                    <a href="@p.ProofOfPayment" target="_blank" rel="noopener" class="btn btn-sm" aria-label="View proof of payment in a new tab">View Proof</a>
                                 }
                                 <form method="post" asp-action="VerifyPayment" style="display:inline;">
                                     @Html.AntiForgeryToken()
@@ -140,16 +141,16 @@
 
 <!-- Reject Payment Modal -->
 <div class="modal-overlay" id="rejectPaymentModal">
-    <div class="modal" style="position: relative;">
-        <button class="modal-close" onclick="closeModal('rejectPaymentModal')">&times;</button>
-        <h3 class="modal-title">Reject Payment</h3>
+    <div class="modal" style="position: relative;" role="dialog" aria-modal="true" aria-labelledby="rejectPaymentTitle">
+        <button class="modal-close" onclick="closeModal('rejectPaymentModal')" aria-label="Close">&times;</button>
+        <h3 class="modal-title" id="rejectPaymentTitle">Reject Payment</h3>
         <p class="text-sm text-muted" style="margin-bottom: 1rem;">Let the student know why so they can resubmit correctly.</p>
         <form method="post" asp-action="RejectPayment">
             @Html.AntiForgeryToken()
             <input type="hidden" name="paymentId" id="reject-payment-id" value="" />
             <div class="form-group">
-                <label class="form-label">Reason (optional)</label>
-                <textarea name="reason" class="form-textarea" rows="3"
+                <label class="form-label" for="reject-reason">Reason (optional)</label>
+                <textarea name="reason" id="reject-reason" class="form-textarea" rows="3"
                           placeholder="e.g. Amount does not match, proof is unclear, no reference number..."></textarea>
             </div>
             <div style="display: flex; gap: 0.75rem;">

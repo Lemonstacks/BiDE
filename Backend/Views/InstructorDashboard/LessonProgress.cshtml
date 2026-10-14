@@ -14,14 +14,15 @@
 
     @if (!string.IsNullOrEmpty(success))
     {
-        <div class="alert alert-info">@success</div>
+        <div class="alert alert-success">@success</div>
     }
 
     @if (Model.Count == 0)
     {
         <div class="empty-state" style="padding: 4rem;">
-            <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin: 0 auto 0.75rem; opacity: 0.3;"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-            <p class="text-muted">No accepted bookings to record progress for.</p>
+            <svg aria-hidden="true" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin: 0 auto 0.75rem; opacity: 0.3;"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+            <p>No accepted bookings yet</p>
+            <p class="sub">Once you accept bookings, you can record lesson progress here.</p>
         </div>
     }
     else
@@ -103,9 +104,9 @@
 
 <!-- Add Progress Modal (UC20: Provide Lesson Feedback) -->
 <div class="modal-overlay" id="progressModal">
-    <div class="modal" style="position: relative;">
-        <button class="modal-close" onclick="closeModal('progressModal')">&times;</button>
-        <h3 class="modal-title">Record Progress</h3>
+    <div class="modal" style="position: relative;" role="dialog" aria-modal="true" aria-labelledby="progressModalTitle">
+        <button class="modal-close" onclick="closeModal('progressModal')" aria-label="Close">&times;</button>
+        <h3 class="modal-title" id="progressModalTitle">Record Progress</h3>
 
         <div style="padding: 0.75rem; background: var(--bg-muted); margin-bottom: 1rem; font-size: 0.875rem;">
             <p class="font-bold" id="progress-lesson-title"></p>
@@ -117,15 +118,15 @@
             <input type="hidden" name="bookingId" id="progress-booking-id" value="" />
 
             <div class="form-group">
-                <label class="form-label">Feedback / Notes *</label>
-                <textarea name="feedback" class="form-textarea" rows="3" required
+                <label class="form-label" for="progress-feedback">Feedback / Notes *</label>
+                <textarea name="feedback" id="progress-feedback" class="form-textarea" rows="3" required
                           placeholder="How did the lesson go?"></textarea>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Rating (1-5) *</label>
-                    <select name="completionStatus" class="form-select" required>
+                    <label class="form-label" for="progress-rating">Rating (1-5) *</label>
+                    <select name="completionStatus" id="progress-rating" class="form-select" required>
                         <option value="1/5">1/5 - Needs Improvement</option>
                         <option value="2/5">2/5 - Below Average</option>
                         <option value="3/5">3/5 - Average</option>
@@ -134,8 +135,8 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Duration (min)</label>
-                    <input type="number" name="duration" class="form-input" min="0" value="60" placeholder="e.g. 60" />
+                    <label class="form-label" for="progress-duration">Duration (min)</label>
+                    <input type="number" name="duration" id="progress-duration" class="form-input" min="0" value="60" placeholder="e.g. 60" />
                 </div>
             </div>
 
