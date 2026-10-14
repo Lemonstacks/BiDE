@@ -40,9 +40,9 @@
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-display: 'Inter', -apple-system, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-fast: all 0.15s ease;
-    --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+    --transition-fast: color 0.1s ease, background-color 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease, transform 0.1s ease;
+    --transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ===== RESET ===== */
@@ -453,16 +453,16 @@ main { min-height: 100vh; margin: 0; padding: 0; }
 
 /* Card appear animation */
 .instructor-card {
-    animation: cardAppear 0.5s ease backwards;
+    animation: cardAppear 0.35s ease backwards;
 }
-.instructor-card:nth-child(1) { animation-delay: 0.05s; }
-.instructor-card:nth-child(2) { animation-delay: 0.15s; }
-.instructor-card:nth-child(3) { animation-delay: 0.25s; }
-.instructor-card:nth-child(4) { animation-delay: 0.35s; }
-.instructor-card:nth-child(5) { animation-delay: 0.45s; }
-.instructor-card:nth-child(6) { animation-delay: 0.55s; }
-.instructor-card:nth-child(7) { animation-delay: 0.65s; }
-.instructor-card:nth-child(8) { animation-delay: 0.75s; }
+.instructor-card:nth-child(1) { animation-delay: 0.03s; }
+.instructor-card:nth-child(2) { animation-delay: 0.06s; }
+.instructor-card:nth-child(3) { animation-delay: 0.09s; }
+.instructor-card:nth-child(4) { animation-delay: 0.12s; }
+.instructor-card:nth-child(5) { animation-delay: 0.15s; }
+.instructor-card:nth-child(6) { animation-delay: 0.18s; }
+.instructor-card:nth-child(7) { animation-delay: 0.21s; }
+.instructor-card:nth-child(8) { animation-delay: 0.24s; }
 
 @keyframes cardAppear {
     from { opacity: 0; transform: translateY(30px) scale(0.95); }
@@ -523,7 +523,7 @@ main { min-height: 100vh; margin: 0; padding: 0; }
     display: grid; grid-template-columns: 1fr 1fr; gap: 4rem;
     align-items: center; position: relative; z-index: 1;
 }
-.hero-content { animation: fadeInUp 0.8s ease; }
+.hero-content { animation: fadeInUp 0.5s ease; }
 .hero-badge {
     display: inline-flex; align-items: center; gap: 0.5rem;
     padding: 0.5rem 1rem; background: rgba(37,99,235,0.15);
@@ -553,7 +553,7 @@ main { min-height: 100vh; margin: 0; padding: 0; }
 .hero-trust-item svg { color: var(--accent); }
 
 .hero-visual {
-    position: relative; animation: fadeIn 1s ease 0.3s backwards;
+    position: relative; animation: fadeIn 0.6s ease 0.15s backwards;
 }
 .hero-image {
     width: 100%; border-radius: var(--radius-xl);
@@ -878,19 +878,19 @@ button.schedule-slot:focus-visible { outline: none; border-color: var(--primary)
 @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
 /* Scroll animation classes */
-.animate-on-scroll { opacity: 0; transform: translateY(40px) scale(0.97); transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+.animate-on-scroll { opacity: 0; transform: translateY(24px); transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
 .animate-on-scroll.visible { opacity: 1; transform: translateY(0) scale(1); }
-.animate-delay-1 { transition-delay: 0.1s; }
-.animate-delay-2 { transition-delay: 0.2s; }
-.animate-delay-3 { transition-delay: 0.3s; }
-.animate-delay-4 { transition-delay: 0.4s; }
-.animate-delay-5 { transition-delay: 0.5s; }
+.animate-delay-1 { transition-delay: 0.05s; }
+.animate-delay-2 { transition-delay: 0.1s; }
+.animate-delay-3 { transition-delay: 0.15s; }
+.animate-delay-4 { transition-delay: 0.2s; }
+.animate-delay-5 { transition-delay: 0.25s; }
 
 /* Image reveal animation */
 .animate-on-scroll img {
-    transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1), filter 0.8s ease;
-    transform: scale(1.05);
-    filter: blur(2px);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s ease;
+    transform: scale(1.03);
+    filter: blur(1px);
 }
 .animate-on-scroll.visible img {
     transform: scale(1);
@@ -1378,4 +1378,19 @@ body:has(.navbar-sticky) .page-container-narrow { padding-top: 5rem; }
     .market-grid { display: flex; flex-direction: column; height: auto; min-height: 0; overflow: visible; border-radius: 17px; }
     .map-wrap { height: 390px; border-radius: 17px 17px 0 0; }
     .market-grid .sidebar { min-height: 440px; padding: 19px 15px; border-radius: 0 0 17px 17px; }
+}
+
+/* ===== REDUCED MOTION ===== */
+/* Honor the user's OS-level "reduce motion" setting: near-instant, no large movement. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    .animate-on-scroll { opacity: 1; transform: none; }
+    .animate-on-scroll img { transform: none; filter: none; }
 }
