@@ -380,6 +380,31 @@ main { min-height: 100vh; margin: 0; padding: 0; }
     #page-progress { transition: opacity 0.1s ease; }
 }
 
+/* ===== PASSWORD SHOW/HIDE ===== */
+.password-field { position: relative; }
+.password-field > input { padding-right: 2.75rem; }
+.password-toggle {
+    position: absolute; top: 0; right: 0; height: 100%;
+    width: 2.75rem; display: flex; align-items: center; justify-content: center;
+    background: transparent; border: 0; cursor: pointer;
+    color: var(--fg-muted); border-radius: var(--radius);
+}
+.password-toggle:hover { color: var(--fg); }
+.password-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.password-toggle .eye-off { display: none; }
+.password-toggle.is-visible .eye-on { display: none; }
+.password-toggle.is-visible .eye-off { display: block; }
+
+/* ===== CONFIRM DIALOG ===== */
+.confirm-dialog { max-width: 420px; text-align: left; }
+.confirm-dialog .confirm-icon {
+    width: 44px; height: 44px; border-radius: var(--radius-full);
+    display: grid; place-items: center; margin-bottom: 1rem;
+    background: var(--primary-light); color: var(--primary);
+}
+.confirm-dialog .confirm-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+.confirm-dialog .confirm-actions .btn { flex: 1; }
+
 /* ===== FORMS ===== */
 .form-group { margin-bottom: 1.5rem; }
 .form-label {

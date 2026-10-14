@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - BiDE</title>
-    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
     <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
@@ -241,7 +241,7 @@
         </div>
     </div>
 
-    <script src="~/js/site.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
     <!-- Register PWA Service Worker -->

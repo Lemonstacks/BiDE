@@ -429,3 +429,85 @@ window.BiDE.hideLoading = function(el) {
     if (ov) ov.remove();
     el.classList.remove('is-loading');
 };
+
+// ===== Password show/hide toggle =====
+// Wraps every password input with an eye button that toggles visibility.
+(function() {
+    var EYE_ON = '<svg class="eye-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+    var EYE_OFF = '<svg class="eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+    function enhance(input) {
+        if (!input || input.dataset.pwToggle) return;
+        input.dataset.pwToggle = '1';
+        var wrap = document.createElement('div');
+        wrap.className = 'password-field';
+        input.parentNode.insertBefore(wrap, input);
+        wrap.appendChild(input);
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'password-toggle';
+        btn.setAttribute('aria-label', 'Show password');
+        btn.setAttribute('aria-pressed', 'false');
+        btn.innerHTML = EYE_ON + EYE_OFF;
+        wrap.appendChild(btn);
+
+        btn.addEventListener('click', function() {
+            var show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            btn.classList.toggle('is-visible', show);
+            btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+            btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+            input.focus();
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('input[type="password"]').forEach(enhance);
+    });
+})();
+
+// ===== Logout confirmation =====
+// Intercepts any link to /Account/Logout and asks the user to confirm first.
+(function() {
+    var pendingHref = null;
+
+    function buildDialog() {
+        if (document.getElementById('logoutConfirmModal')) return;
+        var overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.id = 'logoutConfirmModal';
+        overlay.innerHTML =
+            '<div class="modal confirm-dialog" style="position:relative;" role="dialog" aria-modal="true" aria-labelledby="logoutConfirmTitle">' +
+            '<button class="modal-close" type="button" aria-label="Close" data-logout-cancel>&times;</button>' +
+            '<div class="confirm-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>' +
+            '<h3 class="modal-title" id="logoutConfirmTitle">Log out of BiDE?</h3>' +
+            '<p class="text-sm text-muted" style="margin-top:0.5rem;">You will need to sign in again to access your account.</p>' +
+            '<div class="confirm-actions">' +
+            '<button type="button" class="btn" data-logout-cancel>Stay signed in</button>' +
+            '<a href="#" class="btn btn-destructive" id="logoutConfirmBtn">Log out</a>' +
+            '</div></div>';
+        document.body.appendChild(overlay);
+
+        overlay.querySelectorAll('[data-logout-cancel]').forEach(function(el) {
+            el.addEventListener('click', function() { closeModal('logoutConfirmModal'); });
+        });
+        overlay.querySelector('#logoutConfirmBtn').addEventListener('click', function(e) {
+            // Let the top progress bar show, then navigate.
+            if (pendingHref) { e.currentTarget.setAttribute('href', pendingHref); }
+        });
+    }
+
+    document.addEventListener('click', function(e) {
+        var a = e.target.closest ? e.target.closest('a') : null;
+        if (!a) return;
+        var href = a.getAttribute('href') || '';
+        if (!/\/Account\/Logout\/?$/i.test(href)) return;
+        e.preventDefault();
+        pendingHref = href;
+        buildDialog();
+        var confirmBtn = document.getElementById('logoutConfirmBtn');
+        if (confirmBtn) confirmBtn.setAttribute('href', href);
+        openModal('logoutConfirmModal');
+    }, true);
+})();
