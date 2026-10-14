@@ -7,6 +7,14 @@
     var vContact = ViewBag.Contact as string ?? "";
     var vSuburb = ViewBag.Suburb as string ?? "";
     var vRole = ViewBag.Role as string ?? "";
+    var vSecurityQuestion = ViewBag.SecurityQuestion as string ?? "";
+    var securityQuestions = new[] {
+        "What was the name of your first pet?",
+        "What city were you born in?",
+        "What is your mother's maiden name?",
+        "What was the name of your first school?",
+        "What is your favourite food?"
+    };
 }
 
 <div class="page-header-bg bg-register" style="min-height:100vh;padding-top:6rem;padding-bottom:4rem;">
@@ -70,6 +78,23 @@
                     <label class="form-label">Confirm Password *</label>
                     <input type="password" name="confirmPassword" class="form-input" placeholder="Repeat password" required minlength="6" />
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Security Question *</label>
+                <select name="securityQuestion" class="form-select" required>
+                    <option value="">-- Select a question --</option>
+                    @foreach (var q in securityQuestions)
+                    {
+                        <option value="@q" selected="@(vSecurityQuestion == q)">@q</option>
+                    }
+                </select>
+                <p class="text-xs text-muted" style="margin-top:0.35rem;">Used to recover your account if you forget your password.</p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Security Answer *</label>
+                <input type="text" name="securityAnswer" class="form-input" placeholder="Your answer" required autocomplete="off" />
             </div>
 
             <button type="submit" class="btn btn-primary btn-full btn-lg" style="margin-top:0.5rem;">Create Account</button>

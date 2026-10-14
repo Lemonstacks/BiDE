@@ -1,2 +1,5 @@
 bin/
 obj/
+
+# Local dev settings (contains secrets like Mapbox token)
+appsettings.Development.json

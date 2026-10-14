@@ -28,5 +28,11 @@ namespace BiDE.Models
         [Required]
         [StringLength(255)]
         public string Password { get; set; } = string.Empty;
+
+        [StringLength(200)]
+        public string? SecurityQuestion { get; set; }
+
+        [StringLength(255)]
+        public string? SecurityAnswer { get; set; }
     }
 }

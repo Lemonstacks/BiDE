@@ -48,7 +48,11 @@
                     latitude: lat,
                     longitude: lng,
                     vehicleType: vehicleType,
-                    isAvailable: true
+                    isAvailable: true,
+                    profilePicture: instructorPhoto,
+                    rating: instructorRating,
+                    lessonsCount: instructorLessons,
+                    price: instructorPrice
                 });
 
                 coordsDisplay.textContent = `Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`;

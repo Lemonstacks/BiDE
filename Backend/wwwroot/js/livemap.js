@@ -1,5 +1,6 @@
 // LiveMap.js - Student-facing real-time instructor map (Mapbox GL JS)
-// NOTE: Mapbox uses [longitude, latitude] order (opposite of Leaflet).
+// Prototype-styled: green car pins, photo popups, rich sidebar cards, transmission filter.
+// NOTE: Mapbox uses [longitude, latitude] order.
 
 (function () {
     "use strict";
@@ -12,140 +13,186 @@
         center: [28.0473, -26.2041], // Johannesburg [lng, lat]
         zoom: 11
     });
-
-    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
     const statusEl = document.getElementById('map-status');
     const listEl = document.getElementById('instructor-list');
     const listEmpty = document.getElementById('list-empty');
-    const countBadge = document.getElementById('available-count');
+    const countEls = [
+        document.getElementById('available-count'),
+        document.getElementById('chip-count'),
+        document.getElementById('side-count')
+    ];
+    const filterBar = document.getElementById('transmission-filters');
 
-    const markers = {};        // instructorId -> mapboxgl.Marker
-    const instructorData = {}; // instructorId -> data
+    const markers = {};        // instructorId -> { marker, data }
+    const instructorData = {};
+    let activeFilter = 'all';
 
-    function buildMarkerElement() {
-        const el = document.createElement('div');
-        el.className = 'map-marker';
-        el.innerHTML =
-            '<div class="map-marker-pulse"></div>' +
-            '<div class="map-marker-pin">' +
-            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2v-5l-2-5H5L3 12v5h2"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>' +
+    // ----- marker element (green teardrop car pin + pulse) -----
+    function buildMarkerElement(id) {
+        const wrap = document.createElement('button');
+        wrap.className = 'map-pin';
+        wrap.innerHTML =
+            '<div class="pin-pulse"></div>' +
+            '<div class="pin-body">' +
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2v-5l-2-5H5L3 12v5h2"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>' +
             '</div>';
-        return el;
+        return wrap;
     }
 
-    // Center on student's own location and drop a "you are here" marker
+    function avatarHtml(d, cls) {
+        if (d.profilePicture) {
+            return '<img src="' + d.profilePicture + '" alt="' + d.name + '" />';
+        }
+        var initial = d.name ? d.name.charAt(0).toUpperCase() : '?';
+        return '<div class="avatar-fallback">' + initial + '</div>';
+    }
+
+    function money(d) {
+        return 'R' + (d.price ? Math.round(d.price) : 0);
+    }
+
+    function ratingHtml(d) {
+        if (!d.rating) return '';
+        return '<span><svg width="9" height="9" viewBox="0 0 24 24"><path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 17l-5.5 2.5 1-6.3L3 8.9 9 8z"/></svg>' + d.rating.toFixed(2) + '</span>';
+    }
+
+    function buildPopupHtml(d) {
+        return '<div class="mini-popup">' +
+            '<div class="popup-top">' +
+            avatarHtml(d) +
+            '<div><strong>' + d.name + '</strong>' +
+            '<span><svg width="9" height="9" viewBox="0 0 24 24"><path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 17l-5.5 2.5 1-6.3L3 8.9 9 8z"/></svg>' +
+            (d.rating ? d.rating.toFixed(2) : 'New') + '</span></div>' +
+            '</div>' +
+            '<div class="popup-bottom">' +
+            '<span>' + d.vehicleType + '</span>' +
+            '<strong>' + money(d) + '<small>/hr</small></strong>' +
+            '</div>' +
+            '<a href="/Instructors/Detail/' + d.instructorId + '" style="width:100%;border:0;border-radius:8px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center;background:#2563eb;color:white;font-size:10px;font-weight:700;text-decoration:none;">View profile <span>&rarr;</span></a>' +
+            '</div>';
+    }
+
+    // Center on student's location
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function (pos) {
-            const lng = pos.coords.longitude;
-            const lat = pos.coords.latitude;
-            map.flyTo({ center: [lng, lat], zoom: 13 });
-
-            const youEl = document.createElement('div');
+            map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 13 });
+            var youEl = document.createElement('div');
             youEl.className = 'map-you-dot';
-            new mapboxgl.Marker(youEl)
-                .setLngLat([lng, lat])
-                .setPopup(new mapboxgl.Popup({ offset: 16 }).setHTML('<div class="map-popup"><strong>You are here</strong></div>'))
-                .addTo(map);
+            new mapboxgl.Marker(youEl).setLngLat([pos.coords.longitude, pos.coords.latitude]).addTo(map);
         });
     }
 
+    // ----- SignalR -----
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/instructorHub")
         .withAutomaticReconnect()
         .build();
 
     connection.on("InstructorLocationUpdated", function (data) {
-        const key = data.instructorId;
-        instructorData[key] = data;
+        instructorData[data.instructorId] = data;
 
-        if (markers[key]) {
-            markers[key].setLngLat([data.longitude, data.latitude]);
+        if (markers[data.instructorId]) {
+            markers[data.instructorId].marker.setLngLat([data.longitude, data.latitude]);
+            markers[data.instructorId].data = data;
         } else {
-            const popup = new mapboxgl.Popup({ offset: 28, className: 'map-popup-wrap' }).setHTML(
-                '<div class="map-popup">' +
-                '<p class="map-popup-name">' + data.name + '</p>' +
-                '<p class="map-popup-meta"><span class="map-popup-dot"></span>Available now</p>' +
-                '<p class="map-popup-type">' + data.vehicleType + ' transmission</p>' +
-                '<a href="/Instructors/Detail/' + data.instructorId + '" class="map-popup-btn">View Profile &rarr;</a>' +
-                '</div>'
-            );
-
-            const marker = new mapboxgl.Marker(buildMarkerElement())
+            const popup = new mapboxgl.Popup({ offset: 30, className: 'map-popup-wrap', closeButton: true, maxWidth: '280px' })
+                .setHTML(buildPopupHtml(data));
+            const marker = new mapboxgl.Marker(buildMarkerElement(data.instructorId))
                 .setLngLat([data.longitude, data.latitude])
                 .setPopup(popup)
                 .addTo(map);
-
-            markers[key] = marker;
+            markers[data.instructorId] = { marker: marker, data: data };
         }
 
+        applyFilter();
         renderSidebar();
         updateCount();
     });
 
     connection.on("InstructorRemoved", function (instructorId) {
         if (markers[instructorId]) {
-            markers[instructorId].remove();
+            markers[instructorId].marker.remove();
             delete markers[instructorId];
         }
         delete instructorData[instructorId];
+        applyFilter();
         renderSidebar();
         updateCount();
     });
 
     connection.start()
-        .then(function () {
-            showStatus("Connected. Waiting for available instructors to appear...");
-        })
+        .then(function () { showStatus("Connected. Waiting for available instructors..."); })
         .catch(function (err) {
-            showStatus("Unable to connect to live tracking. Please refresh the page.");
-            console.error("SignalR connection error:", err);
+            showStatus("Unable to connect to live tracking. Please refresh.");
+            console.error(err);
         });
 
+    // ----- transmission filter -----
+    filterBar.addEventListener('click', function (e) {
+        var btn = e.target.closest('button');
+        if (!btn) return;
+        activeFilter = btn.dataset.filter;
+        filterBar.querySelectorAll('button').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        applyFilter();
+        renderSidebar();
+        updateCount();
+    });
+
+    function matchesFilter(d) {
+        if (activeFilter === 'all') return true;
+        return (d.vehicleType || '').toLowerCase() === activeFilter.toLowerCase();
+    }
+
+    function applyFilter() {
+        Object.keys(markers).forEach(function (id) {
+            var el = markers[id].marker.getElement();
+            el.style.display = matchesFilter(markers[id].data) ? '' : 'none';
+        });
+    }
+
     function updateCount() {
-        const n = Object.keys(instructorData).length;
-        if (countBadge) countBadge.textContent = n;
+        var n = Object.values(instructorData).filter(matchesFilter).length;
+        countEls.forEach(function (el) { if (el) el.textContent = n; });
         if (n > 0) statusEl.style.display = 'none';
     }
 
     function renderSidebar() {
-        const keys = Object.keys(instructorData);
+        var items = Object.values(instructorData).filter(matchesFilter);
 
-        if (keys.length === 0) {
+        // clear
+        listEl.querySelectorAll('.instructor-card').forEach(function (el) { el.remove(); });
+
+        if (items.length === 0) {
             listEmpty.style.display = 'block';
-            listEl.querySelectorAll('.sidebar-card').forEach(function (el) { el.remove(); });
             return;
         }
-
         listEmpty.style.display = 'none';
 
-        listEl.querySelectorAll('.sidebar-card').forEach(function (el) {
-            if (!instructorData[el.dataset.id]) el.remove();
-        });
+        items.forEach(function (d) {
+            var card = document.createElement('div');
+            card.className = 'instructor-card';
+            card.innerHTML =
+                '<div class="avatar-wrap">' + avatarHtml(d) + '<i></i></div>' +
+                '<div class="instructor-info">' +
+                '<div class="name-row"><strong>' + d.name + '</strong>' +
+                '<span><svg width="8" height="8" viewBox="0 0 24 24"><path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 17l-5.5 2.5 1-6.3L3 8.9 9 8z"/></svg>' +
+                (d.rating ? d.rating.toFixed(2) : 'New') + '</span></div>' +
+                '<p>' + (d.lessonsCount || 0) + ' lessons</p>' +
+                '<div class="card-meta">' +
+                '<span>' + d.vehicleType + '</span>' +
+                '<strong>' + money(d) + '<small>/hr</small></strong>' +
+                '</div></div>' +
+                '<button class="card-arrow" aria-label="View"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>';
 
-        keys.forEach(function (id) {
-            const d = instructorData[id];
-            const existing = listEl.querySelector('[data-id="' + id + '"]');
+            card.addEventListener('click', function () {
+                map.flyTo({ center: [d.longitude, d.latitude], zoom: 15 });
+                if (markers[d.instructorId]) markers[d.instructorId].marker.togglePopup();
+            });
 
-            if (!existing) {
-                const card = document.createElement('div');
-                card.className = 'sidebar-card';
-                card.dataset.id = id;
-                card.innerHTML =
-                    '<div class="sidebar-card-avatar">' + (d.name ? d.name.charAt(0).toUpperCase() : '?') + '</div>' +
-                    '<div class="sidebar-card-info">' +
-                    '<p class="sidebar-card-name">' + d.name + '</p>' +
-                    '<p class="sidebar-card-type"><span class="sidebar-card-dot"></span>' + d.vehicleType + '</p>' +
-                    '</div>' +
-                    '<svg class="sidebar-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>';
-
-                card.addEventListener('click', function () {
-                    map.flyTo({ center: [d.longitude, d.latitude], zoom: 15 });
-                    markers[id].togglePopup();
-                });
-
-                listEl.appendChild(card);
-            }
+            listEl.appendChild(card);
         });
     }
 

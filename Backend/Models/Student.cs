@@ -35,6 +35,12 @@ namespace BiDE.Models
         [StringLength(255)]
         public string? ProfilePicture { get; set; }
 
+        [StringLength(200)]
+        public string? SecurityQuestion { get; set; }
+
+        [StringLength(255)]
+        public string? SecurityAnswer { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties

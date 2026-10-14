@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BiDE.Data;
@@ -5,6 +6,7 @@ using BiDE.Models;
 
 namespace BiDE.Controllers
 {
+    [Authorize(Roles = "Student")]
     public class StudentController : Controller
     {
         private readonly ApplicationDbContext _context;

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using BiDE.Data;
 using BiDE.Hubs;
 
@@ -12,7 +13,21 @@ builder.Services.AddSignalR();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configure session for authentication
+// Cookie authentication
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = ".BiDE.Auth";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.IsEssential = true;
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/Login";
+    });
+
+// Configure session (still used for lightweight UI state)
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -49,9 +64,10 @@ app.UseStaticFiles(new Microsoft.AspNetCore.Builder.StaticFileOptions
 
 app.UseRouting();
 
-// Session must be before Authorization and after Routing
+// Session must be before auth and after Routing
 app.UseSession();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
@@ -60,4 +76,63 @@ app.MapControllerRoute(
 
 app.MapHub<InstructorHub>("/instructorHub");
 
+// One-time demo data seeding: give the first approved instructor sample
+// offerings so the profile page isn't hollow. Idempotent, safe to re-run.
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    DemoData.SeedOfferings(db);
+}
+
 app.Run();
+
+// Demo seeding helper
+static class DemoData
+{
+    public static void SeedOfferings(ApplicationDbContext db)
+    {
+        try
+        {
+            var instructor = db.Instructors.FirstOrDefault(i => i.Status == BiDE.Models.InstructorStatus.Approved);
+            if (instructor == null) return;
+
+            var hasOfferings = db.LessonOfferings.Any(o => o.InstructorId == instructor.InstructorId);
+            if (hasOfferings) return;
+
+            db.LessonOfferings.AddRange(
+                new BiDE.Models.LessonOffering
+                {
+                    InstructorId = instructor.InstructorId,
+                    Title = "Beginner Driving Lesson",
+                    LessonType = "Manual",
+                    Price = 350m,
+                    Description = "Perfect for first-timers. Covers controls, moving off and stopping.",
+                    CreatedAt = DateTime.UtcNow
+                },
+                new BiDE.Models.LessonOffering
+                {
+                    InstructorId = instructor.InstructorId,
+                    Title = "Highway & Freeway Confidence",
+                    LessonType = "Automatic",
+                    Price = 450m,
+                    Description = "Build confidence merging, overtaking and driving at speed.",
+                    CreatedAt = DateTime.UtcNow
+                },
+                new BiDE.Models.LessonOffering
+                {
+                    InstructorId = instructor.InstructorId,
+                    Title = "K53 Test Preparation",
+                    LessonType = "Manual",
+                    Price = 400m,
+                    Description = "Mock test run-through covering everything examiners look for.",
+                    CreatedAt = DateTime.UtcNow
+                });
+
+            db.SaveChanges();
+        }
+        catch
+        {
+            // Non-fatal: never let demo seeding crash startup
+        }
+    }
+}

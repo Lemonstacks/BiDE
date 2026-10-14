@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.SignalR;
@@ -7,6 +8,7 @@ using BiDE.Hubs;
 
 namespace BiDE.Controllers
 {
+    [Authorize]
     public class InstructorsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -35,11 +37,15 @@ namespace BiDE.Controllers
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                var term = search.ToLower();
+                var term = search.Trim().ToLower();
                 query = query.Where(i =>
                     i.FirstName.ToLower().Contains(term) ||
                     i.LastName.ToLower().Contains(term) ||
-                    (i.Suburb != null && i.Suburb.ToLower().Contains(term)));
+                    (i.Suburb != null && i.Suburb.ToLower().Contains(term)) ||
+                    (i.Certification != null && i.Certification.ToLower().Contains(term)) ||
+                    i.LessonOfferings.Any(o =>
+                        o.Title.ToLower().Contains(term) ||
+                        o.LessonType.ToLower().Contains(term)));
             }
 
             // Apply sorting based on filter selection

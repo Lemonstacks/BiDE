@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BiDE.Data;
@@ -5,6 +6,7 @@ using BiDE.Models;
 
 namespace BiDE.Controllers
 {
+    [Authorize(Roles = "Instructor")]
     public class InstructorDashboardController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -486,7 +488,28 @@ namespace BiDE.Controllers
             var instructor = await _context.Instructors.FindAsync(instructorId.Value);
             if (instructor == null) return RedirectToAction("Login", "Account");
 
+            // Cheapest offering price for the pin/card
+            var price = await _context.LessonOfferings
+                .Where(o => o.InstructorId == instructorId.Value)
+                .OrderBy(o => o.Price)
+                .Select(o => (decimal?)o.Price)
+                .FirstOrDefaultAsync() ?? 0m;
+
+            // Average rating across this instructor's reviews
+            var ratings = await _context.Reviews
+                .Where(r => r.Booking.InstructorId == instructorId.Value)
+                .Select(r => r.Rating)
+                .ToListAsync();
+            var avgRating = ratings.Count > 0 ? Math.Round(ratings.Average(), 2) : 0;
+
+            // Completed lessons count
+            var lessonsCount = await _context.Bookings
+                .CountAsync(b => b.InstructorId == instructorId.Value && b.Status == "Completed");
+
             ViewBag.Instructor = instructor;
+            ViewBag.Price = price;
+            ViewBag.Rating = avgRating;
+            ViewBag.LessonsCount = lessonsCount;
             return View();
         }
     }
