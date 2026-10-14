@@ -14,7 +14,7 @@
 
     @if (!string.IsNullOrEmpty(success))
     {
-        <div class="alert alert-info">@success</div>
+        <div class="alert alert-success">@success</div>
     }
     @if (!string.IsNullOrEmpty(error))
     {
@@ -34,7 +34,7 @@
         @if (active.Count > 0)
         {
             <p class="detail-section-title">Active</p>
-            <div style="margin-bottom: 3rem;">
+            <div class="section-gap">
                 @foreach (var b in active)
                 {
                     var payment = b.Payment;
@@ -177,8 +177,8 @@
             @Html.AntiForgeryToken()
             <input type="hidden" name="bookingId" id="cancel-booking-id" value="" />
             <div class="form-group">
-                <label class="form-label">Reason (optional)</label>
-                <textarea name="reason" class="form-textarea" rows="3"
+                <label class="form-label" for="cancel-reason">Reason (optional)</label>
+                <textarea name="reason" id="cancel-reason" class="form-textarea" rows="3"
                           placeholder="Let the instructor know why..."></textarea>
             </div>
             <div style="display: flex; gap: 0.75rem;">
@@ -200,12 +200,12 @@
             <p class="text-muted text-xs mt-1">Amount: R<span id="payment-amount"></span></p>
         </div>
 
-        <form method="post" asp-action="SubmitPayment" asp-controller="Student" enctype="multipart/form-data">
+        <form method="post" asp-action="SubmitPayment" asp-controller="Student" enctype="multipart/form-data" id="paymentForm">
             @Html.AntiForgeryToken()
             <input type="hidden" name="bookingId" id="payment-booking-id" value="" />
 
             <div class="form-group">
-                <label class="form-label">Payment Method *</label>
+                <label class="form-label" for="paymentMethodSelect">Payment Method *</label>
                 <select name="paymentMethod" id="paymentMethodSelect" class="form-select" required onchange="toggleProofUpload()">
                     <option value="">-- Select --</option>
                     <option value="EFT">EFT / Bank Transfer</option>
@@ -215,16 +215,17 @@
             </div>
 
             <div class="form-group" id="referenceGroup" style="display:none;">
-                <label class="form-label">Payment Reference *</label>
+                <label class="form-label" for="paymentReferenceInput">Payment Reference *</label>
                 <input type="text" name="paymentReference" id="paymentReferenceInput" class="form-input"
                        placeholder="e.g. the reference you used on the EFT" maxlength="100" />
                 <p class="text-xs text-muted mt-1">This helps your instructor match the deposit to your booking.</p>
             </div>
 
             <div class="form-group" id="proofUploadGroup">
-                <label class="form-label">Proof of Payment *</label>
+                <label class="form-label" for="proofFileInput">Proof of Payment *</label>
                 <input type="file" name="proofOfPayment" id="proofFileInput" accept="image/*,.pdf" class="form-input" required />
-                <p class="text-xs text-muted mt-1">Upload a screenshot or PDF of your payment confirmation.</p>
+                <p class="text-xs text-muted mt-1">Upload a screenshot or PDF of your payment confirmation (JPG, PNG or PDF, max 5MB).</p>
+                <p class="text-sm" id="proof-error" style="display:none;color:var(--destructive);margin-top:0.5rem;"></p>
             </div>
 
             <div id="cashPaymentNote" style="display:none;padding:1rem;background:var(--primary-light);border-radius:var(--radius);margin-bottom:1rem;font-size:0.875rem;color:var(--fg);">
@@ -284,6 +285,61 @@ function toggleProofUpload() {
         cashNote.style.display = 'none';
         fileInput.required = true;
     }
+    clearProofError();
 }
+
+var MAX_PROOF_BYTES = 5 * 1024 * 1024; // mirror the server 5MB limit
+var ALLOWED_PROOF_EXT = ['jpg', 'jpeg', 'png', 'pdf'];
+
+function clearProofError() {
+    var err = document.getElementById('proof-error');
+    if (err) { err.style.display = 'none'; err.textContent = ''; }
+}
+
+function proofFileProblem() {
+    var fileInput = document.getElementById('proofFileInput');
+    if (!fileInput || !fileInput.required) return null; // Cash path has no file
+    if (!fileInput.files || fileInput.files.length === 0) return null; // native required handles empty
+    var file = fileInput.files[0];
+    var ext = file.name.split('.').pop().toLowerCase();
+    if (ALLOWED_PROOF_EXT.indexOf(ext) === -1) {
+        return 'That file type is not accepted. Please upload a JPG, PNG or PDF.';
+    }
+    if (file.size > MAX_PROOF_BYTES) {
+        return 'That file is larger than 5MB. Please upload a smaller file.';
+    }
+    return null;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var fileInput = document.getElementById('proofFileInput');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            var problem = proofFileProblem();
+            var err = document.getElementById('proof-error');
+            if (problem && err) {
+                err.textContent = problem;
+                err.style.display = 'block';
+            } else {
+                clearProofError();
+            }
+        });
+    }
+
+    var form = document.getElementById('paymentForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            var problem = proofFileProblem();
+            if (problem) {
+                e.preventDefault();
+                var err = document.getElementById('proof-error');
+                if (err) {
+                    err.textContent = problem;
+                    err.style.display = 'block';
+                }
+            }
+        });
+    }
+});
 </script>
 }

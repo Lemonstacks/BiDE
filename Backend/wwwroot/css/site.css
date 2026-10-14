@@ -915,6 +915,22 @@ button.schedule-slot:focus-visible { outline: none; border-color: var(--primary)
 .items-center { align-items: center; }
 .justify-between { justify-content: space-between; }
 .gap-2 { gap: 0.5rem; }
+.section-gap { margin-bottom: 3rem; }
+
+/* Shared auth page shell (login/register/forgot/reset) */
+.auth-shell {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6rem 0 4rem;
+}
+.auth-shell-inner {
+    width: 100%;
+    max-width: 560px;
+    padding: 0 1.5rem;
+    margin: 0 auto;
+}
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
