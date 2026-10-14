@@ -788,10 +788,15 @@ main { min-height: 100vh; margin: 0; padding: 0; }
 /* ===== SCHEDULE GRID ===== */
 .schedule-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem; }
 .schedule-slot {
+    display: block; width: 100%; margin: 0; font: inherit; color: inherit;
     padding: 1rem; border: 1px solid var(--border); background: var(--bg);
     text-align: center; border-radius: var(--radius); transition: var(--transition);
 }
-.schedule-slot:hover { border-color: var(--primary); background: var(--primary-light); }
+button.schedule-slot { cursor: pointer; }
+.schedule-slot:hover { border-color: var(--primary); background: var(--primary-light); box-shadow: var(--shadow-sm); }
+button.schedule-slot:focus-visible { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
+.schedule-slot .schedule-day { display: block; margin: 0; }
+.schedule-slot .schedule-time { display: block; }
 .schedule-day { font-size: 0.75rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.05em; }
 .schedule-time { margin-top: 0.375rem; font-size: 0.9375rem; font-weight: 600; color: var(--fg); }
 

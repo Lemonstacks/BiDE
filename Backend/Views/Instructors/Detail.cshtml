@@ -120,23 +120,39 @@
                 <hr class="detail-divider" />
                 @if (availability.Count == 0)
                 {
-                    <p class="text-sm text-muted">No schedule set yet.</p>
+                    <div class="empty-state" style="padding:2rem;">
+                        <p class="text-sm text-muted">No schedule set yet.</p>
+                    </div>
                 }
                 else
                 {
                     @if (offerings.Count > 0)
                     {
-                        <p class="text-sm text-muted" style="margin-bottom:1rem;">These are the instructor's open times. To book one, use <strong>Book Now</strong> on a lesson above.</p>
+                        <p class="text-sm text-muted" style="margin-bottom:1rem;">Tap a slot to book it.</p>
+                        <div class="schedule-grid">
+                            @foreach (var a in availability)
+                            {
+                                var slotLabel = $"{a.Date.ToString("ddd, MMM d")} | {a.StartTime.ToString(@"hh\:mm")} - {a.EndTime.ToString(@"hh\:mm")}";
+                                <button type="button" class="schedule-slot" data-schedule-id="@a.AvailabilityId" data-slot-label="@slotLabel" onclick="selectSlot(@a.AvailabilityId)">
+                                    <span class="schedule-day">@a.Date.ToString("ddd, MMM d")</span>
+                                    <span class="schedule-time">@a.StartTime.ToString(@"hh\:mm") - @a.EndTime.ToString(@"hh\:mm")</span>
+                                </button>
+                            }
+                        </div>
                     }
-                    <div class="schedule-grid">
-                        @foreach (var a in availability)
-                        {
-                            <div class="schedule-slot">
-                                <p class="schedule-day">@a.Date.ToString("ddd, MMM d")</p>
-                                <p class="schedule-time">@a.StartTime.ToString(@"hh\:mm") - @a.EndTime.ToString(@"hh\:mm")</p>
-                            </div>
-                        }
-                    </div>
+                    else
+                    {
+                        <p class="text-sm text-muted" style="margin-bottom:1rem;">These are the instructor's open times. Booking opens once a lesson offering is published.</p>
+                        <div class="schedule-grid">
+                            @foreach (var a in availability)
+                            {
+                                <div class="schedule-slot">
+                                    <p class="schedule-day">@a.Date.ToString("ddd, MMM d")</p>
+                                    <p class="schedule-time">@a.StartTime.ToString(@"hh\:mm") - @a.EndTime.ToString(@"hh\:mm")</p>
+                                </div>
+                            }
+                        </div>
+                    }
                 }
             </div>
 
@@ -146,7 +162,9 @@
                 <hr class="detail-divider" />
                 @if (reviews.Count == 0)
                 {
-                    <p class="text-sm text-muted">No reviews yet.</p>
+                    <div class="empty-state" style="padding:2rem;">
+                        <p class="text-sm text-muted">No reviews yet.</p>
+                    </div>
                 }
                 else
                 {
@@ -183,21 +201,22 @@
         <h3 class="modal-title" id="bookingModalTitle">Book a Lesson</h3>
         <div style="padding:1rem;background:var(--bg-muted);border-radius:var(--radius);margin-bottom:1.25rem;">
             <p class="font-bold" id="modal-offering-title"></p>
-            <p class="text-muted text-sm" style="margin-top:0.25rem;">with @Model.FirstName @Model.LastName</p>
+            <p class="text-muted text-sm" id="modal-offering-hint" style="margin-top:0.25rem;">with @Model.FirstName @Model.LastName</p>
         </div>
-        <form method="post" asp-action="Book" asp-controller="Instructors">
+        <form method="post" asp-action="Book" asp-controller="Instructors" id="bookingForm">
             @Html.AntiForgeryToken()
             <input type="hidden" name="instructorId" value="@Model.InstructorId" />
             <input type="hidden" name="offerId" id="modal-offer-id" value="" />
             <div class="form-group">
                 <label class="form-label">Select Available Slot *</label>
-                <select name="scheduleId" class="form-select" required>
+                <select name="scheduleId" id="modal-schedule-id" class="form-select" required>
                     <option value="">-- Choose a time slot --</option>
                     @foreach (var a in availability)
                     {
                         <option value="@a.AvailabilityId">@a.Date.ToString("ddd, MMM d") | @a.StartTime.ToString(@"hh\:mm") - @a.EndTime.ToString(@"hh\:mm")</option>
                     }
                 </select>
+                <p class="text-sm" id="booking-error" style="display:none;color:var(--destructive);margin-top:0.5rem;"></p>
             </div>
             @if (availability.Count == 0)
             { <div class="alert alert-warning">No available time slots. Check back later.</div> }
@@ -209,10 +228,66 @@
 
 @section Scripts {
 <script>
-function openBookingModal(offerId, title, price) {
-    document.getElementById('modal-offering-title').textContent = title + ' \u2014 R' + price;
-    document.getElementById('modal-offer-id').value = offerId;
-    openModal('bookingModal');
-}
+    var bookingOfferings = @Html.Raw(Json.Serialize(offerings.Select(o => new { id = o.OfferId, title = o.Title, price = o.Price.ToString("N0") })));
+
+    function setOffering(offerId, title, price) {
+        document.getElementById('modal-offering-title').textContent = title + ' \u2014 R' + price;
+        document.getElementById('modal-offer-id').value = offerId;
+        var hint = document.getElementById('modal-offering-hint');
+        if (hint) { hint.textContent = 'with @Model.FirstName @Model.LastName'; }
+    }
+
+    function clearBookingError() {
+        var err = document.getElementById('booking-error');
+        if (err) { err.style.display = 'none'; err.textContent = ''; }
+    }
+
+    function openBookingModal(offerId, title, price) {
+        clearBookingError();
+        setOffering(offerId, title, price);
+        openModal('bookingModal');
+    }
+
+    function selectSlot(scheduleId) {
+        clearBookingError();
+        var select = document.getElementById('modal-schedule-id');
+        if (select) { select.value = String(scheduleId); }
+
+        var offerInput = document.getElementById('modal-offer-id');
+        var hasOffering = offerInput && offerInput.value !== '';
+
+        if (!hasOffering) {
+            if (bookingOfferings.length === 1) {
+                var only = bookingOfferings[0];
+                setOffering(only.id, only.title, only.price);
+            } else {
+                document.getElementById('modal-offering-title').textContent = 'Choose a lesson for this slot';
+                var hint = document.getElementById('modal-offering-hint');
+                if (hint) { hint.textContent = 'Pick a lesson offering above, then confirm your booking.'; }
+            }
+        }
+
+        openModal('bookingModal');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var form = document.getElementById('bookingForm');
+        if (!form) return;
+        form.addEventListener('submit', function(e) {
+            var offerInput = document.getElementById('modal-offer-id');
+            var select = document.getElementById('modal-schedule-id');
+            var err = document.getElementById('booking-error');
+            var missing = [];
+            if (!offerInput || offerInput.value === '') { missing.push('a lesson'); }
+            if (!select || select.value === '') { missing.push('a time slot'); }
+            if (missing.length > 0) {
+                e.preventDefault();
+                if (err) {
+                    err.textContent = 'Please choose ' + missing.join(' and ') + ' before confirming.';
+                    err.style.display = 'block';
+                }
+            }
+        });
+    });
 </script>
 }
