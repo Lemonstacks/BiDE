@@ -21,7 +21,7 @@ namespace BiDE.Controllers
         }
 
         // GET: /Instructors
-        public async Task<IActionResult> Index(string? search, string? filterBy)
+        public async Task<IActionResult> Index(string? search, string? filterBy, string? lessonType)
         {
             // Only registered students can search for instructors (FSSB: student must be logged in)
             var userId = HttpContext.Session.GetInt32("UserId");
@@ -48,6 +48,14 @@ namespace BiDE.Controllers
                         o.LessonType.ToLower().Contains(term)));
             }
 
+            // Narrow by lesson type (separate from the sort selection)
+            var hasTypeFilter = !string.IsNullOrWhiteSpace(lessonType)
+                && !string.Equals(lessonType, "all", StringComparison.OrdinalIgnoreCase);
+            if (hasTypeFilter)
+            {
+                query = query.Where(i => i.LessonOfferings.Any(o => o.LessonType == lessonType));
+            }
+
             // Apply sorting based on filter selection
             query = filterBy switch
             {
@@ -60,6 +68,7 @@ namespace BiDE.Controllers
 
             ViewBag.Search = search;
             ViewBag.FilterBy = filterBy ?? "all";
+            ViewBag.LessonType = hasTypeFilter ? lessonType : "all";
 
             return View(instructors);
         }

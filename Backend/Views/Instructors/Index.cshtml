@@ -4,6 +4,9 @@
     var search = ViewBag.Search as string ?? "";
     var filterBy = ViewBag.FilterBy as string ?? "all";
     var sortByLocation = filterBy == "location";
+    var lessonType = ViewBag.LessonType as string ?? "all";
+    var hasTypeFilter = lessonType != "all";
+    var lessonTypes = new[] { "Manual", "Automatic", "Highway", "Parking", "Defensive", "Refresher" };
 }
 
 <div class="page-header-bg bg-find-instructor">
@@ -24,6 +27,14 @@
             </svg>
             <input type="text" name="search" value="@search" class="form-input" placeholder="Search by name, suburb, certification or lesson type..." />
         </div>
+        <label for="filter-lesson-type" class="form-label" style="margin-bottom:0;align-self:center;">Lesson type</label>
+        <select id="filter-lesson-type" name="lessonType" class="form-select search-select" onchange="this.form.submit()">
+            <option value="all" selected="@(!hasTypeFilter)">All types</option>
+            @foreach (var t in lessonTypes)
+            {
+                <option value="@t" selected="@(lessonType == t)">@t</option>
+            }
+        </select>
         <label for="sort-instructors" class="form-label" style="margin-bottom:0;align-self:center;">Sort</label>
         <select id="sort-instructors" name="filterBy" class="form-select search-select" onchange="this.form.submit()">
             <option value="experience" selected="@(!sortByLocation)">Sort: Most experienced</option>
@@ -36,9 +47,16 @@
     @if (Model.Count == 0)
     {
         <div class="empty-state">
-            @if (!string.IsNullOrWhiteSpace(search))
+            @if (!string.IsNullOrWhiteSpace(search) || hasTypeFilter)
             {
-                <p>No instructors match "@search"</p>
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    <p>No instructors match "@search"@(hasTypeFilter ? $" for {lessonType} lessons" : "")</p>
+                }
+                else
+                {
+                    <p>No instructors offer @lessonType lessons</p>
+                }
                 <p class="sub">Try a different name, suburb, certification or lesson type.</p>
                 <a href="/Instructors" class="btn btn-primary" style="margin-top:1.25rem;">Clear search</a>
             }
