@@ -178,9 +178,9 @@
 
 <!-- Booking Modal -->
 <div class="modal-overlay" id="bookingModal">
-    <div class="modal" style="position:relative;">
-        <button class="modal-close" onclick="closeModal('bookingModal')">&times;</button>
-        <h3 class="modal-title">Book a Lesson</h3>
+    <div class="modal" style="position:relative;" role="dialog" aria-modal="true" aria-labelledby="bookingModalTitle">
+        <button class="modal-close" onclick="closeModal('bookingModal')" aria-label="Close">&times;</button>
+        <h3 class="modal-title" id="bookingModalTitle">Book a Lesson</h3>
         <div style="padding:1rem;background:var(--bg-muted);border-radius:var(--radius);margin-bottom:1.25rem;">
             <p class="font-bold" id="modal-offering-title"></p>
             <p class="text-muted text-sm" style="margin-top:0.25rem;">with @Model.FirstName @Model.LastName</p>

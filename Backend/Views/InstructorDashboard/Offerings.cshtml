@@ -74,9 +74,9 @@
 
 <!-- Create Offering Modal -->
 <div class="modal-overlay" id="offeringModal">
-    <div class="modal" style="position: relative;">
-        <button class="modal-close" onclick="closeModal('offeringModal')">&times;</button>
-        <h3 class="modal-title">New Offering</h3>
+    <div class="modal" style="position: relative;" role="dialog" aria-modal="true" aria-labelledby="offeringModalTitle">
+        <button class="modal-close" onclick="closeModal('offeringModal')" aria-label="Close">&times;</button>
+        <h3 class="modal-title" id="offeringModalTitle">New Offering</h3>
         <form method="post" asp-action="CreateOffering">
             @Html.AntiForgeryToken()
             <div class="form-group">
@@ -109,9 +109,9 @@
 
 <!-- Edit Offering Modal -->
 <div class="modal-overlay" id="editOfferingModal">
-    <div class="modal" style="position: relative;">
-        <button class="modal-close" onclick="closeModal('editOfferingModal')">&times;</button>
-        <h3 class="modal-title">Edit Offering</h3>
+    <div class="modal" style="position: relative;" role="dialog" aria-modal="true" aria-labelledby="editOfferingModalTitle">
+        <button class="modal-close" onclick="closeModal('editOfferingModal')" aria-label="Close">&times;</button>
+        <h3 class="modal-title" id="editOfferingModalTitle">Edit Offering</h3>
         <form method="post" asp-action="UpdateOffering">
             @Html.AntiForgeryToken()
             <input type="hidden" name="offerId" id="edit-offer-id" value="" />

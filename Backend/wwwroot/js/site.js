@@ -18,12 +18,49 @@
     onScroll();
 })();
 
+// ===== Focus Management (shared by modals + drawer) =====
+var FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function getFocusable(container) {
+    return Array.prototype.filter.call(
+        container.querySelectorAll(FOCUSABLE_SELECTOR),
+        function(el) { return el.offsetParent !== null || el === document.activeElement; }
+    );
+}
+
+// Returns a keydown handler that keeps Tab focus inside the container.
+function createFocusTrap(container) {
+    return function(e) {
+        if (e.key !== 'Tab') return;
+        var focusable = getFocusable(container);
+        if (!focusable.length) return;
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+        }
+    };
+}
+
 // ===== Hamburger Menu =====
+var hamburgerTrap = null;
+var hamburgerPreviousFocus = null;
+
 function toggleHamburgerMenu() {
     var overlay = document.getElementById('hamburgerMenuOverlay');
     if (!overlay) return;
+    hamburgerPreviousFocus = document.activeElement;
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
+    var drawer = overlay.querySelector('.hamburger-menu') || overlay;
+    hamburgerTrap = createFocusTrap(drawer);
+    overlay.addEventListener('keydown', hamburgerTrap);
+    var closeBtn = overlay.querySelector('.hamburger-menu-close');
+    if (closeBtn) setTimeout(function() { closeBtn.focus(); }, 100);
 }
 
 function closeHamburgerMenu() {
@@ -31,6 +68,11 @@ function closeHamburgerMenu() {
     if (!overlay) return;
     overlay.classList.remove('active');
     document.body.style.overflow = '';
+    if (hamburgerTrap) { overlay.removeEventListener('keydown', hamburgerTrap); hamburgerTrap = null; }
+    if (hamburgerPreviousFocus && typeof hamburgerPreviousFocus.focus === 'function') {
+        hamburgerPreviousFocus.focus();
+    }
+    hamburgerPreviousFocus = null;
 }
 
 function closeHamburgerIfOverlay(event) {
@@ -80,14 +122,26 @@ function toggleFaq(element) {
 }
 
 // ===== Modal Functions =====
+var modalTraps = {};        // modalId -> keydown handler
+var modalPreviousFocus = {}; // modalId -> element to restore focus to
+
 function openModal(modalId) {
     var modal = document.getElementById(modalId);
     if (!modal) return;
+    modalPreviousFocus[modalId] = document.activeElement;
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    var dialog = modal.querySelector('.modal') || modal;
+    var trap = createFocusTrap(dialog);
+    modalTraps[modalId] = trap;
+    modal.addEventListener('keydown', trap);
     setTimeout(function() {
         var input = modal.querySelector('input:not([type="hidden"]), textarea, select');
-        if (input) input.focus();
+        if (input) { input.focus(); }
+        else {
+            var first = getFocusable(dialog)[0];
+            if (first) first.focus();
+        }
     }, 100);
 }
 
@@ -96,13 +150,16 @@ function closeModal(modalId) {
     if (!modal) return;
     modal.classList.remove('active');
     document.body.style.overflow = '';
+    if (modalTraps[modalId]) { modal.removeEventListener('keydown', modalTraps[modalId]); delete modalTraps[modalId]; }
+    var prev = modalPreviousFocus[modalId];
+    if (prev && typeof prev.focus === 'function') prev.focus();
+    delete modalPreviousFocus[modalId];
 }
 
 // Close modal on overlay click
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('modal-overlay')) {
-        e.target.classList.remove('active');
-        document.body.style.overflow = '';
+        closeModal(e.target.id);
     }
 });
 
@@ -114,9 +171,8 @@ document.addEventListener('keydown', function(e) {
             closeHamburgerMenu(); return;
         }
         document.querySelectorAll('.modal-overlay.active').forEach(function(m) {
-            m.classList.remove('active');
+            closeModal(m.id);
         });
-        document.body.style.overflow = '';
     }
 });
 
@@ -132,9 +188,14 @@ function showToast(message, type) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.alert-info, .alert-error').forEach(function(alert) {
-        var type = alert.classList.contains('alert-error') ? 'error' : 'success';
+    document.querySelectorAll('.alert-info, .alert-success, .alert-warning, .alert-error').forEach(function(alert) {
+        var type;
+        if (alert.classList.contains('alert-error')) { type = 'error'; }
+        else if (alert.classList.contains('alert-warning')) { type = 'warning'; }
+        else { type = 'success'; } // alert-info and alert-success both surface as success toasts
         showToast(alert.textContent.trim(), type);
+        // CF-3: suppress the inline banner once mirrored into a toast (CSS hides .alert.toast-mirrored)
+        alert.classList.add('toast-mirrored');
     });
 });
 
@@ -146,17 +207,33 @@ function toggleExpand(id) {
 
 // ===== Form Submit Loading =====
 document.addEventListener('DOMContentLoaded', function() {
+    function restoreSubmitButton(btn) {
+        if (!btn || !btn.dataset.loading) return;
+        btn.disabled = false;
+        btn.innerHTML = btn.dataset.originalHtml || btn.innerHTML;
+        delete btn.dataset.loading;
+        delete btn.dataset.originalHtml;
+    }
+
     document.querySelectorAll('form').forEach(function(form) {
         form.addEventListener('submit', function() {
             var btn = form.querySelector('button[type="submit"]');
-            if (btn && !btn.disabled) {
-                btn.disabled = true;
-                var original = btn.innerHTML;
-                btn.innerHTML = '<span class="spinner"></span> Processing...';
-                setTimeout(function() { btn.disabled = false; btn.innerHTML = original; }, 5000);
-            }
+            if (!btn || btn.disabled || btn.dataset.loading) return; // guard against double-submit
+            btn.dataset.loading = '1';
+            btn.dataset.originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner"></span> Processing...';
+            btn.disabled = true;
+            // A full-page POST navigates away, which ends the loading state naturally.
         });
     });
+
+    // Safety net: if navigation is cancelled or the page is restored from bfcache,
+    // restore any button left in the loading state. No short timeout reset.
+    function restoreAll() {
+        document.querySelectorAll('button[data-loading]').forEach(restoreSubmitButton);
+    }
+    window.addEventListener('pageshow', restoreAll);
+    window.addEventListener('pagehide', restoreAll);
 });
 
 // ===== Smooth Scroll =====
