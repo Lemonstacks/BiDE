@@ -60,16 +60,33 @@
     }
 
     function avatarHtml(d, cls) {
-        if (d.profilePicture) {
-            return '<img src="' + esc(d.profilePicture) + '" alt="' + esc(d.name) + '" />';
+        var ini = esc(initials(d.name));
+        var pic = (d.profilePicture || '').trim();
+        // Only treat it as an image if it looks like a real URL/path.
+        var looksLikePath = pic && (pic.charAt(0) === '/' || /^https?:\/\//i.test(pic));
+        if (looksLikePath) {
+            // data-fallback carries the initials; a delegated error handler swaps a
+            // broken image for the initials box so a bad path never shows its alt text.
+            return '<img src="' + esc(pic) + '" alt="' + esc(d.name) + '" class="avatar-img" data-fallback="' + ini + '" />';
         }
-        return '<div class="avatar-fallback">' + esc(initials(d.name)) + '</div>';
+        return '<div class="avatar-fallback">' + ini + '</div>';
     }
 
     function money(d) {
         if (!d.price || d.price <= 0) return '<span class="price-tba">Price on request</span>';
         return 'R' + Math.round(d.price);
     }
+
+    // When a profile image fails to load, replace it with the initials box.
+    // (image 'error' does not bubble, so listen in the capture phase.)
+    document.addEventListener('error', function (e) {
+        var img = e.target;
+        if (!img || img.tagName !== 'IMG' || !img.classList.contains('avatar-img')) return;
+        var box = document.createElement('div');
+        box.className = 'avatar-fallback';
+        box.textContent = img.getAttribute('data-fallback') || '?';
+        if (img.parentNode) img.parentNode.replaceChild(box, img);
+    }, true);
 
     function ratingHtml(d) {
         if (!d.rating) return '';
