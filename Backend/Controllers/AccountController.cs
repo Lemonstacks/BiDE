@@ -336,6 +336,11 @@ namespace BiDE.Controllers
                     ViewBag.Error = "Incorrect answer to the security question.";
                     return View("ResetPassword");
                 }
+                if (student.Password == newPassword)
+                {
+                    ViewBag.Error = "Your new password cannot be the same as your old password.";
+                    return View("ResetPassword");
+                }
                 student.Password = newPassword;
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Password reset successfully. You can now log in.";
@@ -350,6 +355,11 @@ namespace BiDE.Controllers
                     ViewBag.Error = "Incorrect answer to the security question.";
                     return View("ResetPassword");
                 }
+                if (instructor.Password == newPassword)
+                {
+                    ViewBag.Error = "Your new password cannot be the same as your old password.";
+                    return View("ResetPassword");
+                }
                 instructor.Password = newPassword;
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Password reset successfully. You can now log in.";
@@ -362,6 +372,11 @@ namespace BiDE.Controllers
                 if (admin.SecurityAnswer != normalizedAnswer)
                 {
                     ViewBag.Error = "Incorrect answer to the security question.";
+                    return View("ResetPassword");
+                }
+                if (admin.Password == newPassword)
+                {
+                    ViewBag.Error = "Your new password cannot be the same as your old password.";
                     return View("ResetPassword");
                 }
                 admin.Password = newPassword;

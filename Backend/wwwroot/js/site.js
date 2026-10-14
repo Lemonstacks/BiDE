@@ -501,6 +501,8 @@ window.BiDE.hideLoading = function(el) {
     document.addEventListener('click', function(e) {
         var a = e.target.closest ? e.target.closest('a') : null;
         if (!a) return;
+        // Don't intercept the confirm button itself, or any link inside the confirm modal.
+        if (a.id === 'logoutConfirmBtn' || a.closest('#logoutConfirmModal')) return;
         var href = a.getAttribute('href') || '';
         if (!/\/Account\/Logout\/?$/i.test(href)) return;
         e.preventDefault();
