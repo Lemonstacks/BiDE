@@ -18,13 +18,13 @@
     <div class="card" style="padding: 2rem; text-align: center;">
         <div id="live-status" style="margin-bottom: 1.5rem;">
             <div id="status-offline">
-                <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="opacity: 0.4; margin-bottom: 0.75rem;">
+                <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="opacity: 0.4; margin-bottom: 0.75rem;" aria-hidden="true">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
                 </svg>
                 <p class="text-muted">You are currently offline</p>
             </div>
             <div id="status-online" style="display: none;">
-                <svg width="48" height="48" fill="none" stroke="#22c55e" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom: 0.75rem;">
+                <svg width="48" height="48" fill="none" stroke="#22c55e" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom: 0.75rem;" aria-hidden="true">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
                 </svg>
                 <p style="color: #22c55e; font-weight: 600;">You are live on the map</p>
@@ -32,10 +32,13 @@
             </div>
         </div>
 
-        <button id="btn-go-live" class="btn btn-primary" onclick="goLive()" style="width: 100%; padding: 0.875rem;">
+        <!-- Accessible live announcement for broadcasting state changes -->
+        <p id="live-announce" class="sr-only" role="status" aria-live="polite">You are offline.</p>
+
+        <button id="btn-go-live" class="btn btn-primary" onclick="goLive()" style="width: 100%; padding: 0.875rem;" aria-label="Go live and share your location on the map">
             Go Live
         </button>
-        <button id="btn-go-offline" class="btn btn-destructive" onclick="goOffline()" style="width: 100%; padding: 0.875rem; display: none;">
+        <button id="btn-go-offline" class="btn btn-destructive" onclick="goOffline()" style="width: 100%; padding: 0.875rem; display: none;" aria-label="Go offline and stop sharing your location">
             Go Offline
         </button>
     </div>

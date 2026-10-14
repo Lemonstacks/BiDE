@@ -14,6 +14,13 @@
     const statusOnline = document.getElementById('status-online');
     const coordsDisplay = document.getElementById('coords-display');
     const mapPreview = document.getElementById('live-map-preview');
+    const liveAnnounce = document.getElementById('live-announce');
+
+    function announce(message) {
+        if (liveAnnounce) {
+            liveAnnounce.textContent = message;
+        }
+    }
 
     window.goLive = async function () {
         if (!navigator.geolocation) {
@@ -77,6 +84,7 @@
         statusOffline.style.display = 'none';
         statusOnline.style.display = 'block';
         mapPreview.style.display = 'block';
+        announce('You are now live on the map. Students can find and book you.');
     };
 
     window.goOffline = async function () {
@@ -103,6 +111,7 @@
         statusOffline.style.display = 'block';
         statusOnline.style.display = 'none';
         mapPreview.style.display = 'none';
+        announce('You are now offline. Your location is no longer shared.');
     };
 
     function updatePreviewMap(lat, lng) {

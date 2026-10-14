@@ -1505,12 +1505,16 @@ body:has(.navbar-sticky) .page-container-narrow { padding-top: 5rem; }
 .card-meta small { font-size: 10px; color: #7f8998; font-weight: 400; }
 .card-meta .price-tba { font-size: 11px; font-weight: 600; color: #8e97a6; }
 .card-arrow { border: 0; background: rgba(255,255,255,.07); color: #a9b1bd; border-radius: 9px; padding: 8px; display: grid; place-items: center; cursor: pointer; flex: none; }
-.trust-note { margin-top: auto; display: flex; align-items: flex-start; gap: 11px; padding: 16px 11px 0; color: #657080; border-top: 1px solid rgba(255,255,255,.07); font-size: 11px; line-height: 1.5; }
+/* F-19 targeted contrast: raise muted trust-note body text from #657080 (~3.6:1, fails WCAG AA body) to #848d9d (~5.4:1) on the dark sidebar panel while keeping the muted grey family. */
+.trust-note { margin-top: auto; display: flex; align-items: flex-start; gap: 11px; padding: 16px 11px 0; color: #848d9d; border-top: 1px solid rgba(255,255,255,.07); font-size: 11px; line-height: 1.5; }
 .trust-note svg { color: #4380f4; flex: none; width: 18px; height: 18px; }
 .trust-note span { display: flex; flex-direction: column; }
 .trust-note strong { color: #c6ccd4; font-size: 12px; margin-bottom: 3px; }
 
 @keyframes dotPulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+/* Screen-reader-only utility: visually hidden but exposed to assistive tech (used by Go Live status announcements). */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 @media (max-width: 860px) {
     .market-shell .page-heading { display: block; margin-bottom: 19px; }
