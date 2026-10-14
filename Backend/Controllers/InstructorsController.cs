@@ -73,6 +73,10 @@ namespace BiDE.Controllers
             if (instructor == null)
                 return NotFound();
 
+            // Only approved and verified instructors are publicly viewable (same rule as Index)
+            if (instructor.Status != InstructorStatus.Approved || !instructor.IsVerified)
+                return NotFound();
+
             var offerings = await _context.LessonOfferings
                 .Where(o => o.InstructorId == id)
                 .ToListAsync();
@@ -212,7 +216,7 @@ namespace BiDE.Controllers
             }
 
             var instructor = await _context.Instructors.FindAsync(instructorId);
-            if (instructor == null || instructor.Status != InstructorStatus.Approved)
+            if (instructor == null || instructor.Status != InstructorStatus.Approved || !instructor.IsVerified)
             {
                 TempData["Error"] = "Instructor is not available.";
                 return RedirectToAction("LiveMap");
