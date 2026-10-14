@@ -77,9 +77,13 @@ namespace BiDE.Controllers
                 .Where(o => o.InstructorId == id)
                 .ToListAsync();
 
+            // Only show slots that have not yet passed (future dates, or today but not yet ended)
+            var today = DateTime.Today;
+            var nowTime = DateTime.Now.TimeOfDay;
             var availability = await _context.Availabilities
-                .Where(a => a.InstructorId == id && a.AvailabilityStatus == "Available")
-                .OrderBy(a => a.Date)
+                .Where(a => a.InstructorId == id && a.AvailabilityStatus == "Available"
+                    && (a.Date > today || (a.Date == today && a.EndTime > nowTime)))
+                .OrderBy(a => a.Date).ThenBy(a => a.StartTime)
                 .ToListAsync();
 
             var reviews = await _context.Reviews
@@ -131,6 +135,13 @@ namespace BiDE.Controllers
             if (schedule.AvailabilityStatus != "Available")
             {
                 TempData["Error"] = "This time slot is no longer available. Please choose another.";
+                return RedirectToAction("Detail", new { id = instructorId });
+            }
+
+            // Reject slots whose time has already passed
+            if (schedule.Date.Add(schedule.EndTime) <= DateTime.Now)
+            {
+                TempData["Error"] = "This time slot has already passed. Please choose another.";
                 return RedirectToAction("Detail", new { id = instructorId });
             }
 
@@ -207,9 +218,12 @@ namespace BiDE.Controllers
                 return RedirectToAction("LiveMap");
             }
 
-            // Find the next available slot for this instructor
+            // Find the next available slot that has not yet passed
+            var rtToday = DateTime.Today;
+            var rtNowTime = DateTime.Now.TimeOfDay;
             var nextSlot = await _context.Availabilities
-                .Where(a => a.InstructorId == instructorId && a.AvailabilityStatus == "Available" && a.Date >= DateTime.Today)
+                .Where(a => a.InstructorId == instructorId && a.AvailabilityStatus == "Available"
+                    && (a.Date > rtToday || (a.Date == rtToday && a.EndTime > rtNowTime)))
                 .OrderBy(a => a.Date).ThenBy(a => a.StartTime)
                 .FirstOrDefaultAsync();
 
