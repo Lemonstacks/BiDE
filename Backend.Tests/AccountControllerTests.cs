@@ -15,7 +15,7 @@ namespace BiDE.Tests
             var controller = new AccountController(db);
             TestHelper.SetupAnonymousSession(controller);
 
-            var result = await controller.Register("John", "Doe", "john@test.com", "0711111111", "12345", "12345", "Student", null);
+            var result = await controller.Register("John", "Doe", "john@test.com", "0711111111", "12345", "12345", "Student", null, "What was your first pet?", "Rex");
 
             var viewResult = Assert.IsType<ViewResult>(result);
             Assert.Equal("Password must be at least 6 characters.", controller.ViewBag.Error);
@@ -28,7 +28,7 @@ namespace BiDE.Tests
             var controller = new AccountController(db);
             TestHelper.SetupAnonymousSession(controller);
 
-            var result = await controller.Register("John", "Doe", "notanemail", "0711111111", "password123", "password123", "Student", null);
+            var result = await controller.Register("John", "Doe", "notanemail", "0711111111", "password123", "password123", "Student", null, "What was your first pet?", "Rex");
 
             var viewResult = Assert.IsType<ViewResult>(result);
             Assert.Equal("Please enter a valid email address.", controller.ViewBag.Error);
@@ -41,7 +41,7 @@ namespace BiDE.Tests
             var controller = new AccountController(db);
             TestHelper.SetupAnonymousSession(controller);
 
-            var result = await controller.Register("John", "Doe", "john@test.com", "0711111111", "password1", "password2", "Student", null);
+            var result = await controller.Register("John", "Doe", "john@test.com", "0711111111", "password1", "password2", "Student", null, "What was your first pet?", "Rex");
 
             var viewResult = Assert.IsType<ViewResult>(result);
             Assert.Equal("Passwords do not match.", controller.ViewBag.Error);
@@ -57,7 +57,7 @@ namespace BiDE.Tests
             var controller = new AccountController(db);
             TestHelper.SetupAnonymousSession(controller);
 
-            var result = await controller.Register("John", "Doe", "john@test.com", "0722222222", "password123", "password123", "Student", null);
+            var result = await controller.Register("John", "Doe", "john@test.com", "0722222222", "password123", "password123", "Student", null, "What was your first pet?", "Rex");
 
             var viewResult = Assert.IsType<ViewResult>(result);
             Assert.Equal("An account with this email already exists.", controller.ViewBag.Error);
@@ -70,7 +70,7 @@ namespace BiDE.Tests
             var controller = new AccountController(db);
             TestHelper.SetupAnonymousSession(controller);
 
-            var result = await controller.Register("Jane", "Smith", "jane@test.com", "0733333333", "password123", "password123", "Student", "Sandton");
+            var result = await controller.Register("Jane", "Smith", "jane@test.com", "0733333333", "password123", "password123", "Student", "Sandton", "What was your first pet?", "Rex");
 
             var redirect = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirect.ActionName);
