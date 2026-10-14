@@ -513,3 +513,32 @@ window.BiDE.hideLoading = function(el) {
         openModal('logoutConfirmModal');
     }, true);
 })();
+
+// ===== Profile avatar dropdown (desktop navbar) =====
+function toggleProfileMenu() {
+    var wrap = document.getElementById('navProfile');
+    var btn = document.getElementById('navProfileBtn');
+    if (!wrap) return;
+    var open = wrap.classList.toggle('open');
+    if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+document.addEventListener('click', function(e) {
+    var wrap = document.getElementById('navProfile');
+    if (!wrap || !wrap.classList.contains('open')) return;
+    if (!wrap.contains(e.target)) {
+        wrap.classList.remove('open');
+        var btn = document.getElementById('navProfileBtn');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    var wrap = document.getElementById('navProfile');
+    if (wrap && wrap.classList.contains('open')) {
+        wrap.classList.remove('open');
+        var btn = document.getElementById('navProfileBtn');
+        if (btn) { btn.setAttribute('aria-expanded', 'false'); btn.focus(); }
+    }
+});

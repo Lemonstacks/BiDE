@@ -19,7 +19,7 @@ namespace BiDE.Controllers
 
         // Signs the user in with a claims cookie AND mirrors values into session
         // (existing controllers/_Layout still read Session for lightweight UI state).
-        private async Task SignInUser(int userId, string role, string fullName, string email)
+        private async Task SignInUser(int userId, string role, string fullName, string email, string? pictureUrl = null)
         {
             var claims = new List<Claim>
             {
@@ -39,6 +39,10 @@ namespace BiDE.Controllers
             HttpContext.Session.SetString("UserRole", role);
             HttpContext.Session.SetString("UserName", fullName);
             HttpContext.Session.SetString("UserEmail", email);
+            if (!string.IsNullOrEmpty(pictureUrl))
+                HttpContext.Session.SetString("UserPicture", pictureUrl);
+            else
+                HttpContext.Session.Remove("UserPicture");
         }
 
         // GET: /Account/Login
@@ -67,7 +71,7 @@ namespace BiDE.Controllers
                 .FirstOrDefaultAsync(s => s.Email == email);
             if (student != null && password == student.Password)
             {
-                await SignInUser(student.StudentId, "Student", $"{student.FirstName} {student.LastName}", student.Email);
+                await SignInUser(student.StudentId, "Student", $"{student.FirstName} {student.LastName}", student.Email, student.ProfilePicture);
                 // Always take student to Find Instructors after login
                 return RedirectToAction("Index", "Instructors");
             }
@@ -77,7 +81,7 @@ namespace BiDE.Controllers
                 .FirstOrDefaultAsync(i => i.Email == email);
             if (instructor != null && password == instructor.Password)
             {
-                await SignInUser(instructor.InstructorId, "Instructor", $"{instructor.FirstName} {instructor.LastName}", instructor.Email);
+                await SignInUser(instructor.InstructorId, "Instructor", $"{instructor.FirstName} {instructor.LastName}", instructor.Email, instructor.ProfilePicture);
                 return RedirectToAction("Index", "InstructorDashboard");
             }
 

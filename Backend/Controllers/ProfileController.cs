@@ -111,6 +111,8 @@ namespace BiDE.Controllers
             await _context.SaveChangesAsync();
 
             HttpContext.Session.SetString("UserName", $"{student.FirstName} {student.LastName}");
+            if (!string.IsNullOrEmpty(student.ProfilePicture))
+                HttpContext.Session.SetString("UserPicture", student.ProfilePicture);
             TempData["Success"] = "Profile updated!";
             return RedirectToAction("Index");
         }
@@ -185,6 +187,8 @@ namespace BiDE.Controllers
             await _context.SaveChangesAsync();
 
             HttpContext.Session.SetString("UserName", $"{instructor.FirstName} {instructor.LastName}");
+            if (!string.IsNullOrEmpty(instructor.ProfilePicture))
+                HttpContext.Session.SetString("UserPicture", instructor.ProfilePicture);
             TempData["Success"] = "Profile updated!";
             return RedirectToAction("Index");
         }

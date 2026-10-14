@@ -57,6 +57,11 @@
                 @if (Context.Session.GetInt32("UserId") != null)
                 {
                     var desktopRole = Context.Session.GetString("UserRole");
+                    var desktopName = Context.Session.GetString("UserName") ?? "User";
+                    var desktopPicture = Context.Session.GetString("UserPicture");
+                    var desktopInitials = string.Join("", desktopName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => p[0])).ToUpper();
+                    if (string.IsNullOrEmpty(desktopInitials)) { desktopInitials = "U"; }
+
                     @if (desktopRole == "Student")
                     {
                         var onLiveMap = currentPath.StartsWith("/instructors/livemap");
@@ -65,8 +70,7 @@
                         <a href="/Instructors/LiveMap" class="nav-link @(onLiveMap ? "active" : "")">Live Map</a>
                         <a href="/Student/Bookings" class="nav-link @navActive("/student/bookings")">Bookings</a>
                         <a href="/Student/LessonProgress" class="nav-link @navActive("/student/lessonprogress")">Progress</a>
-                        <a href="/Profile" class="nav-link @navActive("/profile")">Profile</a>
-                        <a href="/Account/Logout" class="nav-link nav-link-cta">Logout</a>
+                        <a href="/Student/CompletedLessons" class="nav-link @navActive("/student/completedlessons")">Completed</a>
                     }
                     @if (desktopRole == "Instructor")
                     {
@@ -74,9 +78,10 @@
                         <a href="/InstructorDashboard" class="nav-link @(onDash ? "active" : "")">Dashboard</a>
                         <a href="/InstructorDashboard/Offerings" class="nav-link @navActive("/instructordashboard/offerings")">Offerings</a>
                         <a href="/InstructorDashboard/Availability" class="nav-link @navActive("/instructordashboard/availability")">Availability</a>
+                        <a href="/InstructorDashboard/Index#booking-requests" class="nav-link">Requests</a>
                         <a href="/InstructorDashboard/Payments" class="nav-link @navActive("/instructordashboard/payments")">Payments</a>
-                        <a href="/Profile" class="nav-link @navActive("/profile")">Profile</a>
-                        <a href="/Account/Logout" class="nav-link nav-link-cta">Logout</a>
+                        <a href="/InstructorDashboard/LessonProgress" class="nav-link @navActive("/instructordashboard/lessonprogress")">Progress</a>
+                        <a href="/InstructorDashboard/GoLive" class="nav-link @navActive("/instructordashboard/golive")">Go Live</a>
                     }
                     @if (desktopRole == "Admin")
                     {
@@ -85,8 +90,35 @@
                         <a href="/Admin/ManageUsers" class="nav-link @navActive("/admin/manageusers")">Users</a>
                         <a href="/Admin/MonitorBookings" class="nav-link @navActive("/admin/monitorbookings")">Bookings</a>
                         <a href="/Admin/ViewPayments" class="nav-link @navActive("/admin/viewpayments")">Payments</a>
-                        <a href="/Account/Logout" class="nav-link nav-link-cta">Logout</a>
                     }
+
+                    <!-- Profile avatar dropdown -->
+                    <div class="nav-profile" id="navProfile">
+                        <button type="button" class="nav-profile-btn" id="navProfileBtn" aria-haspopup="true" aria-expanded="false" aria-label="Account menu" onclick="toggleProfileMenu()">
+                            @if (!string.IsNullOrEmpty(desktopPicture))
+                            {
+                                <img src="@desktopPicture" alt="@desktopName" class="nav-profile-avatar" />
+                            }
+                            else
+                            {
+                                <span class="nav-profile-avatar nav-profile-initials">@desktopInitials</span>
+                            }
+                        </button>
+                        <div class="nav-profile-menu" id="navProfileMenu" role="menu">
+                            <div class="nav-profile-head">
+                                <p class="nav-profile-name">@desktopName</p>
+                                <p class="nav-profile-role">@desktopRole</p>
+                            </div>
+                            <a href="/Profile" class="nav-profile-item" role="menuitem">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                Profile
+                            </a>
+                            <a href="/Account/Logout" class="nav-profile-item nav-profile-item-danger" role="menuitem">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
                 }
                 else
                 {
