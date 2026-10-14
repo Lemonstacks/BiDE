@@ -3,6 +3,7 @@
     ViewData["Title"] = "Find Instructors";
     var search = ViewBag.Search as string ?? "";
     var filterBy = ViewBag.FilterBy as string ?? "all";
+    var sortByLocation = filterBy == "location";
 }
 
 <div class="page-header-bg bg-find-instructor">
@@ -23,6 +24,11 @@
             </svg>
             <input type="text" name="search" value="@search" class="form-input" placeholder="Search by name, suburb, certification or lesson type..." />
         </div>
+        <label for="sort-instructors" class="form-label" style="margin-bottom:0;align-self:center;">Sort</label>
+        <select id="sort-instructors" name="filterBy" class="form-select search-select" onchange="this.form.submit()">
+            <option value="experience" selected="@(!sortByLocation)">Sort: Most experienced</option>
+            <option value="location" selected="@sortByLocation">Sort: Location A-Z</option>
+        </select>
         <button type="submit" class="btn btn-primary">Search</button>
     </form>
 
