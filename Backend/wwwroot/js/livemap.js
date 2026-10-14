@@ -41,16 +41,29 @@
         return wrap;
     }
 
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function initials(name) {
+        var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+        if (parts.length === 0) return '?';
+        if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+        return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    }
+
     function avatarHtml(d, cls) {
         if (d.profilePicture) {
-            return '<img src="' + d.profilePicture + '" alt="' + d.name + '" />';
+            return '<img src="' + esc(d.profilePicture) + '" alt="' + esc(d.name) + '" />';
         }
-        var initial = d.name ? d.name.charAt(0).toUpperCase() : '?';
-        return '<div class="avatar-fallback">' + initial + '</div>';
+        return '<div class="avatar-fallback">' + esc(initials(d.name)) + '</div>';
     }
 
     function money(d) {
-        return 'R' + (d.price ? Math.round(d.price) : 0);
+        if (!d.price || d.price <= 0) return '<span class="price-tba">Price on request</span>';
+        return 'R' + Math.round(d.price);
     }
 
     function ratingHtml(d) {
@@ -62,13 +75,13 @@
         return '<div class="mini-popup">' +
             '<div class="popup-top">' +
             avatarHtml(d) +
-            '<div><strong>' + d.name + '</strong>' +
+            '<div><strong>' + esc(d.name) + '</strong>' +
             '<span><svg width="9" height="9" viewBox="0 0 24 24"><path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 17l-5.5 2.5 1-6.3L3 8.9 9 8z"/></svg>' +
             (d.rating ? d.rating.toFixed(2) : 'New') + '</span></div>' +
             '</div>' +
             '<div class="popup-bottom">' +
-            '<span>' + d.vehicleType + '</span>' +
-            '<strong>' + money(d) + '<small>/hr</small></strong>' +
+            '<span>' + esc(d.vehicleType) + '</span>' +
+            '<strong>' + money(d) + (d.price > 0 ? '<small>/hr</small>' : '') + '</strong>' +
             '</div>' +
             '<a href="/Instructors/Detail/' + d.instructorId + '" style="width:100%;border:0;border-radius:8px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center;background:#2563eb;color:white;font-size:10px;font-weight:700;text-decoration:none;">View profile <span>&rarr;</span></a>' +
             '</div>';
@@ -177,13 +190,13 @@
             card.innerHTML =
                 '<div class="avatar-wrap">' + avatarHtml(d) + '<i></i></div>' +
                 '<div class="instructor-info">' +
-                '<div class="name-row"><strong>' + d.name + '</strong>' +
+                '<div class="name-row"><strong>' + esc(d.name) + '</strong>' +
                 '<span><svg width="8" height="8" viewBox="0 0 24 24"><path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 17l-5.5 2.5 1-6.3L3 8.9 9 8z"/></svg>' +
                 (d.rating ? d.rating.toFixed(2) : 'New') + '</span></div>' +
-                '<p>' + (d.lessonsCount || 0) + ' lessons</p>' +
+                '<p>' + (d.lessonsCount || 0) + ' lesson' + ((d.lessonsCount || 0) === 1 ? '' : 's') + '</p>' +
                 '<div class="card-meta">' +
-                '<span>' + d.vehicleType + '</span>' +
-                '<strong>' + money(d) + '<small>/hr</small></strong>' +
+                '<span>' + esc(d.vehicleType || 'Any') + '</span>' +
+                '<strong>' + money(d) + (d.price > 0 ? '<small>/hr</small>' : '') + '</strong>' +
                 '</div></div>' +
                 '<button class="card-arrow" aria-label="View"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>';
 
