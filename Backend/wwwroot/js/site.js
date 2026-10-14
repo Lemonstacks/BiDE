@@ -333,3 +333,99 @@ function getChatResponse(text) {
 
     setTimeout(type, 1000);
 })();
+
+// ===== Top page-load progress bar =====
+// Shows a slim bar at the top of the viewport whenever the user navigates
+// (internal link click or form submit) so "loading anything" has feedback.
+(function() {
+    var bar = document.createElement('div');
+    bar.id = 'page-progress';
+    var started = false;
+    var timer = null;
+
+    function ready() {
+        if (document.body) {
+            document.body.appendChild(bar);
+        } else {
+            document.addEventListener('DOMContentLoaded', function() { document.body.appendChild(bar); });
+        }
+    }
+    ready();
+
+    function start() {
+        if (started) return;
+        started = true;
+        bar.classList.add('active');
+        bar.style.width = '0';
+        // Force reflow so the width transition runs from 0.
+        void bar.offsetWidth;
+        var progress = 8;
+        bar.style.width = progress + '%';
+        timer = setInterval(function() {
+            // Ease toward 90% but never finish until the page actually unloads.
+            progress += (90 - progress) * 0.12;
+            bar.style.width = progress.toFixed(1) + '%';
+        }, 300);
+    }
+
+    function done() {
+        if (!started) return;
+        started = false;
+        if (timer) { clearInterval(timer); timer = null; }
+        bar.style.width = '100%';
+        setTimeout(function() {
+            bar.classList.remove('active');
+            setTimeout(function() { bar.style.width = '0'; }, 300);
+        }, 200);
+    }
+
+    // Internal link clicks (skip new-tab, downloads, hashes, external, modifier keys).
+    document.addEventListener('click', function(e) {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        var a = e.target.closest ? e.target.closest('a') : null;
+        if (!a) return;
+        var href = a.getAttribute('href');
+        if (!href || href.charAt(0) === '#') return;
+        if (a.target && a.target !== '_self') return;
+        if (a.hasAttribute('download')) return;
+        if (a.getAttribute('rel') === 'external') return;
+        // Same-origin only.
+        if (a.host && a.host !== window.location.host) return;
+        start();
+    }, true);
+
+    // Form submits navigate too (the submit-button spinner handles the button itself).
+    document.addEventListener('submit', function(e) {
+        if (e.defaultPrevented) return;
+        var form = e.target;
+        if (form && form.getAttribute('target') && form.getAttribute('target') !== '_self') return;
+        if (form && form.id === 'antiforgery-form') return;
+        start();
+    }, true);
+
+    // Finish on load and when returning via back/forward cache.
+    window.addEventListener('load', done);
+    window.addEventListener('pageshow', done);
+    // If a navigation is cancelled (user hits Escape / stop), clear after a while.
+    window.addEventListener('beforeunload', function() { /* keep bar visible until unload */ });
+})();
+
+// ===== Loading helpers for async content sections =====
+// Usage: BiDE.showLoading(el, 'Loading bookings...')  /  BiDE.hideLoading(el)
+window.BiDE = window.BiDE || {};
+window.BiDE.showLoading = function(el, message) {
+    if (!el) return;
+    if (el.querySelector(':scope > .loading-overlay')) return;
+    el.classList.add('is-loading');
+    var ov = document.createElement('div');
+    ov.className = 'loading-overlay';
+    ov.innerHTML = '<span class="spinner-lg" role="status" aria-label="Loading"></span>' +
+        (message ? '<p>' + String(message).replace(/[<>&]/g, '') + '</p>' : '');
+    el.appendChild(ov);
+};
+window.BiDE.hideLoading = function(el) {
+    if (!el) return;
+    var ov = el.querySelector(':scope > .loading-overlay');
+    if (ov) ov.remove();
+    el.classList.remove('is-loading');
+};

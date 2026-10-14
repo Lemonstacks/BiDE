@@ -43,7 +43,22 @@
                 <span id="side-count">0</span>
             </div>
             <div class="cards" id="instructor-list">
-                <p id="list-empty" class="text-sm" style="color:#848d9d; padding:1rem 0;">Waiting for instructors to go live...</p>
+                <div id="list-loading" class="side-skeletons">
+                    @for (int s = 0; s < 3; s++)
+                    {
+                        <div class="skeleton-card" style="background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.08);">
+                            <div class="skeleton-row">
+                                <div class="skeleton skeleton-avatar square" style="width:50px;height:55px;"></div>
+                                <div style="flex:1;">
+                                    <div class="skeleton skeleton-text w-50"></div>
+                                    <div class="skeleton skeleton-text w-25"></div>
+                                    <div class="skeleton skeleton-text w-75" style="margin-bottom:0;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <p id="list-empty" class="text-sm" style="color:#848d9d; padding:1rem 0; display:none;">Waiting for instructors to go live...</p>
             </div>
             <div class="trust-note">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>

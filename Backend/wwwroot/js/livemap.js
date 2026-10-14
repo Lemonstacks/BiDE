@@ -18,6 +18,11 @@
     const statusEl = document.getElementById('map-status');
     const listEl = document.getElementById('instructor-list');
     const listEmpty = document.getElementById('list-empty');
+    const listLoading = document.getElementById('list-loading');
+
+    function hideSkeletons() {
+        if (listLoading) listLoading.style.display = 'none';
+    }
     const countEls = [
         document.getElementById('available-count'),
         document.getElementById('chip-count'),
@@ -136,8 +141,17 @@
     });
 
     connection.start()
-        .then(function () { showStatus("Connected. Waiting for available instructors..."); })
+        .then(function () {
+            // Connected: stop showing skeletons. If no one is live yet, show the waiting text.
+            hideSkeletons();
+            if (Object.keys(instructorData).length === 0) {
+                listEmpty.style.display = 'block';
+            }
+            showStatus("Connected. Waiting for available instructors...");
+        })
         .catch(function (err) {
+            hideSkeletons();
+            listEmpty.style.display = 'block';
             showStatus("Unable to connect to live tracking. Please refresh.");
             console.error(err);
         });
@@ -179,9 +193,11 @@
         listEl.querySelectorAll('.instructor-card').forEach(function (el) { el.remove(); });
 
         if (items.length === 0) {
+            hideSkeletons();
             listEmpty.style.display = 'block';
             return;
         }
+        hideSkeletons();
         listEmpty.style.display = 'none';
 
         items.forEach(function (d) {
