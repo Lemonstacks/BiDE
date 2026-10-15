@@ -144,20 +144,72 @@ wiring, the hub, and the location payload shape were untouched.
 These change controller signatures, query behavior, or add new routes, and were
 intentionally held back:
 
-- AP-3 — Introduce view models + `asp-for`/`asp-validation-for` validation for the
-  Account and Profile forms (changes controller action signatures).
-- AP-4 — Turn the Find-Instructors Sort control into a real server-side filter
-  (e.g. by lesson type), changing the `Index` query.
-- AP-6 — Gate payment-proof downloads behind an authorized streaming action
-  instead of serving them as public static files (new route + static-file config
-  change; a confidentiality trade-off).
+_All three were subsequently implemented — see the next section._
+
+---
+
+## Phase 4 — formerly deferred AP items (now implemented)
+
+Each of these changes server behavior, a controller contract, or routing, so each
+was built in its own worktree and reviewed by a second model before merging.
+
+### AP-4 — Lesson-type filter on Find Instructors — `ea65a23`
+- Files: `Backend/Controllers/InstructorsController.cs`, `Backend/Views/Instructors/Index.cshtml`
+- Change: `Index` gained a nullable `string? lessonType` parameter. When set (and
+  not "all"), the query additionally filters to instructors who have a
+  `LessonOffering` of that type, applied before the existing sort. A labeled
+  lesson-type dropdown was added to the search form.
+- Behavior change: yes — results now narrow by lesson type. The existing search
+  and the `filterBy` sort are untouched; the new parameter is nullable so old
+  links without it still work.
+
+### AP-6 — Gate payment-proof downloads behind authorization — `0f1a8f1`
+- Files: new `Backend/Controllers/PaymentController.cs`,
+  `Backend/Controllers/StudentController.cs`, `Backend/Views/InstructorDashboard/Payments.cshtml`,
+  `Backend/Views/Admin/ViewPayments.cshtml`, `.gitignore`
+- AP-6 (audit F-26): payment proofs are no longer served as public static files.
+  New uploads are written to `ContentRootPath/private-uploads/payments` (outside
+  `wwwroot`, gitignored). A new `[Authorize]` action `GET /Payment/Proof/{id}`
+  streams a proof only to the owning student, the booking's instructor, or an
+  admin; everyone else gets NotFound. Legacy records still under
+  `/uploads/payments` resolve via a wwwroot fallback so old data keeps working.
+  Both payment views link to the gated action.
+- Behavior change: yes — proof URLs are now access-controlled. No model or
+  migration change. Added 6 authorization tests.
+- Known residual (non-blocking): proofs uploaded before this change still sit
+  under `wwwroot/uploads/payments` and remain publicly reachable by direct URL;
+  disabling static serving of that legacy path (or migrating old files into the
+  private dir) would close it.
+
+### AP-3 — View models + validation for Account and Profile forms — `22c9d5c`, `3dec0d6`
+- Files: new `Backend/ViewModels/` (RegisterViewModel, LoginViewModel,
+  ResetPasswordViewModel, StudentProfileViewModel, InstructorProfileViewModel,
+  and a custom `RequiredNotBlank` attribute), `Backend/Controllers/AccountController.cs`,
+  `Backend/Controllers/ProfileController.cs`, the five matching views, and the
+  updated `Backend.Tests`.
+- AP-3 (audit F-09, F-10): the five forms now bind to view models with
+  `asp-for` / `asp-validation-for` / validation summary, so all field errors show
+  at once. Server-only rules that annotations can't express (duplicate email,
+  security-answer check, old != new password, file validation) run after the
+  `ModelState.IsValid` gate via `ModelState.AddModelError`. A `RequiredNotBlank`
+  attribute preserves the old behavior of rejecting whitespace-only input (a
+  regression the reviewer caught and that was fixed before merge).
+- Behavior change: yes — controller action signatures now take view models.
+  All prior behavior preserved: auto-login + role redirect + session (incl.
+  UserPicture), the three-table login, security-answer verification, old != new
+  password rejection, profile picture upload, and Experience remaining
+  non-writable by instructors. No migration or schema change. Tests migrated to
+  the new signatures.
 
 ---
 
 ## Verification
 
 - `dotnet build Backend/BiDE.csproj` — 0 errors.
-- `dotnet test Backend.Tests` — 18 passed, 0 failed, 0 skipped.
-- Behavior-changing sub-batches (4A security guards, 4B contrast token) were
-  reviewed by a second model before merge; review records are under
-  `.agents/tasks/bide-uiux-audit-2026-10-14/b4a/` and `b4b/`.
+- `dotnet test Backend.Tests` — 37 passed, 0 failed, 0 skipped (grew from 18 as
+  AP-6 and AP-3 added coverage).
+- Behavior-changing sub-batches (4A security guards, 4B contrast token, AP-4,
+  AP-6, AP-3) were each reviewed by a second model before merge; review records
+  are under `.agents/tasks/bide-uiux-audit-2026-10-14/` (`b4a/`, `b4b/`, `ap4/`,
+  `ap6/`, `ap3/`). AP-3 required a second iteration after the reviewer caught a
+  whitespace-input regression, which was fixed before merge.
