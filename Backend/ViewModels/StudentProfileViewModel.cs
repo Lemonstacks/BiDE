@@ -5,15 +5,15 @@ namespace BiDE.ViewModels
 {
     public class StudentProfileViewModel
     {
-        [Required(ErrorMessage = "First name is required.")]
+        [RequiredNotBlank(ErrorMessage = "First name is required.")]
         [StringLength(50, ErrorMessage = "First name must be 50 characters or fewer.")]
         public string FirstName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Last name is required.")]
+        [RequiredNotBlank(ErrorMessage = "Last name is required.")]
         [StringLength(50, ErrorMessage = "Last name must be 50 characters or fewer.")]
         public string LastName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Phone is required.")]
+        [RequiredNotBlank(ErrorMessage = "Phone is required.")]
         [Phone(ErrorMessage = "Please enter a valid phone number.")]
         [StringLength(15, ErrorMessage = "Phone number must be 15 characters or fewer.")]
         public string Contact { get; set; } = string.Empty;

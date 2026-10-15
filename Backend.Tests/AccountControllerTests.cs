@@ -195,6 +195,90 @@ namespace BiDE.Tests
         }
 
         [Fact]
+        public async Task Register_WhitespaceOnlyFields_AreRejected()
+        {
+            var db = TestHelper.GetInMemoryDbContext();
+            var controller = new AccountController(db);
+            TestHelper.SetupAnonymousSession(controller);
+
+            var model = ValidRegister();
+            model.FirstName = "   ";
+            model.LastName = "   ";
+            model.SecurityAnswer = "   ";
+            model.Password = "      ";
+            model.ConfirmPassword = "      ";
+            TestHelper.ValidateModel(controller, model);
+
+            var result = await controller.Register(model);
+
+            Assert.IsType<ViewResult>(result);
+            Assert.NotEmpty(ErrorsFor(controller, nameof(RegisterViewModel.FirstName)));
+            Assert.NotEmpty(ErrorsFor(controller, nameof(RegisterViewModel.LastName)));
+            Assert.NotEmpty(ErrorsFor(controller, nameof(RegisterViewModel.SecurityAnswer)));
+            Assert.NotEmpty(ErrorsFor(controller, nameof(RegisterViewModel.Password)));
+            Assert.Equal(0, await db.Students.CountAsync());
+        }
+
+        [Fact]
+        public async Task ResetPassword_WhitespaceNewPassword_IsRejected()
+        {
+            var db = TestHelper.GetInMemoryDbContext();
+            db.Students.Add(new Student { StudentId = 1, FirstName = "Test", LastName = "User", Email = "test@test.com", Contact = "0711111111", Password = "oldpass1", SecurityQuestion = "Q?", SecurityAnswer = "rex" });
+            await db.SaveChangesAsync();
+
+            var controller = new AccountController(db);
+            TestHelper.SetupAnonymousSession(controller);
+
+            var model = new ResetPasswordViewModel { Email = "test@test.com", Answer = "Rex", NewPassword = "      ", ConfirmPassword = "      " };
+            TestHelper.ValidateModel(controller, model);
+
+            var result = await controller.ResetPassword(model);
+
+            Assert.IsType<ViewResult>(result);
+            Assert.NotEmpty(ErrorsFor(controller, nameof(ResetPasswordViewModel.NewPassword)));
+            Assert.Equal("oldpass1", (await db.Students.FirstAsync()).Password);
+        }
+
+        [Fact]
+        public async Task ResetPassword_Instructor_ValidAnswer_UpdatesPassword()
+        {
+            var db = TestHelper.GetInMemoryDbContext();
+            db.Instructors.Add(new Instructor { InstructorId = 1, FirstName = "Ins", LastName = "Tructor", Email = "ins@test.com", Contact = "0711111111", Password = "oldpass1", SecurityQuestion = "Q?", SecurityAnswer = "rex" });
+            await db.SaveChangesAsync();
+
+            var controller = new AccountController(db);
+            TestHelper.SetupAnonymousSession(controller);
+
+            var model = new ResetPasswordViewModel { Email = "ins@test.com", Answer = "Rex", NewPassword = "newpass1", ConfirmPassword = "newpass1" };
+            TestHelper.ValidateModel(controller, model);
+
+            var result = await controller.ResetPassword(model);
+
+            Assert.Equal("Login", Assert.IsType<RedirectToActionResult>(result).ActionName);
+            Assert.Equal("newpass1", (await db.Instructors.FirstAsync()).Password);
+        }
+
+        [Fact]
+        public async Task ResetPassword_Admin_WrongAnswer_ReturnsError()
+        {
+            var db = TestHelper.GetInMemoryDbContext();
+            db.Admins.Add(new Admin { AdminId = 99, FirstName = "Ad", LastName = "Min", Email = "adm@test.com", Contact = "0711111111", Password = "oldpass1", SecurityQuestion = "Q?", SecurityAnswer = "rex" });
+            await db.SaveChangesAsync();
+
+            var controller = new AccountController(db);
+            TestHelper.SetupAnonymousSession(controller);
+
+            var model = new ResetPasswordViewModel { Email = "adm@test.com", Answer = "wrong", NewPassword = "newpass1", ConfirmPassword = "newpass1" };
+            TestHelper.ValidateModel(controller, model);
+
+            var result = await controller.ResetPassword(model);
+
+            Assert.IsType<ViewResult>(result);
+            Assert.Contains("Incorrect answer to the security question.", ErrorsFor(controller, nameof(ResetPasswordViewModel.Answer)));
+            Assert.Equal("oldpass1", (await db.Admins.FirstAsync()).Password);
+        }
+
+        [Fact]
         public async Task ResetPassword_SameAsOldPassword_ReturnsError()
         {
             var db = TestHelper.GetInMemoryDbContext();

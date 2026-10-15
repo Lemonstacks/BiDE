@@ -171,6 +171,9 @@ namespace BiDE.Controllers
             return RedirectToAction("Index");
         }
 
+        // Form field name shared by both profile view models.
+        private const string PictureField = "ProfilePicture";
+
         // Adds a ModelState error for a bad profile picture (type or size).
         private void ValidateProfilePicture(IFormFile? profilePicture)
         {
@@ -180,11 +183,11 @@ namespace BiDE.Controllers
             var ext = Path.GetExtension(profilePicture.FileName).ToLower();
             if (!allowedExtensions.Contains(ext))
             {
-                ModelState.AddModelError(nameof(StudentProfileViewModel.ProfilePicture), "Profile picture must be a JPG, PNG, or GIF image.");
+                ModelState.AddModelError(PictureField, "Profile picture must be a JPG, PNG, or GIF image.");
                 return;
             }
             if (profilePicture.Length > 3 * 1024 * 1024)
-                ModelState.AddModelError(nameof(StudentProfileViewModel.ProfilePicture), "Profile picture must be less than 3MB.");
+                ModelState.AddModelError(PictureField, "Profile picture must be less than 3MB.");
         }
 
         private static string InitialsOf(string first, string last) =>
