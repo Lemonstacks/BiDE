@@ -234,7 +234,8 @@ namespace BiDE.Controllers
             string? proofPath = null;
             if (proofOfPayment != null && proofOfPayment.Length > 0)
             {
-                var uploadsDir = Path.Combine(_env.WebRootPath, "uploads", "payments");
+                // Stored outside wwwroot so UseStaticFiles cannot serve it; downloads go through /Payment/Proof/{id}
+                var uploadsDir = Path.Combine(_env.ContentRootPath, "private-uploads", "payments");
                 Directory.CreateDirectory(uploadsDir);
 
                 var fileName = $"payment_{bookingId}_{Path.GetRandomFileName()}{Path.GetExtension(proofOfPayment.FileName)}";
@@ -245,7 +246,7 @@ namespace BiDE.Controllers
                     await proofOfPayment.CopyToAsync(stream);
                 }
 
-                proofPath = $"/uploads/payments/{fileName}";
+                proofPath = $"{PaymentController.PrivateProofPrefix}{fileName}";
             }
 
             if (booking.Payment != null)

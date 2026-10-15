@@ -60,15 +60,15 @@
                                 </div>
                                 @if (!string.IsNullOrEmpty(p.ProofOfPayment) && (p.ProofOfPayment.EndsWith(".jpg") || p.ProofOfPayment.EndsWith(".jpeg") || p.ProofOfPayment.EndsWith(".png")))
                                 {
-                                    <a href="@p.ProofOfPayment" target="_blank" rel="noopener" aria-label="Open proof of payment in a new tab">
-                                        <img src="@p.ProofOfPayment" alt="Proof of payment" style="max-width: 160px; max-height: 120px; border-radius: 8px; border: 1px solid var(--border); margin-top: 0.75rem; object-fit: cover;" />
+                                    <a href="@Url.Action("Proof", "Payment", new { id = p.PaymentId })" target="_blank" rel="noopener" aria-label="Open proof of payment in a new tab">
+                                        <img src="@Url.Action("Proof", "Payment", new { id = p.PaymentId })" alt="Proof of payment" style="max-width: 160px; max-height: 120px; border-radius: 8px; border: 1px solid var(--border); margin-top: 0.75rem; object-fit: cover;" />
                                     </a>
                                 }
                             </div>
                             <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                                 @if (!string.IsNullOrEmpty(p.ProofOfPayment))
                                 {
-                                    <a href="@p.ProofOfPayment" target="_blank" rel="noopener" class="btn btn-sm" aria-label="View proof of payment in a new tab">View Proof</a>
+                                    <a href="@Url.Action("Proof", "Payment", new { id = p.PaymentId })" target="_blank" rel="noopener" class="btn btn-sm" aria-label="View proof of payment in a new tab">View Proof</a>
                                 }
                                 <form method="post" asp-action="VerifyPayment" style="display:inline;">
                                     @Html.AntiForgeryToken()

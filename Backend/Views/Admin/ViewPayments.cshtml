@@ -103,7 +103,7 @@
                             @if (!string.IsNullOrEmpty(p.ProofOfPayment))
                             {
                                 <span class="card-meta-item">
-                                    <a href="@p.ProofOfPayment" target="_blank" rel="noopener" aria-label="View proof of payment in a new tab" style="color: var(--primary); text-decoration: underline;">View Proof</a>
+                                    <a href="@Url.Action("Proof", "Payment", new { id = p.PaymentId })" target="_blank" rel="noopener" aria-label="View proof of payment in a new tab" style="color: var(--primary); text-decoration: underline;">View Proof</a>
                                 </span>
                             }
                         </div>

@@ -47,3 +47,4 @@ packages/
 *.tmp
 *.bak
 Backend.zip
+Backend/private-uploads/
