@@ -1,4 +1,4 @@
-@model Instructor
+@model BiDE.ViewModels.InstructorProfileViewModel
 @{
     ViewData["Title"] = "Instructor Profile";
     var success = TempData["Success"] as string;
@@ -48,59 +48,72 @@
     <form method="post" asp-action="UpdateInstructor" asp-controller="Profile" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
 
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-error" role="alert">
+                <div asp-validation-summary="All"></div>
+            </div>
+        }
+
         <div class="form-group" style="text-align: center; margin-bottom: 1.5rem;">
             <div style="margin-bottom: 0.75rem;">
-                @if (!string.IsNullOrEmpty(Model.ProfilePicture))
+                @if (!string.IsNullOrEmpty(Model.CurrentPictureUrl))
                 {
-                    <img src="@Model.ProfilePicture" alt="Profile Picture" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover;" />
+                    <img src="@Model.CurrentPictureUrl" alt="Profile Picture" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover;" />
                 }
                 else
                 {
                     <div style="width: 120px; height: 120px; border-radius: 50%; background: #e2e8f0; display: inline-flex; align-items: center; justify-content: center; font-size: 2rem; color: #94a3b8;">
-                        @Model.FirstName[0]@Model.LastName[0]
+                        @Model.Initials
                     </div>
                 }
             </div>
-            <label class="form-label">Profile Picture</label>
-            <input type="file" name="profilePicture" accept="image/*" class="form-input" />
+            <label class="form-label" for="ip-picture">Profile Picture</label>
+            <input type="file" asp-for="ProfilePicture" id="ip-picture" accept="image/*" class="form-input" />
+            <span asp-validation-for="ProfilePicture" class="text-xs text-destructive"></span>
         </div>
 
         <div class="form-group">
-            <label class="form-label">Email</label>
-            <input type="email" value="@Model.Email" class="form-input form-input-disabled" disabled />
+            <label class="form-label" for="ip-email">Email</label>
+            <input type="email" id="ip-email" value="@Model.Email" class="form-input form-input-disabled" disabled />
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">First Name *</label>
-                <input type="text" name="firstName" value="@Model.FirstName" class="form-input" required />
+                <label class="form-label" for="ip-firstname">First Name *</label>
+                <input type="text" asp-for="FirstName" id="ip-firstname" class="form-input" required />
+                <span asp-validation-for="FirstName" class="text-xs text-destructive"></span>
             </div>
             <div class="form-group">
-                <label class="form-label">Last Name *</label>
-                <input type="text" name="lastName" value="@Model.LastName" class="form-input" required />
+                <label class="form-label" for="ip-lastname">Last Name *</label>
+                <input type="text" asp-for="LastName" id="ip-lastname" class="form-input" required />
+                <span asp-validation-for="LastName" class="text-xs text-destructive"></span>
             </div>
         </div>
 
         <div class="form-group">
-            <label class="form-label">Phone *</label>
-            <input type="tel" name="contact" value="@Model.Contact" class="form-input" required />
+            <label class="form-label" for="ip-contact">Phone *</label>
+            <input type="tel" asp-for="Contact" id="ip-contact" class="form-input" required />
+            <span asp-validation-for="Contact" class="text-xs text-destructive"></span>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Suburb / Area</label>
-                <input type="text" name="suburb" value="@Model.Suburb" class="form-input" placeholder="e.g. Johannesburg North" />
+                <label class="form-label" for="ip-suburb">Suburb / Area</label>
+                <input type="text" asp-for="Suburb" id="ip-suburb" class="form-input" placeholder="e.g. Johannesburg North" />
+                <span asp-validation-for="Suburb" class="text-xs text-destructive"></span>
             </div>
             <div class="form-group">
-                <label class="form-label">Years of Experience</label>
-                <input type="number" value="@Model.Experience" class="form-input" disabled readonly style="opacity:0.7;cursor:not-allowed;" />
+                <label class="form-label" for="ip-experience">Years of Experience</label>
+                <input type="number" id="ip-experience" value="@Model.Experience" class="form-input" disabled readonly style="opacity:0.7;cursor:not-allowed;" />
                 <p class="text-xs text-muted" style="margin-top:0.35rem;">Set by an administrator. Contact support to update your verified experience.</p>
             </div>
         </div>
 
         <div class="form-group">
-            <label class="form-label">Certification / License</label>
-            <input type="text" name="certification" value="@Model.Certification" class="form-input" placeholder="Your official certification" />
+            <label class="form-label" for="ip-certification">Certification / License</label>
+            <input type="text" asp-for="Certification" id="ip-certification" class="form-input" placeholder="Your official certification" />
+            <span asp-validation-for="Certification" class="text-xs text-destructive"></span>
         </div>
 
         <button type="submit" class="btn btn-primary">Update Profile</button>

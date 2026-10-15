@@ -1,13 +1,6 @@
+@model BiDE.ViewModels.RegisterViewModel
 @{
     ViewData["Title"] = "Register";
-    var error = ViewBag.Error as string;
-    var vFirstName = ViewBag.FirstName as string ?? "";
-    var vLastName = ViewBag.LastName as string ?? "";
-    var vEmail = ViewBag.Email as string ?? "";
-    var vContact = ViewBag.Contact as string ?? "";
-    var vSuburb = ViewBag.Suburb as string ?? "";
-    var vRole = ViewBag.Role as string ?? "";
-    var vSecurityQuestion = ViewBag.SecurityQuestion as string ?? "";
     var securityQuestions = new[] {
         "What was the name of your first pet?",
         "What city were you born in?",
@@ -26,9 +19,11 @@
     </div>
 
     <div class="glass-card" style="margin-top:2rem;padding:2rem;">
-        @if (!string.IsNullOrEmpty(error))
+        @if (!ViewData.ModelState.IsValid)
         {
-            <div class="alert alert-error">@error</div>
+            <div class="alert alert-error" role="alert">
+                <div asp-validation-summary="All"></div>
+            </div>
         }
 
         <form method="post" asp-action="Register" asp-controller="Account">
@@ -36,65 +31,75 @@
 
             <div class="form-group">
                 <label class="form-label" for="reg-role">I want to register as</label>
-                <select id="reg-role" name="role" class="form-select" required>
+                <select id="reg-role" asp-for="Role" class="form-select" required>
                     <option value="">-- Select Role --</option>
-                    <option value="Student" selected="@(vRole == "Student")">Student (I want to learn to drive)</option>
-                    <option value="Instructor" selected="@(vRole == "Instructor")">Instructor (I want to teach)</option>
+                    <option value="Student" selected="@(Model.Role == "Student")">Student (I want to learn to drive)</option>
+                    <option value="Instructor" selected="@(Model.Role == "Instructor")">Instructor (I want to teach)</option>
                 </select>
+                <span asp-validation-for="Role" class="text-xs text-destructive"></span>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="reg-firstname">First Name *</label>
-                    <input type="text" id="reg-firstname" name="firstName" value="@vFirstName" class="form-input" placeholder="First name" required />
+                    <input type="text" id="reg-firstname" asp-for="FirstName" class="form-input" placeholder="First name" required />
+                    <span asp-validation-for="FirstName" class="text-xs text-destructive"></span>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="reg-lastname">Last Name *</label>
-                    <input type="text" id="reg-lastname" name="lastName" value="@vLastName" class="form-input" placeholder="Last name" required />
+                    <input type="text" id="reg-lastname" asp-for="LastName" class="form-input" placeholder="Last name" required />
+                    <span asp-validation-for="LastName" class="text-xs text-destructive"></span>
                 </div>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="reg-email">Email Address *</label>
-                <input type="email" id="reg-email" name="email" value="@vEmail" class="form-input" placeholder="you@example.com" required />
+                <input type="email" id="reg-email" asp-for="Email" class="form-input" placeholder="you@example.com" required />
+                <span asp-validation-for="Email" class="text-xs text-destructive"></span>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="reg-contact">Phone Number *</label>
-                <input type="tel" id="reg-contact" name="contact" value="@vContact" class="form-input" placeholder="e.g. 0812345678" required />
+                <input type="tel" id="reg-contact" asp-for="Contact" class="form-input" placeholder="e.g. 0812345678" required />
+                <span asp-validation-for="Contact" class="text-xs text-destructive"></span>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="reg-suburb">Suburb / Area</label>
-                <input type="text" id="reg-suburb" name="suburb" value="@vSuburb" class="form-input" placeholder="e.g. Johannesburg North" />
+                <input type="text" id="reg-suburb" asp-for="Suburb" class="form-input" placeholder="e.g. Johannesburg North" />
+                <span asp-validation-for="Suburb" class="text-xs text-destructive"></span>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="reg-password">Password *</label>
-                    <input type="password" id="reg-password" name="password" class="form-input" placeholder="Min 6 characters" required minlength="6" />
+                    <input type="password" id="reg-password" asp-for="Password" class="form-input" placeholder="Min 6 characters" required minlength="6" />
+                    <span asp-validation-for="Password" class="text-xs text-destructive"></span>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="reg-confirm-password">Confirm Password *</label>
-                    <input type="password" id="reg-confirm-password" name="confirmPassword" class="form-input" placeholder="Repeat password" required minlength="6" />
+                    <input type="password" id="reg-confirm-password" asp-for="ConfirmPassword" class="form-input" placeholder="Repeat password" required minlength="6" />
+                    <span asp-validation-for="ConfirmPassword" class="text-xs text-destructive"></span>
                 </div>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="reg-security-question">Security Question *</label>
-                <select id="reg-security-question" name="securityQuestion" class="form-select" required>
+                <select id="reg-security-question" asp-for="SecurityQuestion" class="form-select" required>
                     <option value="">-- Select a question --</option>
                     @foreach (var q in securityQuestions)
                     {
-                        <option value="@q" selected="@(vSecurityQuestion == q)">@q</option>
+                        <option value="@q" selected="@(Model.SecurityQuestion == q)">@q</option>
                     }
                 </select>
+                <span asp-validation-for="SecurityQuestion" class="text-xs text-destructive"></span>
                 <p class="text-xs text-muted" style="margin-top:0.35rem;">Used to recover your account if you forget your password.</p>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="reg-security-answer">Security Answer *</label>
-                <input type="text" id="reg-security-answer" name="securityAnswer" class="form-input" placeholder="Your answer" required autocomplete="off" />
+                <input type="text" id="reg-security-answer" asp-for="SecurityAnswer" class="form-input" placeholder="Your answer" required autocomplete="off" />
+                <span asp-validation-for="SecurityAnswer" class="text-xs text-destructive"></span>
             </div>
 
             <button type="submit" class="btn btn-primary btn-full btn-lg" style="margin-top:0.5rem;">Create Account</button>

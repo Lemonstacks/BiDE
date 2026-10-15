@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BiDE.Data;
 using BiDE.Models;
+using BiDE.ViewModels;
 
 namespace BiDE.Controllers
 {
@@ -51,20 +52,19 @@ namespace BiDE.Controllers
         {
             if (HttpContext.Session.GetInt32("UserId") != null)
                 return RedirectToAction("Index", "Home");
-            ViewBag.Redirect = redirect;
-            return View();
+            return View(new LoginViewModel { Redirect = redirect });
         }
 
         // POST: /Account/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(string email, string password, string? redirect)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
-            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-            {
-                ViewBag.Error = "Please fill in all fields.";
-                return View();
-            }
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var email = model.Email;
+            var password = model.Password;
 
             // Check Student
             var student = await _context.Students
@@ -94,10 +94,9 @@ namespace BiDE.Controllers
                 return RedirectToAction("Index", "Admin");
             }
 
-            ViewBag.Error = "Invalid email or password.";
-            ViewBag.Email = email;
-            ViewBag.Redirect = redirect;
-            return View();
+            ModelState.AddModelError(string.Empty, "Invalid email or password.");
+            model.Password = string.Empty;
+            return View(model);
         }
 
         // GET: /Account/Register
@@ -106,86 +105,37 @@ namespace BiDE.Controllers
         {
             if (HttpContext.Session.GetInt32("UserId") != null)
                 return RedirectToAction("Index", "Home");
-            return View();
+            return View(new RegisterViewModel());
         }
 
         // POST: /Account/Register
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(
-            string firstName, string lastName, string email,
-            string contact, string password, string confirmPassword,
-            string role, string? suburb, string securityQuestion, string securityAnswer)
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            // Preserve entered values so the form isn't cleared on validation error
-            void PreserveInput()
-            {
-                ViewBag.FirstName = firstName;
-                ViewBag.LastName = lastName;
-                ViewBag.Email = email;
-                ViewBag.Contact = contact;
-                ViewBag.Suburb = suburb;
-                ViewBag.Role = role;
-                ViewBag.SecurityQuestion = securityQuestion;
-            }
+            if (!ModelState.IsValid)
+                return View(model);
 
-            // Validation
-            if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) ||
-                string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) ||
-                string.IsNullOrWhiteSpace(contact))
-            {
-                ViewBag.Error = "Please fill in all required fields.";
-                PreserveInput();
-                return View();
-            }
+            var firstName = model.FirstName;
+            var lastName = model.LastName;
+            var email = model.Email;
+            var contact = model.Contact;
+            var password = model.Password;
+            var role = model.Role;
+            var suburb = model.Suburb;
+            var securityQuestion = model.SecurityQuestion;
+            var securityAnswer = model.SecurityAnswer;
 
-            if (password != confirmPassword)
-            {
-                ViewBag.Error = "Passwords do not match.";
-                PreserveInput();
-                return View();
-            }
-
-            if (password.Length < 6)
-            {
-                ViewBag.Error = "Password must be at least 6 characters.";
-                PreserveInput();
-                return View();
-            }
-
-            if (!email.Contains("@") || !email.Contains("."))
-            {
-                ViewBag.Error = "Please enter a valid email address.";
-                PreserveInput();
-                return View();
-            }
-
-            if (role != "Student" && role != "Instructor")
-            {
-                ViewBag.Error = "Please select a valid role.";
-                PreserveInput();
-                return View();
-            }
-
-            if (string.IsNullOrWhiteSpace(securityQuestion) || string.IsNullOrWhiteSpace(securityAnswer))
-            {
-                ViewBag.Error = "Please choose a security question and provide an answer.";
-                PreserveInput();
-                return View();
-            }
-
-            // Check if email already exists
+            // Server-only rule: email must be unique across all account types
             var existingStudent = await _context.Students.AnyAsync(s => s.Email == email);
             var existingInstructor = await _context.Instructors.AnyAsync(i => i.Email == email);
             var existingAdmin = await _context.Admins.AnyAsync(a => a.Email == email);
 
             if (existingStudent || existingInstructor || existingAdmin)
             {
-                ViewBag.Error = "An account with this email already exists.";
-                PreserveInput();
-                return View();
+                ModelState.AddModelError(nameof(RegisterViewModel.Email), "An account with this email already exists.");
+                return View(model);
             }
-
             if (role == "Student")
             {
                 var student = new Student
@@ -291,16 +241,15 @@ namespace BiDE.Controllers
             }
 
             // Move to step 2
-            ViewBag.Email = email;
-            ViewBag.Question = question;
-            return View("ResetPassword");
+            return View("ResetPassword", new ResetPasswordViewModel { Email = email, Question = question });
         }
 
         // POST: /Account/ResetPassword  (step 2: verify answer -> set new password)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ResetPassword(string email, string answer, string newPassword, string confirmPassword)
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
+            var email = model.Email;
             var (found, question) = await LookupSecurityQuestion(email);
             if (!found)
             {
@@ -308,43 +257,22 @@ namespace BiDE.Controllers
                 return View("ForgotPassword");
             }
 
-            ViewBag.Email = email;
-            ViewBag.Question = question;
+            model.Question = question;
 
-            if (string.IsNullOrWhiteSpace(answer) || string.IsNullOrWhiteSpace(newPassword))
-            {
-                ViewBag.Error = "Please answer the question and enter a new password.";
-                return View("ResetPassword");
-            }
+            if (!ModelState.IsValid)
+                return View("ResetPassword", model);
 
-            if (newPassword.Length < 6)
-            {
-                ViewBag.Error = "Password must be at least 6 characters.";
-                return View("ResetPassword");
-            }
-
-            if (newPassword != confirmPassword)
-            {
-                ViewBag.Error = "Passwords do not match.";
-                return View("ResetPassword");
-            }
-
-            var normalizedAnswer = answer.Trim().ToLower();
+            var newPassword = model.NewPassword;
+            var normalizedAnswer = model.Answer.Trim().ToLower();
 
             // Find the account and verify the answer
             var student = await _context.Students.FirstOrDefaultAsync(s => s.Email == email);
             if (student != null)
             {
                 if (student.SecurityAnswer != normalizedAnswer)
-                {
-                    ViewBag.Error = "Incorrect answer to the security question.";
-                    return View("ResetPassword");
-                }
+                    return ResetError(model, nameof(ResetPasswordViewModel.Answer), "Incorrect answer to the security question.");
                 if (student.Password == newPassword)
-                {
-                    ViewBag.Error = "Your new password cannot be the same as your old password.";
-                    return View("ResetPassword");
-                }
+                    return ResetError(model, nameof(ResetPasswordViewModel.NewPassword), "Your new password cannot be the same as your old password.");
                 student.Password = newPassword;
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Password reset successfully. You can now log in.";
@@ -355,15 +283,9 @@ namespace BiDE.Controllers
             if (instructor != null)
             {
                 if (instructor.SecurityAnswer != normalizedAnswer)
-                {
-                    ViewBag.Error = "Incorrect answer to the security question.";
-                    return View("ResetPassword");
-                }
+                    return ResetError(model, nameof(ResetPasswordViewModel.Answer), "Incorrect answer to the security question.");
                 if (instructor.Password == newPassword)
-                {
-                    ViewBag.Error = "Your new password cannot be the same as your old password.";
-                    return View("ResetPassword");
-                }
+                    return ResetError(model, nameof(ResetPasswordViewModel.NewPassword), "Your new password cannot be the same as your old password.");
                 instructor.Password = newPassword;
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Password reset successfully. You can now log in.";
@@ -374,15 +296,9 @@ namespace BiDE.Controllers
             if (admin != null)
             {
                 if (admin.SecurityAnswer != normalizedAnswer)
-                {
-                    ViewBag.Error = "Incorrect answer to the security question.";
-                    return View("ResetPassword");
-                }
+                    return ResetError(model, nameof(ResetPasswordViewModel.Answer), "Incorrect answer to the security question.");
                 if (admin.Password == newPassword)
-                {
-                    ViewBag.Error = "Your new password cannot be the same as your old password.";
-                    return View("ResetPassword");
-                }
+                    return ResetError(model, nameof(ResetPasswordViewModel.NewPassword), "Your new password cannot be the same as your old password.");
                 admin.Password = newPassword;
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Password reset successfully. You can now log in.";
@@ -391,6 +307,12 @@ namespace BiDE.Controllers
 
             ViewBag.Error = "No account found with that email address.";
             return View("ForgotPassword");
+        }
+
+        private IActionResult ResetError(ResetPasswordViewModel model, string field, string message)
+        {
+            ModelState.AddModelError(field, message);
+            return View("ResetPassword", model);
         }
     }
 }

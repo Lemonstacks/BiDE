@@ -49,6 +49,20 @@ namespace BiDE.Tests
             controller.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
         }
 
+        // Unit tests call actions directly, so model binding never runs. This mirrors the
+        // framework: it runs the model's data annotations and records failures in ModelState.
+        public static void ValidateModel(Controller controller, object model)
+        {
+            var results = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
+            var context = new System.ComponentModel.DataAnnotations.ValidationContext(model);
+            System.ComponentModel.DataAnnotations.Validator.TryValidateObject(model, context, results, validateAllProperties: true);
+            foreach (var r in results)
+            {
+                var members = r.MemberNames.Any() ? r.MemberNames : new[] { string.Empty };
+                foreach (var member in members)
+                    controller.ModelState.AddModelError(member, r.ErrorMessage ?? string.Empty);
+            }
+        }
         // Provides the services HttpContext.SignInAsync/SignOutAsync resolve at runtime.
         // The auth service is a no-op stub so cookie sign-in during Register/Login
         // succeeds without a full authentication middleware pipeline.
