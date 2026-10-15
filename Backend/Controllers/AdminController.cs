@@ -144,11 +144,36 @@ namespace BiDE.Controllers
 
             var payments = await BuildPaymentQuery(status, search, dateFrom, dateTo).ToListAsync();
 
+            // Per-instructor earnings (verified payments only = money actually confirmed),
+            // respecting the current filters. Highest earners first.
+            var earnings = payments
+                .Where(p => p.PaymentStatus == "Verified" && p.Booking?.Instructor != null)
+                .GroupBy(p => p.Booking!.InstructorId)
+                .Select(g => new InstructorEarningsRow
+                {
+                    InstructorId = g.Key,
+                    InstructorName = $"{g.First().Booking!.Instructor!.FirstName} {g.First().Booking!.Instructor!.LastName}".Trim(),
+                    LessonsPaid = g.Count(),
+                    TotalEarned = g.Sum(p => p.Amount)
+                })
+                .OrderByDescending(r => r.TotalEarned)
+                .ToList();
+
+            ViewBag.Earnings = earnings;
             ViewBag.StatusFilter = status ?? "all";
             ViewBag.SearchFilter = search ?? "";
             ViewBag.DateFrom = dateFrom;
             ViewBag.DateTo = dateTo;
             return View(payments);
+        }
+
+        // Lightweight row type for the per-instructor earnings breakdown on ViewPayments.
+        public class InstructorEarningsRow
+        {
+            public int InstructorId { get; set; }
+            public string InstructorName { get; set; } = string.Empty;
+            public int LessonsPaid { get; set; }
+            public decimal TotalEarned { get; set; }
         }
 
         // GET: /Admin/ExportPayments

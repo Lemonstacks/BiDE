@@ -72,6 +72,54 @@
         </div>
     </div>
 
+    <!-- Earnings per instructor (verified payments only) -->
+    @{
+        var earnings = ViewBag.Earnings as List<BiDE.Controllers.AdminController.InstructorEarningsRow> ?? new List<BiDE.Controllers.AdminController.InstructorEarningsRow>();
+        var earningsTotal = earnings.Sum(e => e.TotalEarned);
+    }
+    <div class="section-gap">
+        <p class="detail-section-title">Earnings by Instructor</p>
+        <hr class="detail-divider" />
+        <p class="text-sm text-muted" style="margin-bottom:1rem;">Verified payments only, matching the current filters.</p>
+        @if (earnings.Count == 0)
+        {
+            <div class="empty-state"><p>No verified earnings yet</p><p class="sub">Totals appear here once payments are verified.</p></div>
+        }
+        else
+        {
+            <div class="card" style="padding:0;overflow:hidden;">
+                <table class="earnings-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Instructor</th>
+                            <th scope="col" style="text-align:center;">Lessons paid</th>
+                            <th scope="col" style="text-align:right;">Total earned</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var e in earnings)
+                        {
+                            <tr>
+                                <td>
+                                    <a href="/Instructors/Detail/@e.InstructorId" style="color:var(--primary);font-weight:600;">@e.InstructorName</a>
+                                </td>
+                                <td style="text-align:center;">@e.LessonsPaid</td>
+                                <td style="text-align:right;font-weight:700;">R@(e.TotalEarned.ToString("N0"))</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td style="font-weight:700;">All instructors</td>
+                            <td style="text-align:center;font-weight:700;">@earnings.Sum(e => e.LessonsPaid)</td>
+                            <td style="text-align:right;font-weight:800;">R@(earningsTotal.ToString("N0"))</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+    </div>
+
     <!-- Payment List -->
     @if (Model.Count == 0)
     {

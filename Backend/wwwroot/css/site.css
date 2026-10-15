@@ -1041,6 +1041,18 @@ button.schedule-slot:focus-visible { outline: none; border-color: var(--primary)
 .gap-2 { gap: 0.5rem; }
 .section-gap { margin-bottom: 3rem; }
 
+/* Earnings-by-instructor table (admin ViewPayments) */
+.earnings-table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+.earnings-table thead th {
+    text-align: left; font-size: 0.75rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--fg-muted);
+    padding: 0.875rem 1.25rem; border-bottom: 1px solid var(--border);
+}
+.earnings-table tbody td { padding: 0.875rem 1.25rem; border-bottom: 1px solid var(--border); color: var(--fg); }
+.earnings-table tbody tr:last-child td { border-bottom: 1px solid var(--border); }
+.earnings-table tbody tr:hover { background: var(--bg-muted); }
+.earnings-table tfoot td { padding: 0.875rem 1.25rem; background: var(--bg-muted); color: var(--fg); }
+
 /* Shared auth page shell (login/register/forgot/reset) */
 .auth-shell {
     min-height: calc(100vh - 80px);
