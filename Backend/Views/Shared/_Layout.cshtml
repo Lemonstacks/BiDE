@@ -47,6 +47,11 @@
                 @if (Context.Session.GetInt32("UserId") != null)
                 {
                     var desktopRole = Context.Session.GetString("UserRole");
+                    var desktopUserName = Context.Session.GetString("UserName") ?? "User";
+                    <span class="nav-user" title="Signed in as @desktopUserName (@desktopRole)">
+                        <span class="nav-user-name">@desktopUserName</span>
+                        <span class="nav-user-role">@desktopRole</span>
+                    </span>
                     @if (desktopRole == "Student")
                     {
                         <a href="/Instructors" class="nav-link">Find Instructors</a>

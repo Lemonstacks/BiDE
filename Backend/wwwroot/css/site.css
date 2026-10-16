@@ -148,6 +148,22 @@ p { color: var(--fg-muted); line-height: 1.7; }
     border-radius: var(--radius-sm); font-weight: 600;
 }
 .navbar-desktop .nav-link-primary:hover { background: var(--primary-hover); }
+
+/* Logged-in user badge in the navbar */
+.nav-user {
+    display: inline-flex; flex-direction: column; align-items: flex-start;
+    line-height: 1.1; margin-right: 0.5rem; padding-right: 0.85rem;
+    border-right: 1px solid var(--border);
+}
+.nav-user-name { font-size: 0.8125rem; font-weight: 700; color: var(--fg); white-space: nowrap; }
+.nav-user-role {
+    font-size: 0.625rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--primary);
+}
+/* On the dark sticky navbar, invert the badge text so it stays readable */
+.navbar-sticky .nav-user { border-right-color: rgba(255,255,255,0.2); }
+.navbar-sticky .nav-user-name { color: #ffffff; }
+.navbar-sticky .nav-user-role { color: #93c5fd; }
 .navbar-desktop .nav-link-primary::after { display: none; }
 
 @media (min-width: 768px) {
