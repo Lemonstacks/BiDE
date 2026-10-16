@@ -117,7 +117,9 @@ namespace BiDE.Tests
 
         private static IFormFile FakeProofFile(string fileName = "proof.png")
         {
-            var bytes = new byte[] { 1, 2, 3, 4 };
+            // Valid PNG magic-number header (89 50 4E 47 0D 0A 1A 0A) so the controller's
+            // content-signature validation accepts it; the rest is filler.
+            var bytes = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00 };
             return new FormFile(new MemoryStream(bytes), 0, bytes.Length, "proofOfPayment", fileName);
         }
 
@@ -180,6 +182,32 @@ namespace BiDE.Tests
             Assert.Equal(PaymentMethod.Eft, payment.PaymentMethod);
             Assert.Equal("REF123", payment.PaymentReference);
             Assert.Equal(400, payment.Amount);
+        }
+
+        [Fact]
+        public async Task UC08_SubmitPayment_DisguisedFileWrongSignature_ReturnsError()
+        {
+            // Security: a non-image/PDF (e.g. a .vsdx, which is a ZIP starting with "PK")
+            // renamed to proof.png must be rejected by the content-signature check even
+            // though its extension is allowed.
+            var db = TestHelper.GetInMemoryDbContext();
+            var controller = new StudentController(db, TempWebRootEnv());
+            TestHelper.SetupSession(controller, 1, "Student");
+
+            db.Students.Add(new Student { StudentId = 1, FirstName = "Test", LastName = "Student", Email = "s@test.com", Contact = "0722222222", Password = "pass" });
+            db.Bookings.Add(new Booking { BookingId = 1, InstructorId = 1, StudentId = 1, ScheduleId = 1, OfferId = 1, Status = BookingStatus.Accepted });
+            await db.SaveChangesAsync();
+
+            // ZIP/Office/Visio signature "PK" (0x50 0x4B) with a .png extension.
+            var zipBytes = new byte[] { 0x50, 0x4B, 0x03, 0x04, 0x00, 0x00 };
+            var disguised = new FormFile(new MemoryStream(zipBytes), 0, zipBytes.Length, "proofOfPayment", "proof.png");
+
+            var result = await controller.SubmitPayment(1, PaymentMethod.Eft, "REF123", disguised);
+
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Bookings", redirect.ActionName);
+            Assert.Equal("The file does not look like a valid JPG, PNG, or PDF. Please upload a real image or PDF.", controller.TempData["Error"]);
+            Assert.Equal(0, await db.Payments.CountAsync());
         }
 
         [Fact]
@@ -259,7 +287,7 @@ namespace BiDE.Tests
 
             var redirect = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Bookings", redirect.ActionName);
-            Assert.Equal("Proof of payment file is required for EFT and Card payments.", controller.TempData["Error"]);
+            Assert.Equal("Proof of payment file is required for EFT payments.", controller.TempData["Error"]);
             Assert.Equal(0, await db.Payments.CountAsync());
         }
 

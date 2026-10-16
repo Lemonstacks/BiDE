@@ -192,7 +192,7 @@ namespace BiDE.Controllers
             {
                 if (proofOfPayment == null || proofOfPayment.Length == 0)
                 {
-                    TempData["Error"] = "Proof of payment file is required for EFT and Card payments.";
+                    TempData["Error"] = "Proof of payment file is required for EFT payments.";
                     return RedirectToAction("Bookings");
                 }
 
@@ -203,12 +203,22 @@ namespace BiDE.Controllers
                     return RedirectToAction("Bookings");
                 }
 
-                // File type validation
+                // File type validation (extension allowlist).
                 var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
                 var extension = Path.GetExtension(proofOfPayment.FileName).ToLower();
                 if (!allowedExtensions.Contains(extension))
                 {
                     TempData["Error"] = "Only JPG, PNG, and PDF files are allowed.";
+                    return RedirectToAction("Bookings");
+                }
+
+                // Content validation: inspect the actual file bytes (magic number) so a
+                // disallowed file (e.g. a .vsdx or .exe) renamed to .pdf/.jpg cannot slip
+                // past the extension check. A renamed Office/Visio file is really a ZIP
+                // and starts with "PK", which matches none of the signatures below.
+                if (!await IsAllowedFileSignatureAsync(proofOfPayment))
+                {
+                    TempData["Error"] = "The file does not look like a valid JPG, PNG, or PDF. Please upload a real image or PDF.";
                     return RedirectToAction("Bookings");
                 }
             }
@@ -285,6 +295,46 @@ namespace BiDE.Controllers
                 TempData["Success"] = "Payment submitted. Your instructor will verify it shortly.";
             }
             return RedirectToAction("Bookings");
+        }
+
+        /// <summary>
+        /// Verifies an uploaded file's actual leading bytes (its "magic number") match an
+        /// allowed proof-of-payment type: JPEG, PNG, or PDF. This is content-based validation
+        /// that cannot be fooled by simply renaming a disallowed file (e.g. a .vsdx, .docx, or
+        /// .exe) to a .pdf/.jpg extension, because those files begin with different signatures
+        /// (Office/Visio/ZIP files start with "PK", 0x50 0x4B).
+        /// </summary>
+        private static async Task<bool> IsAllowedFileSignatureAsync(IFormFile file)
+        {
+            try
+            {
+                // Read the first 8 bytes, enough for every signature we check.
+                var header = new byte[8];
+                using (var stream = file.OpenReadStream())
+                {
+                    int read = await stream.ReadAsync(header.AsMemory(0, header.Length));
+                    if (read < 4) return false; // too short to be any valid image/pdf
+                }
+
+                // JPEG: FF D8 FF
+                if (header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF)
+                    return true;
+
+                // PNG: 89 50 4E 47 0D 0A 1A 0A
+                if (header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47)
+                    return true;
+
+                // PDF: 25 50 44 46  ("%PDF")
+                if (header[0] == 0x25 && header[1] == 0x50 && header[2] == 0x44 && header[3] == 0x46)
+                    return true;
+
+                return false;
+            }
+            catch
+            {
+                // If the file can't be read, treat it as invalid rather than letting it through.
+                return false;
+            }
         }
     }
 }

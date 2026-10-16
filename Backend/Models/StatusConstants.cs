@@ -38,10 +38,9 @@ namespace BiDE.Models
     {
         public const string Eft = "EFT";
         public const string Cash = "Cash";
-        public const string Card = "Card";
 
         /// <summary>All accepted payment methods, for validation.</summary>
-        public static readonly string[] All = { Eft, Cash, Card };
+        public static readonly string[] All = { Eft, Cash };
     }
 
     public static class CancelledBy
