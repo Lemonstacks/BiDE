@@ -39,7 +39,7 @@ namespace BiDE.Controllers
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
-            var pending = bookings.Where(b => b.Status == "Pending").ToList();
+            var pending = bookings.Where(b => b.Status == BookingStatus.Pending).ToList();
 
             // Sort pending requests
             pending = sort switch
@@ -52,8 +52,8 @@ namespace BiDE.Controllers
 
             ViewBag.Instructor = instructor;
             ViewBag.Pending = pending;
-            ViewBag.Accepted = bookings.Where(b => b.Status == "Accepted").ToList();
-            ViewBag.Completed = bookings.Where(b => b.Status == "Completed").ToList();
+            ViewBag.Accepted = bookings.Where(b => b.Status == BookingStatus.Accepted).ToList();
+            ViewBag.Completed = bookings.Where(b => b.Status == BookingStatus.Completed).ToList();
             ViewBag.TotalBookings = bookings.Count;
             ViewBag.Sort = sort ?? "newest";
 
@@ -72,7 +72,7 @@ namespace BiDE.Controllers
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.InstructorId == instructorId.Value);
             if (booking == null) return NotFound();
 
-            booking.Status = "Accepted";
+            booking.Status = BookingStatus.Accepted;
             booking.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
@@ -93,14 +93,14 @@ namespace BiDE.Controllers
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.InstructorId == instructorId.Value);
             if (booking == null) return NotFound();
 
-            booking.Status = "Rejected";
+            booking.Status = BookingStatus.Rejected;
             booking.CancellationReason = reason;
-            booking.CancelledBy = "Instructor";
+            booking.CancelledBy = CancelledBy.Instructor;
             booking.CancelledAt = DateTime.UtcNow;
             booking.UpdatedAt = DateTime.UtcNow;
 
             if (booking.Schedule != null)
-                booking.Schedule.AvailabilityStatus = "Available";
+                booking.Schedule.AvailabilityStatus = AvailabilityStatus.Available;
 
             await _context.SaveChangesAsync();
 
@@ -121,21 +121,21 @@ namespace BiDE.Controllers
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.InstructorId == instructorId.Value);
             if (booking == null) return NotFound();
 
-            if (booking.Status != "Accepted")
+            if (booking.Status != BookingStatus.Accepted)
             {
                 TempData["Error"] = "Only accepted bookings can be marked as completed.";
                 return RedirectToAction("Index");
             }
 
             // Check payment is verified before allowing completion
-            var paymentStatus = booking.Payment?.PaymentStatus ?? "Unpaid";
-            if (paymentStatus != "Verified")
+            var paymentStatus = booking.Payment?.PaymentStatus ?? PaymentStatus.Unpaid;
+            if (paymentStatus != PaymentStatus.Verified)
             {
                 TempData["Error"] = "Cannot mark as complete. The student has not paid yet.";
                 return RedirectToAction("Index");
             }
 
-            booking.Status = "Completed";
+            booking.Status = BookingStatus.Completed;
             booking.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
@@ -199,7 +199,7 @@ namespace BiDE.Controllers
                 Date = date,
                 StartTime = startTime,
                 EndTime = endTime,
-                AvailabilityStatus = "Available",
+                AvailabilityStatus = AvailabilityStatus.Available,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -349,7 +349,7 @@ namespace BiDE.Controllers
                 .Include(b => b.LessonOffering)
                 .Include(b => b.Schedule)
                 .Include(b => b.LessonProgresses)
-                .Where(b => b.InstructorId == instructorId.Value && b.Status == "Accepted")
+                .Where(b => b.InstructorId == instructorId.Value && b.Status == BookingStatus.Accepted)
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
@@ -380,7 +380,7 @@ namespace BiDE.Controllers
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.InstructorId == instructorId.Value);
             if (booking == null) return NotFound();
 
-            if (booking.Status != "Accepted")
+            if (booking.Status != BookingStatus.Accepted)
             {
                 TempData["Error"] = "Can only add progress to accepted bookings.";
                 return RedirectToAction("LessonProgress");
@@ -420,9 +420,9 @@ namespace BiDE.Controllers
                 .OrderByDescending(p => p.PaymentDate)
                 .ToListAsync();
 
-            ViewBag.Pending = payments.Where(p => p.PaymentStatus == "Pending").ToList();
-            ViewBag.Verified = payments.Where(p => p.PaymentStatus == "Verified").ToList();
-            ViewBag.Rejected = payments.Where(p => p.PaymentStatus == "Rejected").ToList();
+            ViewBag.Pending = payments.Where(p => p.PaymentStatus == PaymentStatus.Pending).ToList();
+            ViewBag.Verified = payments.Where(p => p.PaymentStatus == PaymentStatus.Verified).ToList();
+            ViewBag.Rejected = payments.Where(p => p.PaymentStatus == PaymentStatus.Rejected).ToList();
 
             return View(payments);
         }
@@ -441,13 +441,13 @@ namespace BiDE.Controllers
             if (payment == null) return NotFound();
 
             // Cannot verify payment for a cancelled or rejected booking
-            if (payment.Booking != null && (payment.Booking.Status == "Cancelled" || payment.Booking.Status == "Rejected"))
+            if (payment.Booking != null && (payment.Booking.Status == BookingStatus.Cancelled || payment.Booking.Status == BookingStatus.Rejected))
             {
                 TempData["Error"] = "Cannot verify payment for a cancelled or rejected booking.";
                 return RedirectToAction("Payments");
             }
 
-            payment.PaymentStatus = "Verified";
+            payment.PaymentStatus = PaymentStatus.Verified;
             payment.RejectionReason = null;
             payment.VerificationDate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -468,7 +468,7 @@ namespace BiDE.Controllers
                 .FirstOrDefaultAsync(p => p.PaymentId == paymentId && p.InstructorId == instructorId.Value);
             if (payment == null) return NotFound();
 
-            payment.PaymentStatus = "Rejected";
+            payment.PaymentStatus = PaymentStatus.Rejected;
             payment.RejectionReason = reason;
             payment.VerificationDate = DateTime.UtcNow;
             await _context.SaveChangesAsync();

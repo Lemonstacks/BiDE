@@ -207,7 +207,7 @@ namespace BiDE.Controllers
             // Check for active bookings
             var activeBookings = await _context.Bookings
                 .AnyAsync(b => b.InstructorId == userId.Value &&
-                    (b.Status == "Pending" || b.Status == "Accepted"));
+                    (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Accepted));
             if (activeBookings)
             {
                 TempData["Error"] = "Cannot delete profile while you have active bookings. Please complete or reject them first.";

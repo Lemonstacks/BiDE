@@ -38,8 +38,8 @@ namespace BiDE.Controllers
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
-            var active = bookings.Where(b => b.Status == "Pending" || b.Status == "Accepted").ToList();
-            var past = bookings.Where(b => b.Status == "Completed" || b.Status == "Cancelled" || b.Status == "Rejected").ToList();
+            var active = bookings.Where(b => b.Status == BookingStatus.Pending || b.Status == BookingStatus.Accepted).ToList();
+            var past = bookings.Where(b => b.Status == BookingStatus.Completed || b.Status == BookingStatus.Cancelled || b.Status == BookingStatus.Rejected).ToList();
 
             ViewBag.Active = active;
             ViewBag.Past = past;
@@ -58,7 +58,7 @@ namespace BiDE.Controllers
                 .Include(b => b.Schedule)
                 .Include(b => b.Review)
                 .Include(b => b.LessonProgresses)
-                .Where(b => b.StudentId == studentId.Value && b.Status == "Completed")
+                .Where(b => b.StudentId == studentId.Value && b.Status == BookingStatus.Completed)
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
@@ -77,7 +77,7 @@ namespace BiDE.Controllers
                 .Include(b => b.Schedule)
                 .Include(b => b.LessonProgresses)
                 .Where(b => b.StudentId == studentId.Value &&
-                       (b.Status == "Accepted" || b.Status == "Completed"))
+                       (b.Status == BookingStatus.Accepted || b.Status == BookingStatus.Completed))
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
@@ -98,21 +98,21 @@ namespace BiDE.Controllers
 
             if (booking == null) return NotFound();
 
-            if (booking.Status != "Pending" && booking.Status != "Accepted")
+            if (booking.Status != BookingStatus.Pending && booking.Status != BookingStatus.Accepted)
             {
                 TempData["Error"] = "Only pending or accepted bookings can be cancelled.";
                 return RedirectToAction("Bookings");
             }
 
-            booking.Status = "Cancelled";
+            booking.Status = BookingStatus.Cancelled;
             booking.CancellationReason = reason;
-            booking.CancelledBy = "Student";
+            booking.CancelledBy = CancelledBy.Student;
             booking.CancelledAt = DateTime.UtcNow;
             booking.UpdatedAt = DateTime.UtcNow;
 
             // Free up the schedule slot
             if (booking.Schedule != null)
-                booking.Schedule.AvailabilityStatus = "Available";
+                booking.Schedule.AvailabilityStatus = AvailabilityStatus.Available;
 
             await _context.SaveChangesAsync();
 
@@ -137,7 +137,7 @@ namespace BiDE.Controllers
             var booking = await _context.Bookings
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.StudentId == studentId.Value);
 
-            if (booking == null || booking.Status != "Completed")
+            if (booking == null || booking.Status != BookingStatus.Completed)
                 return NotFound();
 
             // Check if already reviewed
@@ -174,22 +174,21 @@ namespace BiDE.Controllers
             if (studentId == null) return RedirectToAction("Login", "Account");
 
             // Validate payment method
-            var validMethods = new[] { "EFT", "Cash", "Card" };
-            if (string.IsNullOrWhiteSpace(paymentMethod) || !validMethods.Contains(paymentMethod))
+            if (string.IsNullOrWhiteSpace(paymentMethod) || !PaymentMethod.All.Contains(paymentMethod))
             {
                 TempData["Error"] = "Please select a valid payment method.";
                 return RedirectToAction("Bookings");
             }
 
             // EFT requires a payment reference so the instructor can match the bank deposit
-            if (paymentMethod == "EFT" && string.IsNullOrWhiteSpace(paymentReference))
+            if (paymentMethod == PaymentMethod.Eft && string.IsNullOrWhiteSpace(paymentReference))
             {
                 TempData["Error"] = "Please enter the payment reference used for your EFT.";
                 return RedirectToAction("Bookings");
             }
 
             // Validate file upload (not required for Cash payments)
-            if (paymentMethod != "Cash")
+            if (paymentMethod != PaymentMethod.Cash)
             {
                 if (proofOfPayment == null || proofOfPayment.Length == 0)
                 {
@@ -222,7 +221,7 @@ namespace BiDE.Controllers
             if (booking == null) return NotFound();
 
             // Don't allow payment if already paid
-            if (booking.Payment != null && booking.Payment.PaymentStatus == "Verified")
+            if (booking.Payment != null && booking.Payment.PaymentStatus == PaymentStatus.Verified)
             {
                 TempData["Error"] = "Payment already verified for this booking.";
                 return RedirectToAction("Bookings");
@@ -252,10 +251,10 @@ namespace BiDE.Controllers
                 booking.Payment.PaymentMethod = paymentMethod;
                 booking.Payment.PaymentReference = paymentReference;
                 booking.Payment.ProofOfPayment = proofPath;
-                booking.Payment.PaymentStatus = paymentMethod == "Cash" ? "Verified" : "Pending";
+                booking.Payment.PaymentStatus = paymentMethod == PaymentMethod.Cash ? PaymentStatus.Verified : PaymentStatus.Pending;
                 booking.Payment.PaymentDate = DateTime.UtcNow;
                 booking.Payment.RejectionReason = null;
-                if (paymentMethod == "Cash") booking.Payment.VerificationDate = DateTime.UtcNow;
+                if (paymentMethod == PaymentMethod.Cash) booking.Payment.VerificationDate = DateTime.UtcNow;
             }
             else
             {
@@ -268,16 +267,16 @@ namespace BiDE.Controllers
                     PaymentMethod = paymentMethod,
                     PaymentReference = paymentReference,
                     ProofOfPayment = proofPath,
-                    PaymentStatus = paymentMethod == "Cash" ? "Verified" : "Pending",
+                    PaymentStatus = paymentMethod == PaymentMethod.Cash ? PaymentStatus.Verified : PaymentStatus.Pending,
                     PaymentDate = DateTime.UtcNow
                 };
-                if (paymentMethod == "Cash") payment.VerificationDate = DateTime.UtcNow;
+                if (paymentMethod == PaymentMethod.Cash) payment.VerificationDate = DateTime.UtcNow;
                 _context.Payments.Add(payment);
             }
 
             await _context.SaveChangesAsync();
 
-            if (paymentMethod == "Cash")
+            if (paymentMethod == PaymentMethod.Cash)
             {
                 TempData["Success"] = "Cash payment confirmed. Your lesson is ready to go!";
             }

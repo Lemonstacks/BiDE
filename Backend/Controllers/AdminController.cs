@@ -316,7 +316,7 @@ namespace BiDE.Controllers
             // Check for active bookings
             var activeBookings = await _context.Bookings
                 .AnyAsync(b => b.StudentId == studentId &&
-                    (b.Status == "Pending" || b.Status == "Accepted"));
+                    (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Accepted));
             if (activeBookings)
             {
                 TempData["Error"] = $"Cannot remove {student.FirstName} {student.LastName} — they have active bookings.";

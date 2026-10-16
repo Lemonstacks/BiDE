@@ -68,7 +68,7 @@ namespace BiDE.Controllers
                 .ToListAsync();
 
             var availability = await _context.Availabilities
-                .Where(a => a.InstructorId == id && a.AvailabilityStatus == "Available")
+                .Where(a => a.InstructorId == id && a.AvailabilityStatus == AvailabilityStatus.Available)
                 .OrderBy(a => a.Date)
                 .ToListAsync();
 
@@ -118,7 +118,7 @@ namespace BiDE.Controllers
             }
 
             // Verify the slot is still available
-            if (schedule.AvailabilityStatus != "Available")
+            if (schedule.AvailabilityStatus != AvailabilityStatus.Available)
             {
                 TempData["Error"] = "This time slot is no longer available. Please choose another.";
                 return RedirectToAction("Detail", new { id = instructorId });
@@ -134,7 +134,7 @@ namespace BiDE.Controllers
 
             // Prevent duplicate booking for same slot
             var existingBooking = await _context.Bookings
-                .AnyAsync(b => b.ScheduleId == scheduleId && b.Status != "Cancelled" && b.Status != "Rejected");
+                .AnyAsync(b => b.ScheduleId == scheduleId && b.Status != BookingStatus.Cancelled && b.Status != BookingStatus.Rejected);
             if (existingBooking)
             {
                 TempData["Error"] = "This time slot has already been booked.";
@@ -148,14 +148,14 @@ namespace BiDE.Controllers
                 ScheduleId = scheduleId,
                 OfferId = offerId,
                 AgreedPrice = offering.Price,
-                Status = "Pending",
+                Status = BookingStatus.Pending,
                 CreatedAt = DateTime.UtcNow
             };
 
             _context.Bookings.Add(booking);
 
             // Mark schedule as booked
-            schedule.AvailabilityStatus = "Booked";
+            schedule.AvailabilityStatus = AvailabilityStatus.Booked;
 
             await _context.SaveChangesAsync();
 
