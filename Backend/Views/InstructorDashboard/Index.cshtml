@@ -72,7 +72,7 @@
             <p class="detail-section-title" style="margin:0;">Pending Requests (@pending.Count)</p>
             <div style="display:flex; align-items:center; gap:0.5rem;">
                 <label class="text-xs text-muted" for="sortRequests">Sort by</label>
-                <select id="sortRequests" class="form-select" style="width:auto; padding:0.4rem 0.75rem;"
+                <select id="sortRequests" class="form-select" style="width:auto; min-width:170px; height:40px; padding:0 2.5rem 0 0.85rem;"
                         onchange="window.location.href='/InstructorDashboard?sort=' + this.value + '#booking-requests'">
                     <option value="newest" selected="@(currentSort == "newest")">Newest request</option>
                     <option value="oldest" selected="@(currentSort == "oldest")">Oldest request</option>
