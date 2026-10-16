@@ -36,14 +36,23 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-// Cache static assets (css/js/images) so repeat loads are instant
-app.UseStaticFiles(new Microsoft.AspNetCore.Builder.StaticFileOptions
+// Cache static assets (css/js/images) so repeat loads are instant IN PRODUCTION.
+// In Development we skip the long cache so edits show up on a normal refresh
+// (no hard-refresh needed).
+if (app.Environment.IsDevelopment())
 {
-    OnPrepareResponse = ctx =>
+    app.UseStaticFiles();
+}
+else
+{
+    app.UseStaticFiles(new Microsoft.AspNetCore.Builder.StaticFileOptions
     {
-        ctx.Context.Response.Headers["Cache-Control"] = "public,max-age=3600";
-    }
-});
+        OnPrepareResponse = ctx =>
+        {
+            ctx.Context.Response.Headers["Cache-Control"] = "public,max-age=3600";
+        }
+    });
+}
 
 app.UseRouting();
 

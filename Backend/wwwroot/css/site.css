@@ -149,21 +149,19 @@ p { color: var(--fg-muted); line-height: 1.7; }
 }
 .navbar-desktop .nav-link-primary:hover { background: var(--primary-hover); }
 
-/* Logged-in user badge in the navbar */
+/* Logged-in user badge in the navbar. The navbar sits on a dark hero/photo (and
+   the sticky variant is dark too), so the badge text is light by default to stay
+   readable, matching the white nav links. */
 .nav-user {
     display: inline-flex; flex-direction: column; align-items: flex-start;
-    line-height: 1.1; margin-right: 0.5rem; padding-right: 0.85rem;
-    border-right: 1px solid var(--border);
+    line-height: 1.15; margin-right: 0.75rem; padding-right: 1rem;
+    border-right: 1px solid rgba(255,255,255,0.25);
 }
-.nav-user-name { font-size: 0.8125rem; font-weight: 700; color: var(--fg); white-space: nowrap; }
+.nav-user-name { font-size: 0.8125rem; font-weight: 700; color: #ffffff; white-space: nowrap; }
 .nav-user-role {
-    font-size: 0.625rem; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.06em; color: var(--primary);
+    font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: #93c5fd; white-space: nowrap;
 }
-/* On the dark sticky navbar, invert the badge text so it stays readable */
-.navbar-sticky .nav-user { border-right-color: rgba(255,255,255,0.2); }
-.navbar-sticky .nav-user-name { color: #ffffff; }
-.navbar-sticky .nav-user-role { color: #93c5fd; }
 .navbar-desktop .nav-link-primary::after { display: none; }
 
 @media (min-width: 768px) {
