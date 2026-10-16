@@ -1115,16 +1115,23 @@ main { min-height: 100vh; margin: 0; padding: 0; }
 /* ===== STICKY NAVBAR (logged in, except landing/find instructors) ===== */
 .navbar-sticky {
     position: fixed; top: 0; left: 0; right: 0;
+    /* Fixed, predictable bar height so the content offset below lines up exactly
+       and the bar never visually overlaps the page content. */
+    height: 72px;
+    display: flex; align-items: center;
     background: rgba(0, 0, 0, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     box-shadow: 0 2px 20px rgba(0,0,0,0.3);
-    padding: 0.75rem 2rem;
+    padding: 0 2rem;
     z-index: 1000;
 }
-body:has(.navbar-sticky) .page-header-bg { padding-top: 5rem; }
-body:has(.navbar-sticky) .page-container { padding-top: 5rem; }
-body:has(.navbar-sticky) .page-container-narrow { padding-top: 5rem; }
+.navbar-sticky .navbar-container { width: 100%; }
+/* Offset page content by the bar height (72px) plus a comfortable gap so inner
+   pages clear the fixed navbar evenly instead of tucking under it. */
+body:has(.navbar-sticky) .page-header-bg { padding-top: 6.5rem; }
+body:has(.navbar-sticky) .page-container { padding-top: 6.5rem; }
+body:has(.navbar-sticky) .page-container-narrow { padding-top: 6.5rem; }
 
 /* ===== LANDING PAGE BODY BACKGROUND ===== */
 .landing-body-bg {
